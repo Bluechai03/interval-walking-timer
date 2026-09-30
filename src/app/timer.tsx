@@ -1,7 +1,9 @@
 "use client";
 
 import type { Phase } from "@/lib/plan";
+import { useCues } from "@/lib/use-cues";
 import { useTimer } from "@/lib/use-timer";
+import { useWakeLock } from "@/lib/use-wake-lock";
 
 // Countdown blinks once this many seconds (or fewer) remain in a phase.
 const BLINK_THRESHOLD_SECONDS = 3;
@@ -27,6 +29,8 @@ export function Timer({ plan }: { plan: Phase[] }) {
     pause,
     reset,
   } = useTimer(plan);
+  const { prime } = useCues({ plan, phaseIndex, running, started, done });
+  useWakeLock(running);
   const current = plan[phaseIndex];
   const blinking = running && secondsLeft <= BLINK_THRESHOLD_SECONDS;
 
@@ -87,7 +91,13 @@ export function Timer({ plan }: { plan: Phase[] }) {
           </button>
         ) : (
           !done && (
-            <button className="btn btn-primary" onClick={start}>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                prime();
+                start();
+              }}
+            >
               {started ? "Resume" : "Start"}
             </button>
           )
