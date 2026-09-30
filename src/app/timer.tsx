@@ -47,7 +47,7 @@ export function Timer() {
       >
         <div className="card-body items-center text-center">
           <div
-            className={`relative size-64 ${blinking ? "animate-blink" : ""}`}
+            className={`relative aspect-square w-full max-w-64 ${blinking ? "animate-blink" : ""}`}
           >
             <svg viewBox="0 0 200 200" className="size-full -rotate-90">
               <circle
@@ -84,15 +84,15 @@ export function Timer() {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex w-full gap-3">
         {running ? (
-          <button className="btn btn-warning" onClick={pause}>
+          <button className="btn btn-warning btn-lg flex-1" onClick={pause}>
             Pause
           </button>
         ) : (
           !done && (
             <button
-              className="btn btn-primary"
+              className="btn btn-primary btn-lg flex-1"
               onClick={() => {
                 prime();
                 start();
@@ -102,7 +102,7 @@ export function Timer() {
             </button>
           )
         )}
-        <button className="btn btn-outline" onClick={reset} disabled={!started}>
+        <button className="btn btn-outline btn-lg flex-1" onClick={reset} disabled={!started}>
           Reset
         </button>
       </div>

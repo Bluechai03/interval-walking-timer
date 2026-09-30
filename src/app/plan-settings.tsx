@@ -32,7 +32,8 @@ export function PlanSettings({ config, totalSeconds, disabled, onChange }: Props
             <input
               type="number"
               inputMode="numeric"
-              className="input w-full"
+              // text-base: iOS Safari zooms in on inputs smaller than 16px.
+              className="input w-full text-base"
               defaultValue={config[field]}
               min={PLAN_LIMITS[field].min}
               max={PLAN_LIMITS[field].max}
