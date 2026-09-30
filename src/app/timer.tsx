@@ -1,9 +1,13 @@
 "use client";
 
-import type { Phase } from "@/lib/plan";
+import { useMemo } from "react";
+import { formatTime } from "@/lib/format-time";
+import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useCues } from "@/lib/use-cues";
+import { usePlanConfig } from "@/lib/use-plan-config";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { PlanSettings } from "./plan-settings";
 
 // Countdown blinks once this many seconds (or fewer) remain in a phase.
 const BLINK_THRESHOLD_SECONDS = 3;
@@ -11,13 +15,9 @@ const BLINK_THRESHOLD_SECONDS = 3;
 const RING_RADIUS = 90;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainder = String(seconds % 60).padStart(2, "0");
-  return `${minutes}:${remainder}`;
-}
-
-export function Timer({ plan }: { plan: Phase[] }) {
+export function Timer() {
+  const { config, setConfig, hydrated } = usePlanConfig();
+  const plan = useMemo(() => buildPlan(config), [config]);
   const {
     phaseIndex,
     secondsLeft,
@@ -106,6 +106,15 @@ export function Timer({ plan }: { plan: Phase[] }) {
           Reset
         </button>
       </div>
+
+      <PlanSettings
+        // Remount once after hydration so the inputs show stored values.
+        key={String(hydrated)}
+        config={config}
+        totalSeconds={totalSeconds(plan)}
+        disabled={started}
+        onChange={setConfig}
+      />
 
       <ul className="menu w-full rounded-box bg-base-200">
         {plan.map((item, i) => (
