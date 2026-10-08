@@ -1,5 +1,6 @@
 "use client";
 
+import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
 import { useMemo } from "react";
 import { formatTime } from "@/lib/format-time";
 import { buildPlan, totalSeconds } from "@/lib/plan";
@@ -7,6 +8,7 @@ import { useCues } from "@/lib/use-cues";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { HeartRate } from "./heart-rate";
 import { PlanSettings } from "./plan-settings";
 
 // Countdown blinks once this many seconds (or fewer) remain in a phase.
@@ -36,76 +38,88 @@ export function Timer() {
 
   return (
     <div className="flex w-full flex-col items-center gap-6">
-      <div
-        className={`card w-full ${
-          done
-            ? "bg-neutral text-neutral-content"
-            : current.type === "fast"
-              ? "bg-primary text-primary-content"
-              : "bg-secondary text-secondary-content"
-        }`}
-      >
-        <div className="card-body items-center text-center">
-          <div
-            className={`relative aspect-square w-full max-w-64 ${blinking ? "animate-blink" : ""}`}
-          >
-            <svg viewBox="0 0 200 200" className="size-full -rotate-90">
-              <circle
-                cx="100"
-                cy="100"
-                r={RING_RADIUS}
-                fill="none"
-                stroke="currentColor"
-                strokeOpacity={0.2}
-                strokeWidth={10}
-              />
-              <circle
-                cx="100"
-                cy="100"
-                r={RING_RADIUS}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={10}
-                strokeLinecap="round"
-                strokeDasharray={RING_CIRCUMFERENCE}
-                strokeDashoffset={RING_CIRCUMFERENCE * (1 - fractionLeft)}
-                className="transition-[stroke-dashoffset] duration-300 ease-linear"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <p className="font-mono text-6xl tabular-nums grow-0">
-                {formatTime(secondsLeft)}
-              </p>
-              <p className="text-2xl font-semibold uppercase grow-0">
-                {done ? "Done" : current.type}
-              </p>
+      {/* Sticky so the countdown and controls stay visible while scrolling. */}
+      <div className="sticky top-0 z-10 flex w-full flex-col gap-3 bg-base-100 py-2">
+        <div
+          className={`card w-full ${
+            done
+              ? "bg-neutral text-neutral-content"
+              : current.type === "fast"
+                ? "bg-primary text-primary-content"
+                : "bg-secondary text-secondary-content"
+          }`}
+        >
+          <div className="card-body items-center p-4 text-center">
+            <div
+              className={`relative aspect-square w-full max-w-56 ${blinking ? "animate-blink" : ""}`}
+            >
+              <svg viewBox="0 0 200 200" className="size-full -rotate-90">
+                <circle
+                  cx="100"
+                  cy="100"
+                  r={RING_RADIUS}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeOpacity={0.2}
+                  strokeWidth={10}
+                />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r={RING_RADIUS}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={10}
+                  strokeLinecap="round"
+                  strokeDasharray={RING_CIRCUMFERENCE}
+                  strokeDashoffset={RING_CIRCUMFERENCE * (1 - fractionLeft)}
+                  className="transition-[stroke-dashoffset] duration-300 ease-linear"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className="font-mono text-6xl tabular-nums grow-0">
+                  {formatTime(secondsLeft)}
+                </p>
+                <p className="text-2xl font-semibold uppercase grow-0">
+                  {done ? "Done" : current.type}
+                </p>
+              </div>
             </div>
           </div>
         </div>
+
+        <div className="flex w-full gap-3">
+          {running ? (
+            <button className="btn btn-warning btn-lg flex-1" onClick={pause}>
+              <PauseIcon aria-hidden="true" />
+              Pause
+            </button>
+          ) : (
+            !done && (
+              <button
+                className="btn btn-primary btn-lg flex-1"
+                onClick={() => {
+                  prime();
+                  start();
+                }}
+              >
+                <PlayIcon aria-hidden="true" />
+                {started ? "Resume" : "Start"}
+              </button>
+            )
+          )}
+          <button
+            className="btn btn-outline btn-lg flex-1"
+            onClick={reset}
+            disabled={!started}
+          >
+            <RotateCcwIcon aria-hidden="true" />
+            Reset
+          </button>
+        </div>
       </div>
 
-      <div className="flex w-full gap-3">
-        {running ? (
-          <button className="btn btn-warning btn-lg flex-1" onClick={pause}>
-            Pause
-          </button>
-        ) : (
-          !done && (
-            <button
-              className="btn btn-primary btn-lg flex-1"
-              onClick={() => {
-                prime();
-                start();
-              }}
-            >
-              {started ? "Resume" : "Start"}
-            </button>
-          )
-        )}
-        <button className="btn btn-outline btn-lg flex-1" onClick={reset} disabled={!started}>
-          Reset
-        </button>
-      </div>
+      {!done && <HeartRate type={current.type} pulsing={running} />}
 
       <PlanSettings
         // Remount once after hydration so the inputs show stored values.

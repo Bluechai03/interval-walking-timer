@@ -27,13 +27,13 @@ export function PlanSettings({ config, totalSeconds, disabled, onChange }: Props
     <div className="w-full rounded-box bg-base-200 p-4">
       <div className="grid grid-cols-3 gap-3">
         {FIELDS.map(({ field, label }) => (
-          <label key={field} className="flex flex-col gap-1 text-sm">
+          <label key={field} className="flex min-w-0 flex-col gap-1 text-sm">
             {label}
             <input
               type="number"
               inputMode="numeric"
               // text-base: iOS Safari zooms in on inputs smaller than 16px.
-              className="input w-full text-base"
+              className="input w-full min-w-0 text-base"
               defaultValue={config[field]}
               min={PLAN_LIMITS[field].min}
               max={PLAN_LIMITS[field].max}
@@ -49,9 +49,9 @@ export function PlanSettings({ config, totalSeconds, disabled, onChange }: Props
         ))}
       </div>
       <p className="mt-3 text-sm opacity-70">
-        {disabled
-          ? "Reset the timer to change the plan. "
-          : ""}
+        <span className={disabled ? "" : "invisible"}>
+          Reset the timer to change the plan.{" "}
+        </span>
         Total: {formatTime(totalSeconds)}
       </p>
     </div>
