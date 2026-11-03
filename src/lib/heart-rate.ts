@@ -2,8 +2,8 @@ import type { Phase } from "./plan";
 
 // Interval walking guidance: fast phases at roughly 70-80% of max heart rate,
 // slow phases at roughly 40-50%. Max heart rate is estimated as 220 - age,
-// using a typical adult age since the app doesn't ask for one.
-export const ASSUMED_AGE = 40;
+// using the owner's age since the app doesn't ask for one.
+export const ASSUMED_AGE = 23;
 const MAX_HEART_RATE = 220 - ASSUMED_AGE;
 
 const INTENSITY: Record<Phase["type"], { min: number; max: number }> = {
