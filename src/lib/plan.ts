@@ -6,15 +6,17 @@ export type PlanConfig = {
   rounds: number;
 };
 
+// Phases are set in whole minutes but stored in seconds; step is the unit.
 export const PLAN_LIMITS = {
-  fastSeconds: { min: 5, max: 3600 },
-  slowSeconds: { min: 5, max: 3600 },
-  rounds: { min: 1, max: 20 },
+  fastSeconds: { min: 60, max: 3600, step: 60 },
+  slowSeconds: { min: 60, max: 3600, step: 60 },
+  rounds: { min: 1, max: 20, step: 1 },
 } as const;
 
+// The classic interval walking plan: 3 minutes fast, 3 minutes slow, 5 rounds.
 export const DEFAULT_PLAN_CONFIG: PlanConfig = {
-  fastSeconds: 10,
-  slowSeconds: 10,
+  fastSeconds: 180,
+  slowSeconds: 180,
   rounds: 5,
 };
 
@@ -22,10 +24,11 @@ export const isValidPlanValue = (
   field: keyof PlanConfig,
   value: unknown,
 ): value is number => {
-  const { min, max } = PLAN_LIMITS[field];
+  const { min, max, step } = PLAN_LIMITS[field];
   return (
     typeof value === "number" &&
     Number.isInteger(value) &&
+    value % step === 0 &&
     value >= min &&
     value <= max
   );

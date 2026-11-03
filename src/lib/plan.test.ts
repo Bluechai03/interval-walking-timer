@@ -48,14 +48,20 @@ describe("isValidPlanValue", () => {
   it("accepts integers within the limits, inclusive", () => {
     expect(isValidPlanValue("rounds", 1)).toBe(true);
     expect(isValidPlanValue("rounds", 20)).toBe(true);
-    expect(isValidPlanValue("fastSeconds", 5)).toBe(true);
+    expect(isValidPlanValue("fastSeconds", 60)).toBe(true);
     expect(isValidPlanValue("fastSeconds", 3600)).toBe(true);
+  });
+
+  it("only accepts phases that are a whole number of minutes", () => {
+    expect(isValidPlanValue("slowSeconds", 180)).toBe(true);
+    expect(isValidPlanValue("slowSeconds", 90)).toBe(false);
+    expect(isValidPlanValue("fastSeconds", 10)).toBe(false);
   });
 
   it("rejects out-of-range, fractional, non-numeric and NaN values", () => {
     expect(isValidPlanValue("rounds", 0)).toBe(false);
     expect(isValidPlanValue("rounds", 21)).toBe(false);
-    expect(isValidPlanValue("fastSeconds", 4)).toBe(false);
+    expect(isValidPlanValue("fastSeconds", 0)).toBe(false);
     expect(isValidPlanValue("slowSeconds", 3601)).toBe(false);
     expect(isValidPlanValue("rounds", 2.5)).toBe(false);
     expect(isValidPlanValue("rounds", "3")).toBe(false);
@@ -65,12 +71,26 @@ describe("isValidPlanValue", () => {
 
 describe("sanitizePlanConfig", () => {
   it("keeps valid values", () => {
-    const config = { fastSeconds: 120, slowSeconds: 90, rounds: 8 };
+    const config = { fastSeconds: 120, slowSeconds: 240, rounds: 8 };
     expect(sanitizePlanConfig(config)).toEqual(config);
   });
 
   it("falls back to defaults for missing fields", () => {
     expect(sanitizePlanConfig({})).toEqual(DEFAULT_PLAN_CONFIG);
+  });
+
+  it("defaults to 3 minutes fast, 3 minutes slow, 5 rounds", () => {
+    expect(DEFAULT_PLAN_CONFIG).toEqual({
+      fastSeconds: 180,
+      slowSeconds: 180,
+      rounds: 5,
+    });
+  });
+
+  it("replaces a saved plan with 10-second phases by the default", () => {
+    expect(
+      sanitizePlanConfig({ fastSeconds: 10, slowSeconds: 10, rounds: 5 }),
+    ).toEqual(DEFAULT_PLAN_CONFIG);
   });
 
   it("replaces only the invalid fields", () => {
