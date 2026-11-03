@@ -7,9 +7,9 @@ import {
   type PlanConfig,
 } from "@/lib/plan";
 
-const FIELDS: { field: keyof PlanConfig; label: string }[] = [
-  { field: "fastSeconds", label: "Fast (sec)" },
-  { field: "slowSeconds", label: "Slow (sec)" },
+const FIELDS: { field: keyof PlanConfig; label: string; unit?: string }[] = [
+  { field: "fastSeconds", label: "Fast", unit: "sec" },
+  { field: "slowSeconds", label: "Slow", unit: "sec" },
   { field: "rounds", label: "Rounds" },
 ];
 
@@ -24,36 +24,49 @@ type Props = {
 // valid values are applied to the plan.
 export function PlanSettings({ config, totalSeconds, disabled, onChange }: Props) {
   return (
-    <div className="w-full rounded-box bg-base-200 p-4">
+    <section aria-labelledby="plan-heading" className="flex flex-col gap-3 px-4 sm:px-0">
+      <div className="flex items-baseline justify-between border-b-2 border-page-ink pb-2">
+        <h2 id="plan-heading" className="text-xl font-semibold">
+          Plan
+        </h2>
+        <p className="text-base tabular-nums">Total {formatTime(totalSeconds)}</p>
+      </div>
       <div className="grid grid-cols-3 gap-3">
-        {FIELDS.map(({ field, label }) => (
-          <label key={field} className="flex min-w-0 flex-col gap-1 text-sm">
-            {label}
-            <input
-              type="number"
-              inputMode="numeric"
-              // text-base: iOS Safari zooms in on inputs smaller than 16px.
-              className="input w-full min-w-0 text-base"
-              defaultValue={config[field]}
-              min={PLAN_LIMITS[field].min}
-              max={PLAN_LIMITS[field].max}
-              disabled={disabled}
-              onChange={(event) => {
-                const value = event.target.valueAsNumber;
-                if (isValidPlanValue(field, value)) {
-                  onChange({ ...config, [field]: value });
-                }
-              }}
-            />
+        {FIELDS.map(({ field, label, unit }) => (
+          <label key={field} className="flex min-w-0 flex-col gap-1">
+            <span className="text-sm font-medium text-page-quiet">
+              {label}
+              {unit && <span className="sr-only"> in seconds</span>}
+            </span>
+            <span className="flex items-baseline gap-1 border-b border-page-line focus-within:border-page-ink">
+              <input
+                type="number"
+                inputMode="numeric"
+                // text-2xl keeps it above 16px, so iOS Safari doesn't zoom in.
+                className="w-full min-w-0 bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"
+                defaultValue={config[field]}
+                min={PLAN_LIMITS[field].min}
+                max={PLAN_LIMITS[field].max}
+                disabled={disabled}
+                onChange={(event) => {
+                  const value = event.target.valueAsNumber;
+                  if (isValidPlanValue(field, value)) {
+                    onChange({ ...config, [field]: value });
+                  }
+                }}
+              />
+              {unit && (
+                <span aria-hidden="true" className="text-sm text-page-quiet">
+                  {unit}
+                </span>
+              )}
+            </span>
           </label>
         ))}
       </div>
-      <p className="mt-3 text-sm opacity-70">
-        <span className={disabled ? "" : "invisible"}>
-          Reset the timer to change the plan.{" "}
-        </span>
-        Total: {formatTime(totalSeconds)}
+      <p className={`text-sm text-page-quiet ${disabled ? "" : "invisible"}`}>
+        Reset the timer to change the plan.
       </p>
-    </div>
+    </section>
   );
 }
