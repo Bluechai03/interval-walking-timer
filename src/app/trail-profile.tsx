@@ -8,12 +8,12 @@ type Props = {
   done: boolean;
 };
 
-// The session drawn like a trail's elevation profile: fast phases are tall,
+// The walk drawn like a trail's elevation profile: fast phases are tall,
 // slow phases low, and each segment's width follows its duration. Walked
 // segments are solid and the current one fills as it runs.
 export function TrailProfile({ plan, phaseIndex, fractionLeft, done }: Props) {
   return (
-    <ol aria-label="Session" className="flex h-12 items-end gap-1">
+    <ol aria-label="Walk" className="flex h-12 items-end gap-1">
       {plan.map((phase, i) => {
         const walked = done || i < phaseIndex;
         const isCurrent = !done && i === phaseIndex;
