@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Interval Walking Timer
 
-## Getting Started
+A phone-first timer for Japanese interval walking: alternate fast and slow walking, classically 3 minutes each for 5 rounds.
 
-First, run the development server:
+**Live:** [interval-walking-timer.vercel.app](https://interval-walking-timer.vercel.app)
+
+## What it does
+
+- Fills the screen with the current phase, with a countdown readable at arm's length mid-stride.
+- Plays an audio cue at each phase change and when the walk ends.
+- Keeps the screen awake while a walk is running.
+- Shows the target heart rate for each phase (currently set for age 23).
+- Lets you change the plan (fast and slow minutes, number of rounds); it's saved on your device.
+- Installs as an app on your home screen (PWA).
+
+Next up: live cadence (steps per minute) from your phone's motion sensors.
+
+## Stack
+
+Next.js (App Router), React, TypeScript, Tailwind CSS, Vitest. Deployed on Vercel.
+
+## Develop
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev       # http://localhost:3000
+pnpm test      # timer, plan and cue logic
+pnpm lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The walk logic lives in `src/lib` and is covered by tests. `src/app` holds the screens. Terms like plan, phase, round and walk are defined in [`GLOSSARY.md`](./GLOSSARY.md).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Real-walk log
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Each real walk with the app is recorded in [`docs/walk-log.md`](./docs/walk-log.md), with links to the issues it found.
