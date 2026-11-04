@@ -4,3 +4,4 @@ One line per real walk with the app. Problems found on a walk become GitHub issu
 
 | Date | Plan | Notes | Issues |
 | ---- | ---- | ----- | ------ |
+| 2026-11-04 | 3 min fast, 3 min slow, 5 rounds | Cues did not arrive on time with the screen locked, though the timer kept going. Barely checked the screen while listening to music. | #3, #4, #5, #6 |
