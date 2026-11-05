@@ -1,5 +1,6 @@
 "use client";
 
+import { PushTest } from "./push-test";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 // Throwaway on-device test for steps 1-4 of the plan in docs/research/lock-screen-live-notifications.md.
@@ -357,6 +358,7 @@ export function LockTest() {
             ))}
         </ol>
       </section>
+      <PushTest />
     </main>
   );
 }
