@@ -94,8 +94,18 @@ type Runner = { stop: () => void };
 function startRun(run: Run, audio: HTMLAudioElement): Runner {
   const timers: number[] = [];
   const startedAt = Date.now();
-  writeLog([]);
   addEntry(`start run ${run}`);
+
+  // Record when the page is hidden or shown (a locked screen hides the page), and what the audio element does.
+  const onVisibility = () => addEntry(`page ${document.visibilityState}`);
+  const onPageHide = () => addEntry("pagehide");
+  const onPageShow = () => addEntry("pageshow");
+  document.addEventListener("visibilitychange", onVisibility);
+  window.addEventListener("pagehide", onPageHide);
+  window.addEventListener("pageshow", onPageShow);
+  const audioEvents = ["play", "pause", "ended", "stalled", "waiting"] as const;
+  const onAudioEvent = (e: Event) => addEntry(`audio ${e.type}`);
+  audioEvents.forEach((name) => audio.addEventListener(name, onAudioEvent));
 
   const ctx = new AudioContext();
   timers.push(window.setInterval(() => addEntry("tick"), TICK_MS));
@@ -167,6 +177,10 @@ function startRun(run: Run, audio: HTMLAudioElement): Runner {
 
   return {
     stop() {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
+      audioEvents.forEach((name) => audio.removeEventListener(name, onAudioEvent));
       timers.forEach((id) => window.clearInterval(id));
       audio.pause();
       window.speechSynthesis?.cancel();
@@ -174,6 +188,30 @@ function startRun(run: Run, audio: HTMLAudioElement): Runner {
       addEntry("stop");
     },
   };
+}
+
+type RunSummary = { run: string; startedAt: number; ticks: number; seconds: number; maxGap: number; lateTicks: number; hidden: number };
+
+// Splits the log at each "start run" line and summarises every run on its own.
+export function summarize(log: Entry[]): RunSummary[] {
+  const runs: { run: string; entries: Entry[] }[] = [];
+  for (const entry of log) {
+    if (entry.kind.startsWith("start run ")) runs.push({ run: entry.kind.slice(-1), entries: [entry] });
+    else runs.at(-1)?.entries.push(entry);
+  }
+  return runs.map(({ run, entries }) => {
+    const ticks = entries.filter((e) => e.kind === "tick");
+    const gaps = ticks.slice(1).map((e, i) => (e.t - ticks[i].t) / 1000);
+    return {
+      run,
+      startedAt: entries[0].t,
+      ticks: ticks.length,
+      seconds: Math.round((entries.at(-1)!.t - entries[0].t) / 1000),
+      maxGap: gaps.length ? Math.max(...gaps) : 0,
+      lateTicks: gaps.filter((g) => g > (TICK_MS / 1000) * 1.5).length,
+      hidden: entries.filter((e) => e.kind === "page hidden").length,
+    };
+  });
 }
 
 export function LockTest() {
@@ -185,10 +223,7 @@ export function LockTest() {
 
   useEffect(() => () => runner.current?.stop(), []);
 
-  const ticks = log.filter((e) => e.kind === "tick");
-  const gaps = ticks.slice(1).map((e, i) => (e.t - ticks[i].t) / 1000);
-  const maxGap = gaps.length ? Math.max(...gaps) : 0;
-  const lateTicks = gaps.filter((g) => g > (TICK_MS / 1000) * 1.5).length;
+  const summaries = summarize(log);
 
   return (
     <main className="mx-auto max-w-xl space-y-5 p-5 pb-16 font-sans text-base">
@@ -237,10 +272,18 @@ export function LockTest() {
 
       <section>
         <h2 className="font-semibold">Result</h2>
-        <p>
-          {running ? `Running run ${running}…` : "Not running."} Ticks: {ticks.length}. Longest gap between ticks:{" "}
-          {maxGap.toFixed(0)} s. Late ticks (over 15 s): {lateTicks}.
-        </p>
+        <p>{running ? `Running run ${running}…` : "Not running."}</p>
+        <ul className="mt-2 list-disc pl-5 text-sm">
+          {summaries.map((r) => (
+            <li key={r.startedAt}>
+              Run {r.run} at {clock(r.startedAt)}: {r.seconds} s, {r.ticks} ticks, longest gap {r.maxGap.toFixed(0)} s,
+              late ticks (over 15 s) {r.lateTicks}, times the page was hidden {r.hidden}.
+            </li>
+          ))}
+        </ul>
+        <button type="button" onClick={() => writeLog([])} disabled={running !== null} className="mt-3 rounded-md border px-3 py-2 text-sm disabled:opacity-40">
+          Clear log
+        </button>
         <ol className="mt-3 max-h-80 overflow-auto font-mono text-xs">
           {log
             .slice()
