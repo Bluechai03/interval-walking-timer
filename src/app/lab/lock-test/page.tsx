@@ -5,6 +5,8 @@ import { LockTest } from "./lock-test";
 export const metadata: Metadata = {
   title: "Lock-screen test",
   robots: { index: false, follow: false },
+  manifest: "/lab/lock-test/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Lock test" },
 };
 
 export default function LockTestPage() {
