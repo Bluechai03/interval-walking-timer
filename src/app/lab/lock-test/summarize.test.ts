@@ -6,12 +6,12 @@ const at = (seconds: number, kind: string) => ({ t: 1_000_000 + seconds * 1000, 
 describe("summarize", () => {
   it("summarises each run on its own", () => {
     const log = [
-      at(0, "start run A"),
+      at(0, "start run A (session default, wake lock off)"),
       at(10, "tick"),
       at(20, "tick"),
       at(60, "tick"),
       at(61, "stop"),
-      at(100, "start run B"),
+      at(100, "start run B (session ambient, wake lock on)"),
       at(110, "tick"),
       at(115, "page hidden"),
       at(120, "tick"),

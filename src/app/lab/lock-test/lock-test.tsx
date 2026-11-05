@@ -8,6 +8,12 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 // Run C: B plus the Media Session title updated every 10 s while locked.
 
 type Run = "A" | "B" | "C";
+type SessionType = "default" | "auto" | "playback" | "ambient" | "transient" | "transient-solo";
+type Options = { sessionType: SessionType; wakeLock: boolean };
+
+// navigator.audioSession is experimental and not in the TypeScript DOM types yet.
+type AudioSessionLike = { type: string };
+const getAudioSession = () => (navigator as Navigator & { audioSession?: AudioSessionLike }).audioSession;
 type Entry = { t: number; kind: string };
 
 const LOG_KEY = "lock-test-log";
@@ -91,10 +97,38 @@ const noSubscribe = () => () => {};
 // Everything below touches timers, audio and the lock screen, so it lives outside the component.
 type Runner = { stop: () => void };
 
-function startRun(run: Run, audio: HTMLAudioElement): Runner {
+function startRun(run: Run, audio: HTMLAudioElement, options: Options): Runner {
   const timers: number[] = [];
   const startedAt = Date.now();
-  addEntry(`start run ${run}`);
+  addEntry(`start run ${run} (session ${options.sessionType}, wake lock ${options.wakeLock ? "on" : "off"})`);
+
+  // Audio session type decides whether we mix with the music app or pause it. Must be set before audio plays.
+  if (options.sessionType !== "default") {
+    const session = getAudioSession();
+    if (session) {
+      try {
+        session.type = options.sessionType;
+        addEntry(`audioSession.type = ${session.type}`);
+      } catch (e) {
+        addEntry(`audioSession.type failed: ${String(e)}`);
+      }
+    } else {
+      addEntry("navigator.audioSession not available");
+    }
+  }
+
+  // Keep the screen on so the page stays visible; this is the option that lets music keep playing.
+  let wakeLock: WakeLockSentinel | null = null;
+  if (options.wakeLock && "wakeLock" in navigator) {
+    navigator.wakeLock.request("screen").then(
+      (lock) => {
+        wakeLock = lock;
+        addEntry("wake lock acquired");
+        lock.addEventListener("release", () => addEntry("wake lock released"));
+      },
+      (e) => addEntry(`wake lock failed: ${String(e)}`),
+    );
+  }
 
   // Record when the page is hidden or shown (a locked screen hides the page), and what the audio element does.
   const onVisibility = () => addEntry(`page ${document.visibilityState}`);
@@ -182,6 +216,7 @@ function startRun(run: Run, audio: HTMLAudioElement): Runner {
       window.removeEventListener("pageshow", onPageShow);
       audioEvents.forEach((name) => audio.removeEventListener(name, onAudioEvent));
       timers.forEach((id) => window.clearInterval(id));
+      void wakeLock?.release();
       audio.pause();
       window.speechSynthesis?.cancel();
       void ctx.close();
@@ -196,7 +231,7 @@ type RunSummary = { run: string; startedAt: number; ticks: number; seconds: numb
 export function summarize(log: Entry[]): RunSummary[] {
   const runs: { run: string; entries: Entry[] }[] = [];
   for (const entry of log) {
-    if (entry.kind.startsWith("start run ")) runs.push({ run: entry.kind.slice(-1), entries: [entry] });
+    if (entry.kind.startsWith("start run ")) runs.push({ run: entry.kind.charAt(10), entries: [entry] });
     else runs.at(-1)?.entries.push(entry);
   }
   return runs.map(({ run, entries }) => {
@@ -218,6 +253,8 @@ export function LockTest() {
   const log = useSyncExternalStore(subscribeLog, readLog, () => []);
   const ua = useSyncExternalStore(noSubscribe, () => navigator.userAgent, () => "");
   const [running, setRunning] = useState<Run | null>(null);
+  const [sessionType, setSessionType] = useState<SessionType>("default");
+  const [wakeLock, setWakeLock] = useState(false);
   const runner = useRef<Runner | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -241,7 +278,7 @@ export function LockTest() {
             type="button"
             disabled={running !== null}
             onClick={() => {
-              runner.current = startRun(r, audioRef.current!);
+              runner.current = startRun(r, audioRef.current!, { sessionType, wakeLock });
               setRunning(r);
             }}
             className="rounded-md border px-4 py-3 font-semibold disabled:opacity-40"
@@ -261,6 +298,31 @@ export function LockTest() {
         >
           Stop
         </button>
+      </div>
+      <div className="space-y-2 text-sm">
+        <label className="flex items-center gap-2">
+          Audio session type (set before you tap a run):
+          <select
+            value={sessionType}
+            disabled={running !== null}
+            onChange={(e) => setSessionType(e.target.value as SessionType)}
+            className="rounded-md border px-2 py-1"
+          >
+            {["default", "auto", "playback", "ambient", "transient", "transient-solo"].map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={wakeLock} disabled={running !== null} onChange={(e) => setWakeLock(e.target.checked)} />
+          Keep the screen on (wake lock)
+        </label>
+        <p className="opacity-70">
+          Music test: start your music app, then try each type with Run B or C and note whether the music pauses and
+          whether the beeps still sound with the phone locked. &ldquo;ambient&rdquo; should mix with music.
+        </p>
       </div>
       <ul className="list-disc pl-5 text-sm">
         <li>Run A: ticks, Web Audio beep every 30 s, speech every 60 s. No audio element.</li>
