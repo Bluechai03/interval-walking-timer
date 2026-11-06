@@ -1,4 +1,4 @@
-import { heartRateTarget } from "./heart-rate";
+import { effortWords } from "./heart-rate";
 import { totalSeconds, type Phase } from "./plan";
 
 export type PushCue = { delaySeconds: number; title: string; body: string };
@@ -30,13 +30,12 @@ export const pushCues = (plan: Phase[], elapsedSeconds: number): PushCue[] => {
       return;
     }
 
-    const { min, max } = heartRateTarget(next.type);
     const round = Math.floor((i + 1) / 2) + 1;
     const after = plan[i + 2];
     cues.push({
       delaySeconds,
       title: `${NAME[next.type]} · ${minutes(next.durationInSeconds)}`,
-      body: `Round ${round} of ${rounds} · ${min}–${max} bpm · ${after ? `next: ${NAME[after.type]}` : "last phase"}`,
+      body: `Round ${round} of ${rounds} · ${effortWords(next.type)} · ${after ? `next: ${NAME[after.type]}` : "last phase"}`,
     });
   });
 

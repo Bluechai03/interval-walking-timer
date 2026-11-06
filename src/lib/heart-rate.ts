@@ -19,3 +19,11 @@ export const heartRateTarget = (type: Phase["type"]): HeartRateTarget => {
   const high = Math.round(MAX_HEART_RATE * max);
   return { min: low, max: high, average: Math.round((low + high) / 2) };
 };
+
+// How the pace should feel, for walkers without a tracker: the talk test.
+const EFFORT: Record<Phase["type"], string> = {
+  fast: "Brisk: short sentences only",
+  slow: "Easy: you can chat",
+};
+
+export const effortWords = (type: Phase["type"]): string => EFFORT[type];

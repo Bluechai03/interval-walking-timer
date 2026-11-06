@@ -34,18 +34,19 @@ export function Timer() {
     secondsLeft,
     fractionLeft,
     done,
+    ready,
     running,
     started,
     start,
     pause,
     reset,
   } = useTimer(plan);
-  const { prime } = useCues({ plan, phaseIndex, running, started, done });
+  const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft });
   useWakeLock(running);
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
     (done ? 0 : plan[phaseIndex].durationInSeconds - secondsLeft);
-  const phasePush = usePhasePush({ config, elapsedSeconds, running, done });
+  const phasePush = usePhasePush({ config, elapsedSeconds, ready, running, done });
   const current = plan[phaseIndex];
   const blinking = running && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
@@ -121,14 +122,16 @@ export function Timer() {
               </button>
             )
           )}
-          <button
-            className={`${BUTTON} border-2 border-page-ink`}
-            onClick={reset}
-            disabled={!started}
-          >
-            <RotateCcwIcon aria-hidden="true" />
-            Reset
-          </button>
+          {/* Only while paused or finished, so a tap mid-walk can't throw the walk away. */}
+          {started && !running && (
+            <button
+              className={`${BUTTON} border-2 border-page-ink`}
+              onClick={reset}
+            >
+              <RotateCcwIcon aria-hidden="true" />
+              Reset
+            </button>
+          )}
         </div>
 
         <PhaseNotifications

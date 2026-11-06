@@ -5,6 +5,24 @@ import type { PlanConfig } from "./plan";
 
 const ENABLED_KEY = "phase-push-enabled";
 const ASKED_KEY = "phase-push-asked";
+const RUN_KEY = "phase-push-run";
+
+const rememberRun = (id: string | null) => {
+  try {
+    if (id) localStorage.setItem(RUN_KEY, id);
+    else localStorage.removeItem(RUN_KEY);
+  } catch {
+    // storage unavailable
+  }
+};
+
+const savedRun = () => {
+  try {
+    return localStorage.getItem(RUN_KEY);
+  } catch {
+    return null;
+  }
+};
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
 export type PushSupport = "unsupported" | "denied" | "off" | "on";
@@ -24,13 +42,15 @@ const canPush = () =>
 type Options = {
   config: PlanConfig;
   elapsedSeconds: number;
+  // False until the timer has picked up a walk saved before a reload.
+  ready: boolean;
   running: boolean;
   done: boolean;
 };
 
 // Optional phase notifications for a locked phone. The server schedules them
 // when the walk starts or resumes, and they are cancelled on pause or reset.
-export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options) => {
+export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: Options) => {
   const [state, setState] = useState<PushSupport>("unsupported");
   // Whether the opening dialog has been answered (either way) on this phone.
   const [asked, setAsked] = useState(true);
@@ -93,13 +113,14 @@ export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options)
     setState("off");
   }, []);
 
-  const enabled = state === "on";
+  const enabled = state === "on" && ready;
 
   useEffect(() => {
     if (!enabled) return;
     const cancel = () => {
-      const id = runId.current;
+      const id = runId.current ?? savedRun();
       runId.current = null;
+      rememberRun(null);
       if (!id) return;
       void fetch("/api/walk-push/cancel", {
         method: "POST",
@@ -112,6 +133,13 @@ export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options)
     if (!running) {
       // After the last phase the final notification is already on its way.
       if (!done) cancel();
+      return;
+    }
+
+    // After a reload the earlier run is still counting down: keep it.
+    const existing = runId.current ?? savedRun();
+    if (existing) {
+      runId.current = existing;
       return;
     }
 
@@ -141,6 +169,7 @@ export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options)
         return;
       }
       runId.current = body.runId;
+      rememberRun(body.runId);
     })();
 
     return () => {

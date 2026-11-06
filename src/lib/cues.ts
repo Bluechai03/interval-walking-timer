@@ -50,3 +50,15 @@ export const playCue = (cue: Cue, ctx: AudioContext | null) => {
     speechSynthesis.speak(new SpeechSynthesisUtterance(CUE_TEXT[cue]));
   }
 };
+
+// A short spoken and felt warning so the walker can get ready for the change.
+export const playHeadsUp = () => {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate(100);
+  }
+
+  if (typeof speechSynthesis !== "undefined") {
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance("10 seconds"));
+  }
+};

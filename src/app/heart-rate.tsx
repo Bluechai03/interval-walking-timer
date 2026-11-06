@@ -1,5 +1,5 @@
 import { HeartIcon } from "@phosphor-icons/react";
-import { ASSUMED_AGE, heartRateTarget } from "@/lib/heart-rate";
+import { ASSUMED_AGE, effortWords, heartRateTarget } from "@/lib/heart-rate";
 import type { Phase } from "@/lib/plan";
 
 type Props = {
@@ -26,12 +26,9 @@ export function HeartRate({ type, pulsing }: Props) {
         }
       />
       <p className="text-lg leading-tight">
-        <span className="font-semibold tabular-nums">
-          {min}–{max} bpm
-        </span>{" "}
-        target heart rate
-        <span className="block text-sm opacity-75">
-          For age {ASSUMED_AGE}. The heart pulses at {average} bpm
+        <span className="font-semibold">{effortWords(type)}</span>
+        <span className="block text-base opacity-90">
+          Target {min}–{max} bpm, for age {ASSUMED_AGE}
         </span>
       </p>
     </div>
