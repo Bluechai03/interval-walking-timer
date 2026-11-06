@@ -3,16 +3,16 @@
 /* Strut palette: the phase colors are fixed so they read the same in
    sunlight and at night; only the page around them follows the color scheme. */
 :root {
-  --page: #f2f4ef;
+  --page: #f1f3f6;
   --page-ink: #14213d;
-  --page-quiet: #56655f;
-  --page-line: #d5dbd4;
+  --page-quiet: #5a6579;
+  --page-line: #d8dde5;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --page: #070d1a;
-    --page-ink: #e6f2ee;
+    --page-ink: #e8edf3;
     --page-quiet: #9fb0c8;
     --page-line: #1c2a42;
   }
@@ -22,12 +22,12 @@
   --font-sans: var(--font-barlow);
   --font-condensed: var(--font-barlow-condensed);
 
-  --color-blaze: #ffc21a;
+  --color-blaze: #e6b84e;
   --color-ink: #14213d;
   --color-brick: #9a4137;
   --color-slate: #1d3557;
   --color-charcoal: #211c1b;
-  --color-mist: #e6f2ee;
+  --color-mist: #e8edf3;
   --color-page: var(--page);
   --color-page-ink: var(--page-ink);
   --color-page-quiet: var(--page-quiet);
