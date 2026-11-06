@@ -11,6 +11,7 @@ const plan: Phase[] = [
 const advance = (ms: number) => act(() => vi.advanceTimersByTime(ms));
 
 beforeEach(() => {
+  localStorage.clear();
   vi.useFakeTimers();
   vi.setSystemTime(0);
 });
@@ -89,5 +90,58 @@ describe("useTimer", () => {
 
     advance(5000);
     expect(result.current).toMatchObject({ done: true, secondsLeft: 0 });
+  });
+});
+
+describe("useTimer across a reload", () => {
+  it("keeps a running walk going after the page is reloaded", () => {
+    const first = renderHook(() => useTimer(plan));
+    act(() => first.result.current.start());
+    advance(3000);
+    first.unmount();
+
+    // The phone was locked for 4 more seconds and the page came back.
+    vi.setSystemTime(7000);
+    const { result } = renderHook(() => useTimer(plan));
+    expect(result.current).toMatchObject({
+      ready: true,
+      running: true,
+      started: true,
+      phaseIndex: 0,
+      secondsLeft: 3,
+    });
+  });
+
+  it("restores a paused walk where it was left", () => {
+    const first = renderHook(() => useTimer(plan));
+    act(() => first.result.current.start());
+    advance(4000);
+    act(() => first.result.current.pause());
+    first.unmount();
+
+    vi.setSystemTime(60_000);
+    const { result } = renderHook(() => useTimer(plan));
+    expect(result.current).toMatchObject({ running: false, started: true, secondsLeft: 6 });
+  });
+
+  it("starts fresh after a reset", () => {
+    const first = renderHook(() => useTimer(plan));
+    act(() => first.result.current.start());
+    advance(2000);
+    act(() => first.result.current.reset());
+    first.unmount();
+
+    const { result } = renderHook(() => useTimer(plan));
+    expect(result.current).toMatchObject({ started: false, running: false, secondsLeft: 10 });
+  });
+
+  it("forgets a walk that finished a while ago", () => {
+    const first = renderHook(() => useTimer(plan));
+    act(() => first.result.current.start());
+    first.unmount();
+
+    vi.setSystemTime(60 * 60 * 1000);
+    const { result } = renderHook(() => useTimer(plan));
+    expect(result.current).toMatchObject({ started: false, secondsLeft: 10 });
   });
 });

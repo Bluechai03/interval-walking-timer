@@ -9,9 +9,9 @@ const CUE_TONE_HZ: Record<Cue, number> = {
 };
 
 const CUE_TEXT: Record<Cue, string> = {
-  fast: "Fast",
-  slow: "Slow",
-  done: "Done",
+  fast: "Walk fast",
+  slow: "Walk slow",
+  done: "Walk complete",
 };
 
 const BEEP_SECONDS = 0.25;
@@ -48,5 +48,17 @@ export const playCue = (cue: Cue, ctx: AudioContext | null) => {
   if (typeof speechSynthesis !== "undefined") {
     speechSynthesis.cancel();
     speechSynthesis.speak(new SpeechSynthesisUtterance(CUE_TEXT[cue]));
+  }
+};
+
+// A short spoken and felt warning so the walker can get ready for the change.
+export const playHeadsUp = () => {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    navigator.vibrate(100);
+  }
+
+  if (typeof speechSynthesis !== "undefined") {
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance("10 seconds"));
   }
 };
