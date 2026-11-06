@@ -41,7 +41,7 @@ self.addEventListener("fetch", (event) => {
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
   event.waitUntil(
-    self.registration.showNotification(data.title ?? "Walking timer", {
+    self.registration.showNotification(data.title ?? "Strut", {
       body: data.body,
       tag: "phase",
       renotify: true,

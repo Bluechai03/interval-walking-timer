@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
-import { THEME_COLOR } from "./theme";
+import { DESCRIPTION, THEME_COLOR } from "./theme";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Interval Walking Timer",
-    short_name: "Walking Timer",
-    description: "Alternate fast and slow walking intervals with audio cues.",
+    name: "Strut",
+    short_name: "Strut",
+    description: DESCRIPTION,
     start_url: "/",
     display: "standalone",
     orientation: "portrait",

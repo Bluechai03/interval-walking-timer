@@ -6,7 +6,7 @@ const BARS = [ICON_FAST, ICON_SLOW, ICON_FAST, ICON_SLOW];
 // the same image works as a maskable icon.
 export function IconArt({ size }: { size: number }) {
   const area = size * 0.6;
-  const gap = size * 0.04;
+  const gap = size * 0.03;
 
   return (
     <div
@@ -35,7 +35,7 @@ export function IconArt({ size }: { size: number }) {
               flex: 1,
               height: color === ICON_FAST ? "100%" : "40%",
               background: color,
-              borderRadius: size * 0.02,
+              borderRadius: size * 0.04,
             }}
           />
         ))}
