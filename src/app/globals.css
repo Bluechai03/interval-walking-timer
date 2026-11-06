@@ -11,10 +11,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --page: #0f1a18;
+    --page: #070d1a;
     --page-ink: #e6f2ee;
-    --page-quiet: #9fb2ab;
-    --page-line: #263532;
+    --page-quiet: #9fb0c8;
+    --page-line: #1c2a42;
   }
 }
 
