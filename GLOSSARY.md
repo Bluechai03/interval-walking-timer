@@ -1,4 +1,4 @@
-# Interval Walking Timer
+# Strut
 
 A timer for Japanese interval walking: alternating fast and slow walking so the walker gets the benefit of hard effort with recovery in between.
 

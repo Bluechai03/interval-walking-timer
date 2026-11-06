@@ -93,7 +93,7 @@ export function PhaseNotifications({ state, failed, shouldAsk, onEnable, onDisab
             </div>
           </div>
         ) : state === "on" ? (
-          <div role="status" className={`${ALERT} border-pine bg-pine text-mist`}>
+          <div role="status" className={`${ALERT} border-slate bg-slate text-mist`}>
             <BellRingIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Reminders are on</p>

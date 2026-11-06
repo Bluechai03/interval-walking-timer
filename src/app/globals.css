@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Trail-sign palette: the phase colors are fixed so they read the same in
+/* Strut palette: the phase colors are fixed so they read the same in
    sunlight and at night; only the page around them follows the color scheme. */
 :root {
   --page: #f2f4ef;
@@ -24,7 +24,9 @@
 
   --color-blaze: #ffc21a;
   --color-ink: #14213d;
-  --color-pine: #123f3a;
+  --color-brick: #b3261e;
+  --color-slate: #1d3557;
+  --color-charcoal: #211c1b;
   --color-mist: #e6f2ee;
   --color-page: var(--page);
   --color-page-ink: var(--page-ink);

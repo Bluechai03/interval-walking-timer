@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "./service-worker-register";
-import { THEME_COLOR } from "./theme";
+import { DESCRIPTION, THEME_COLOR } from "./theme";
 
 const barlow = Barlow({
   variable: "--font-barlow",
@@ -18,9 +18,9 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "Interval Walking Timer",
-  description: "Alternate fast and slow walking intervals with audio cues.",
-  appleWebApp: { capable: true, title: "Walking Timer" },
+  title: "Strut",
+  description: DESCRIPTION,
+  appleWebApp: { capable: true, title: "Strut" },
 };
 
 export const viewport: Viewport = {

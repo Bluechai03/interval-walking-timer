@@ -1,6 +1,6 @@
-# Interval Walking Timer
+# Strut
 
-A phone-first timer for Japanese interval walking: alternate fast and slow walking, classically 3 minutes each for 5 rounds.
+A phone-first Japanese interval walking timer that walks with you: strut fast, ease off slow, classically 3 minutes each for 5 rounds.
 
 **Live:** [interval-walking-timer.vercel.app](https://interval-walking-timer.vercel.app)
 

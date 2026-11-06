@@ -18,9 +18,9 @@ import { TrailProfile } from "./trail-profile";
 const BLINK_THRESHOLD_SECONDS = 3;
 
 const PHASE_FIELD = {
-  fast: "bg-blaze text-ink",
-  slow: "bg-pine text-mist",
-  done: "bg-ink text-mist",
+  fast: "bg-brick text-mist",
+  slow: "bg-slate text-mist",
+  done: "bg-charcoal text-mist",
 };
 
 const BUTTON =
@@ -55,6 +55,16 @@ export function Timer() {
 
   return (
     <div className="flex w-full flex-col gap-8">
+      {/* Kept in the page mid-walk for screen readers, but hidden so the countdown is the only thing on screen. */}
+      <h1
+        className={
+          started && !done
+            ? "sr-only"
+            : "px-4 font-condensed text-[2rem] leading-none sm:px-0"
+        }
+      >
+        Strut
+      </h1>
       <div className="flex flex-col gap-3">
         <section
           aria-label="Current phase"
