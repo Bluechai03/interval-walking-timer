@@ -7,5 +7,5 @@ export const DESCRIPTION =
 // App icon colors: slate field, a brighter red than the phase field so the
 // fast bars stay visible against it, and mist slow bars.
 export const ICON_BACKGROUND = "#1d3557";
-export const ICON_FAST = "#e8695d";
+export const ICON_FAST = "#dc7a6f";
 export const ICON_SLOW = "#e6f2ee";
