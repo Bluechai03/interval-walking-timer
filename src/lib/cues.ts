@@ -9,9 +9,9 @@ const CUE_TONE_HZ: Record<Cue, number> = {
 };
 
 const CUE_TEXT: Record<Cue, string> = {
-  fast: "Fast",
-  slow: "Slow",
-  done: "Done",
+  fast: "Walk fast",
+  slow: "Walk slow",
+  done: "Walk complete",
 };
 
 const BEEP_SECONDS = 0.25;

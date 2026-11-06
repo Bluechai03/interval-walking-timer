@@ -42,11 +42,12 @@ export function Timer() {
     reset,
   } = useTimer(plan);
   const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft });
-  useWakeLock(running);
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
     (done ? 0 : plan[phaseIndex].durationInSeconds - secondsLeft);
   const phasePush = usePhasePush({ config, elapsedSeconds, ready, running, done });
+  // With reminders on, the phone can lock and still cue the walker.
+  useWakeLock(running && phasePush.state !== "on");
   const current = plan[phaseIndex];
   const blinking = running && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
@@ -136,6 +137,7 @@ export function Timer() {
 
         <PhaseNotifications
           state={phasePush.state}
+          failed={phasePush.failed}
           shouldAsk={phasePush.shouldAsk}
           onEnable={() => void phasePush.enable()}
           onDisable={() => void phasePush.disable()}

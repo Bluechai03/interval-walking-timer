@@ -25,7 +25,16 @@ const savedRun = () => {
 };
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
-export type PushSupport = "unsupported" | "denied" | "off" | "on";
+// "install": an iPhone browser tab, where push only works from the Home Screen.
+export type PushSupport = "unsupported" | "install" | "denied" | "off" | "on";
+
+const isIphoneBrowserTab = () => {
+  const iphone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const installed =
+    (navigator as Navigator & { standalone?: boolean }).standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches;
+  return iphone && !installed;
+};
 
 const keyToBytes = (base64: string) => {
   const padded = base64.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (base64.length % 4)) % 4);
@@ -54,6 +63,8 @@ export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: O
   const [state, setState] = useState<PushSupport>("unsupported");
   // Whether the opening dialog has been answered (either way) on this phone.
   const [asked, setAsked] = useState(true);
+  // True when the server could not schedule this walk's reminders.
+  const [failed, setFailed] = useState(false);
   const runId = useRef<string | null>(null);
   const latest = useRef({ config, elapsedSeconds });
   useEffect(() => {
@@ -61,7 +72,12 @@ export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: O
   });
 
   useEffect(() => {
-    if (!canPush()) return;
+    if (!canPush()) {
+      if (typeof window !== "undefined" && isIphoneBrowserTab()) {
+        void Promise.resolve().then(() => setState("install"));
+      }
+      return;
+    }
     let enabled = false;
     let wasAsked = false;
     try {
@@ -148,6 +164,7 @@ export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: O
       const reg = await navigator.serviceWorker.ready;
       const subscription = await reg.pushManager.getSubscription();
       if (!subscription || stale) return;
+      setFailed(false);
       const response = await fetch("/api/walk-push/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,6 +174,7 @@ export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: O
           elapsedSeconds: latest.current.elapsedSeconds,
         }),
       }).catch(() => null);
+      if (!stale) setFailed(!response?.ok);
       const body = (await response?.json().catch(() => null)) as { runId?: string | null } | null;
       if (!body?.runId) return;
       if (stale) {
@@ -177,5 +195,5 @@ export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: O
     };
   }, [enabled, running, done]);
 
-  return { state, enable, disable, shouldAsk: state === "off" && !asked, dismissAsk };
+  return { state, failed, enable, disable, shouldAsk: state === "off" && !asked, dismissAsk };
 };

@@ -6,6 +6,7 @@ import type { PushSupport } from "@/lib/use-phase-push";
 
 type Props = {
   state: PushSupport;
+  failed: boolean;
   shouldAsk: boolean;
   onEnable: () => void;
   onDisable: () => void;
@@ -61,20 +62,42 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
 }
 
 // Alert-style note under the controls: a tinted card with an icon, a title and one clear action.
-export function PhaseNotifications({ state, shouldAsk, onEnable, onDisable, onDismissAsk }: Props) {
+export function PhaseNotifications({ state, failed, shouldAsk, onEnable, onDisable, onDismissAsk }: Props) {
   if (state === "unsupported") return null;
+
+  if (state === "install") {
+    return (
+      <div className="px-4 sm:px-0">
+        <div role="status" className={`${ALERT} border-blaze bg-page text-page-ink`}>
+          <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold">Want reminders on your lock screen?</p>
+            <p>Tap Share, then Add to Home Screen, and open the timer from there.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       {shouldAsk && <AskDialog onEnable={onEnable} onDismissAsk={onDismissAsk} />}
 
       <div className="px-4 sm:px-0">
-        {state === "on" ? (
+        {state === "on" && failed ? (
+          <div role="alert" className={`${ALERT} border-blaze bg-page text-page-ink`}>
+            <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
+            <div className="flex flex-col gap-1">
+              <p className="font-semibold">Reminders couldn&apos;t be set up</p>
+              <p>Check your signal. The beeps and voice still work while the app is open.</p>
+            </div>
+          </div>
+        ) : state === "on" ? (
           <div role="status" className={`${ALERT} border-pine bg-pine text-mist`}>
             <BellRingIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Reminders are on</p>
-              <p>You&apos;ll get a note at each change, even with your phone locked.</p>
+              <p>You&apos;ll get a note at each change, and your screen can sleep.</p>
               <button type="button" className={ACTION} onClick={onDisable}>
                 Turn off
               </button>
