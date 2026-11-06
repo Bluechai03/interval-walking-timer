@@ -35,3 +35,22 @@ self.addEventListener("fetch", (event) => {
       ),
   );
 });
+
+// Phase notifications sent by the server while the phone is locked. One shared
+// tag so each cue replaces the last instead of stacking up.
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  event.waitUntil(
+    self.registration.showNotification(data.title ?? "Walking timer", {
+      body: data.body,
+      tag: "phase",
+      renotify: true,
+      icon: "/icon/192",
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(self.clients.openWindow("/"));
+});

@@ -5,10 +5,12 @@ import { useMemo } from "react";
 import { formatTime } from "@/lib/format-time";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useCues } from "@/lib/use-cues";
+import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { HeartRate } from "./heart-rate";
+import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
 import { TrailProfile } from "./trail-profile";
 
@@ -40,6 +42,10 @@ export function Timer() {
   } = useTimer(plan);
   const { prime } = useCues({ plan, phaseIndex, running, started, done });
   useWakeLock(running);
+  const elapsedSeconds =
+    plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
+    (done ? 0 : plan[phaseIndex].durationInSeconds - secondsLeft);
+  const phasePush = usePhasePush({ config, elapsedSeconds, running, done });
   const current = plan[phaseIndex];
   const blinking = running && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
@@ -124,6 +130,12 @@ export function Timer() {
             Reset
           </button>
         </div>
+
+        <PhaseNotifications
+          state={phasePush.state}
+          onEnable={() => void phasePush.enable()}
+          onDisable={() => void phasePush.disable()}
+        />
       </div>
 
       <PlanSettings
