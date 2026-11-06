@@ -115,3 +115,14 @@ body {
     }
   }
 }
+
+/* View transitions: the phase field, header and buttons each morph on their
+   own, and the rest of the page stays still. */
+::view-transition-group(*) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-group(root) {
+  animation-duration: 0s;
+}
