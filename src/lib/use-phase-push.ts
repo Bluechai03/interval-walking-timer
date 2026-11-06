@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { PlanConfig } from "./plan";
 
 const ENABLED_KEY = "phase-push-enabled";
+const ASKED_KEY = "phase-push-asked";
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
 export type PushSupport = "unsupported" | "denied" | "off" | "on";
@@ -31,6 +32,8 @@ type Options = {
 // when the walk starts or resumes, and they are cancelled on pause or reset.
 export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options) => {
   const [state, setState] = useState<PushSupport>("unsupported");
+  // Whether the opening dialog has been answered (either way) on this phone.
+  const [asked, setAsked] = useState(true);
   const runId = useRef<string | null>(null);
   const latest = useRef({ config, elapsedSeconds });
   useEffect(() => {
@@ -40,18 +43,33 @@ export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options)
   useEffect(() => {
     if (!canPush()) return;
     let enabled = false;
+    let wasAsked = false;
     try {
       enabled = localStorage.getItem(ENABLED_KEY) === "1";
+      wasAsked = localStorage.getItem(ASKED_KEY) === "1";
     } catch {
       // storage unavailable
     }
     const initial: PushSupport =
       Notification.permission === "denied" ? "denied" : enabled && Notification.permission === "granted" ? "on" : "off";
-    void Promise.resolve().then(() => setState(initial));
+    void Promise.resolve().then(() => {
+      setState(initial);
+      setAsked(wasAsked);
+    });
+  }, []);
+
+  const dismissAsk = useCallback(() => {
+    try {
+      localStorage.setItem(ASKED_KEY, "1");
+    } catch {
+      // storage unavailable
+    }
+    setAsked(true);
   }, []);
 
   const enable = useCallback(async () => {
     if (!canPush()) return;
+    dismissAsk();
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return setState(permission === "denied" ? "denied" : "off");
     const reg = await navigator.serviceWorker.ready;
@@ -62,7 +80,7 @@ export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options)
       // storage unavailable
     }
     setState("on");
-  }, []);
+  }, [dismissAsk]);
 
   const disable = useCallback(async () => {
     try {
@@ -130,5 +148,5 @@ export const usePhasePush = ({ config, elapsedSeconds, running, done }: Options)
     };
   }, [enabled, running, done]);
 
-  return { state, enable, disable };
+  return { state, enable, disable, shouldAsk: state === "off" && !asked, dismissAsk };
 };

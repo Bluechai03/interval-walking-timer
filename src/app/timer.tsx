@@ -133,8 +133,10 @@ export function Timer() {
 
         <PhaseNotifications
           state={phasePush.state}
+          shouldAsk={phasePush.shouldAsk}
           onEnable={() => void phasePush.enable()}
           onDisable={() => void phasePush.disable()}
+          onDismissAsk={phasePush.dismissAsk}
         />
       </div>
 
