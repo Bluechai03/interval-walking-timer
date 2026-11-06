@@ -25,7 +25,7 @@ const PHASE_FIELD = {
 };
 
 const BUTTON =
-  "flex h-16 flex-1 items-center justify-center gap-2 rounded-lg text-xl font-semibold transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink disabled:opacity-40";
+  "flex h-16 flex-1 items-center justify-center gap-2 rounded-lg text-xl font-semibold transition-[colors,transform] motion-safe:active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink disabled:opacity-40";
 
 export function Timer() {
   const { config, setConfig, hydrated } = usePlanConfig();
@@ -50,30 +50,29 @@ export function Timer() {
   // With reminders on, the phone can lock and still cue the walker.
   useWakeLock(running && phasePush.state !== "on");
   const current = plan[phaseIndex];
+  // Between Start and the finish the header is out of the way.
+  const walking = started && !done;
   const blinking = running && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
   const round = Math.floor(phaseIndex / 2) + 1;
 
   return (
     <div className="flex w-full flex-col gap-8">
-      {/* Mid-walk the heading stays for screen readers but is hidden, and the help button goes, so the countdown is the only thing on screen. */}
+      {/* Mid-walk the header folds away so the countdown is the only thing on screen. It stays in the page for screen readers, and inert keeps the help button out of tab order. */}
       <div
-        className={
-          started && !done
-            ? undefined
-            : "flex items-center justify-between px-4 sm:px-0"
-        }
+        inert={walking}
+        className={`grid motion-safe:transition-[grid-template-rows,opacity,margin] motion-safe:duration-500 ${
+          walking
+            ? "-mb-8 grid-rows-[0fr] opacity-0"
+            : "grid-rows-[1fr] opacity-100"
+        }`}
       >
-        <h1
-          className={
-            started && !done
-              ? "sr-only"
-              : "font-condensed text-[2rem] leading-none"
-          }
-        >
-          Strut
-        </h1>
-        {!(started && !done) && <AboutDialog />}
+        <div className="overflow-hidden">
+          <div className="flex items-center justify-between px-4 sm:px-0">
+            <h1 className="font-condensed text-[2rem] leading-none">Strut</h1>
+            <AboutDialog />
+          </div>
+        </div>
       </div>
       <div className="flex flex-col gap-3">
         <section
