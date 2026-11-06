@@ -9,6 +9,7 @@ import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { AboutDialog } from "./about-dialog";
 import { HeartRate } from "./heart-rate";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
@@ -55,16 +56,25 @@ export function Timer() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      {/* Kept in the page mid-walk for screen readers, but hidden so the countdown is the only thing on screen. */}
-      <h1
+      {/* Mid-walk the heading stays for screen readers but is hidden, and the help button goes, so the countdown is the only thing on screen. */}
+      <div
         className={
           started && !done
-            ? "sr-only"
-            : "px-4 font-condensed text-[2rem] leading-none sm:px-0"
+            ? undefined
+            : "flex items-center justify-between px-4 sm:px-0"
         }
       >
-        Strut
-      </h1>
+        <h1
+          className={
+            started && !done
+              ? "sr-only"
+              : "font-condensed text-[2rem] leading-none"
+          }
+        >
+          Strut
+        </h1>
+        {!(started && !done) && <AboutDialog />}
+      </div>
       <div className="flex flex-col gap-3">
         <section
           aria-label="Current phase"
