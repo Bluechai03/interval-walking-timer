@@ -2,7 +2,7 @@
 
 A phone-first Japanese interval walking timer that walks with you: strut fast, ease off slow, classically 3 minutes each for 5 rounds.
 
-**Live:** [interval-walking-timer.vercel.app](https://interval-walking-timer.vercel.app)
+**Live:** [strutwalk.vercel.app](https://strutwalk.vercel.app)
 
 ## What it does
 
