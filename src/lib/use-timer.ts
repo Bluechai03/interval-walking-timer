@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { totalSeconds, type Phase } from "./plan";
 import { getPosition } from "./timer";
-import { withViewTransition } from "./view-transition";
 
 const TICK_MS = 250;
 
@@ -74,44 +73,27 @@ export const useTimer = (plan: Phase[]) => {
     if (ready) writeSaved(accumulatedMs, startedAt);
   }, [ready, accumulatedMs, startedAt]);
 
-  const phaseRef = useRef(position.phaseIndex);
   useEffect(() => {
-    phaseRef.current = position.phaseIndex;
-  }, [position.phaseIndex]);
-
-  useEffect(() => {
-    if (!running || startedAt === null) return;
-    const id = setInterval(() => {
-      const t = Date.now();
-      const next = getPosition(plan, accumulatedMs + t - startedAt).phaseIndex;
-      // Only a change of phase is worth animating; ordinary ticks are not.
-      if (next !== phaseRef.current) withViewTransition(() => setNow(t));
-      else setNow(t);
-    }, TICK_MS);
+    if (!running) return;
+    const id = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(id);
-  }, [running, plan, accumulatedMs, startedAt]);
+  }, [running]);
 
   const start = useCallback(() => {
     const t = Date.now();
-    withViewTransition(() => {
-      setNow(t);
-      setStartedAt(t);
-    });
+    setNow(t);
+    setStartedAt(t);
   }, []);
 
   const pause = useCallback(() => {
     if (startedAt === null) return;
-    withViewTransition(() => {
-      setAccumulatedMs((ms) => ms + Date.now() - startedAt);
-      setStartedAt(null);
-    });
+    setAccumulatedMs((ms) => ms + Date.now() - startedAt);
+    setStartedAt(null);
   }, [startedAt]);
 
   const reset = useCallback(() => {
-    withViewTransition(() => {
-      setAccumulatedMs(0);
-      setStartedAt(null);
-    });
+    setAccumulatedMs(0);
+    setStartedAt(null);
   }, []);
 
   return {
