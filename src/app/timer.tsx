@@ -58,27 +58,21 @@ export function Timer() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      {/* Mid-walk the header folds away so the countdown is the only thing on screen. It stays in the page for screen readers, and inert keeps the help button out of tab order. A view transition animates the change. */}
+      {/* Mid-walk the header fades out so the countdown is the only thing on screen. It keeps its space, so nothing moves when a walk starts, and inert keeps the help button out of tab order. */}
       <div
         inert={walking}
-        className={`grid [view-transition-name:header] ${
-          walking
-            ? "-mb-8 grid-rows-[0fr] opacity-0"
-            : "grid-rows-[1fr] opacity-100"
+        className={`flex items-center justify-between px-4 motion-safe:transition-opacity motion-safe:duration-300 sm:px-0 ${
+          walking ? "opacity-0" : ""
         }`}
       >
-        <div className="overflow-hidden">
-          <div className="flex items-center justify-between px-4 sm:px-0">
-            <h1 className="font-condensed text-[2rem] leading-none">Strut</h1>
-            <AboutDialog />
-          </div>
-        </div>
+        <h1 className="font-condensed text-[2rem] leading-none">Strut</h1>
+        <AboutDialog />
       </div>
       <div className="flex flex-col gap-3">
         <section
           aria-label="Current phase"
           // Tall enough on phones that the buttons land within thumb reach.
-          className={`[view-transition-name:phase-field] flex min-h-[64svh] flex-col justify-between gap-6 px-5 pt-5 pb-6 sm:min-h-0 sm:rounded-xl ${
+          className={`flex min-h-[64svh] flex-col justify-between gap-6 px-5 pt-5 pb-6 transition-colors duration-500 sm:min-h-0 sm:rounded-xl ${
             PHASE_FIELD[done ? "done" : current.type]
           }`}
         >
