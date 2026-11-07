@@ -1,4 +1,5 @@
 import { heartRateTarget } from "./heart-rate";
+import { pickVoice } from "./pick-voice";
 import type { Phase } from "./plan";
 
 export type Cue = Phase["type"] | "done";
@@ -37,6 +38,17 @@ const beep = (ctx: AudioContext, frequency: number, startOffset = 0) => {
   oscillator.stop(start + BEEP_SECONDS);
 };
 
+// Speaks a line in the most natural voice the device has, cutting off any
+// line still being spoken.
+const speak = (text: string) => {
+  if (typeof speechSynthesis === "undefined") return;
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voice = pickVoice(speechSynthesis.getVoices());
+  if (voice) utterance.voice = voice;
+  speechSynthesis.speak(utterance);
+};
+
 export const playCue = (cue: Cue, ctx: AudioContext | null) => {
   if (ctx) {
     void ctx.resume();
@@ -49,10 +61,7 @@ export const playCue = (cue: Cue, ctx: AudioContext | null) => {
     navigator.vibrate(cue === "done" ? [200, 100, 200] : 300);
   }
 
-  if (typeof speechSynthesis !== "undefined") {
-    speechSynthesis.cancel();
-    speechSynthesis.speak(new SpeechSynthesisUtterance(spokenCue(cue)));
-  }
+  speak(spokenCue(cue));
 };
 
 // A short spoken and felt warning so the walker can get ready for the change.
@@ -61,8 +70,5 @@ export const playHeadsUp = () => {
     navigator.vibrate(100);
   }
 
-  if (typeof speechSynthesis !== "undefined") {
-    speechSynthesis.cancel();
-    speechSynthesis.speak(new SpeechSynthesisUtterance("10 seconds"));
-  }
+  speak("10 seconds");
 };
