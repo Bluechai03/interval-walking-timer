@@ -119,7 +119,7 @@ export function Timer() {
           />
         </section>
 
-        <div className="flex gap-3 px-4 [view-transition-name:controls] sm:px-0">
+        <div className="flex gap-3 px-4 sm:px-0">
           {running ? (
             <button
               className={`${BUTTON} bg-page-ink text-page`}
