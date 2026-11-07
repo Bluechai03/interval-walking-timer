@@ -75,43 +75,72 @@ body {
   }
 }
 
-/* Dialogs ease in and out instead of snapping. Only when motion is welcome. */
-@media (prefers-reduced-motion: no-preference) {
-  dialog {
+/* Dialogs ease in and out instead of snapping. Only when motion is welcome.
+   Opening uses keyframes, which every browser handles. Fading out needs the
+   overlay property to keep the dialog in the top layer while it fades; without
+   it the dialog would fade in the middle of the page, so those browsers just
+   close it at once. */
+@keyframes dialog-in {
+  from {
     opacity: 0;
     transform: translateY(0.75rem) scale(0.98);
-    transition:
-      opacity 0.2s ease-out,
-      transform 0.2s ease-out,
-      overlay 0.2s allow-discrete,
-      display 0.2s allow-discrete;
   }
+}
 
-  dialog[open] {
-    opacity: 1;
-    transform: none;
-  }
-
-  dialog::backdrop {
+@keyframes backdrop-in {
+  from {
     background: rgb(0 0 0 / 0);
-    transition:
-      background 0.2s ease-out,
-      overlay 0.2s allow-discrete,
-      display 0.2s allow-discrete;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog[open] {
+    animation: dialog-in 0.2s ease-out;
   }
 
   dialog[open]::backdrop {
-    background: rgb(0 0 0 / 0.6);
+    animation: backdrop-in 0.2s ease-out;
   }
 
-  @starting-style {
-    dialog[open] {
+  @supports (overlay: auto) {
+    dialog {
       opacity: 0;
       transform: translateY(0.75rem) scale(0.98);
+      transition:
+        opacity 0.2s ease-out,
+        transform 0.2s ease-out,
+        overlay 0.2s allow-discrete,
+        display 0.2s allow-discrete;
+    }
+
+    dialog[open] {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+
+    dialog::backdrop {
+      background: rgb(0 0 0 / 0);
+      transition:
+        background 0.2s ease-out,
+        overlay 0.2s allow-discrete,
+        display 0.2s allow-discrete;
     }
 
     dialog[open]::backdrop {
-      background: rgb(0 0 0 / 0);
+      background: rgb(0 0 0 / 0.6);
+      animation: none;
+    }
+
+    @starting-style {
+      dialog[open] {
+        opacity: 0;
+        transform: translateY(0.75rem) scale(0.98);
+      }
+
+      dialog[open]::backdrop {
+        background: rgb(0 0 0 / 0);
+      }
     }
   }
 }
