@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { playCue, spokenCue } from "./cues";
+import { playCue, playHeadsUp, spokenCue } from "./cues";
 
 // Expected wording comes from the "Speak the target heart rate" issue (#9),
 // which works out the target for the assumed age.
@@ -41,5 +41,39 @@ describe("playCue speech", () => {
     expect(spoken).toHaveLength(1);
     expect(spoken[0].text).toBe("Fast. Target heart rate 148.");
     expect(spoken[0].voice?.name).toBe("Ava (Premium)");
+  });
+});
+
+describe("playCue when muted", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const setup = () => {
+    const spoken: string[] = [];
+    const vibrate = vi.fn();
+    const createOscillator = vi.fn();
+    vi.stubGlobal("SpeechSynthesisUtterance", class { constructor(public text: string) {} });
+    vi.stubGlobal("speechSynthesis", {
+      cancel: () => {},
+      getVoices: () => [],
+      speak: (u: { text: string }) => spoken.push(u.text),
+    });
+    vi.stubGlobal("navigator", { vibrate });
+    const ctx = { currentTime: 0, resume: vi.fn(), createOscillator, createGain: vi.fn() } as unknown as AudioContext;
+    return { spoken, vibrate, createOscillator, ctx };
+  };
+
+  it("makes no beep and speaks nothing, but still vibrates", () => {
+    const { spoken, vibrate, createOscillator, ctx } = setup();
+    playCue("fast", ctx, true);
+    expect(createOscillator).not.toHaveBeenCalled();
+    expect(spoken).toEqual([]);
+    expect(vibrate).toHaveBeenCalledWith(300);
+  });
+
+  it("keeps the 10-second heads-up silent too, but still vibrates", () => {
+    const { spoken, vibrate } = setup();
+    playHeadsUp(true);
+    expect(spoken).toEqual([]);
+    expect(vibrate).toHaveBeenCalledWith(100);
   });
 });

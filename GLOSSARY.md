@@ -39,8 +39,12 @@ A spoken cue partway through a phase that says how many seconds remain and what 
 _Avoid_: Warning, reminder
 
 **Quiet mode**:
-A setting that turns off countdown cues while keeping phase cues, beeps and vibration. Off by default, remembered between walks, and can be changed during a walk.
-_Avoid_: Mute, silent mode
+A setting that turns off countdown cues while keeping phase cues, beeps and vibration. Off by default, remembered between walks, and can be changed during a walk. Not the same as Mute, which silences every cue's sound.
+_Avoid_: Silent mode
+
+**Mute**:
+A switch that silences the beep and the spoken words of every cue, while vibration still plays on phones that have it. Off by default, remembered between walks, and can be switched during a walk. Not the same as Quiet mode, which only drops the countdown cues.
+_Avoid_: Silent mode, sound off
 
 ## Rates
 

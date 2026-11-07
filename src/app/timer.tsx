@@ -5,12 +5,14 @@ import { useMemo } from "react";
 import { formatTime } from "@/lib/format-time";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useCues } from "@/lib/use-cues";
+import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { AboutDialog } from "./about-dialog";
 import { HeartRate } from "./heart-rate";
+import { MuteButton } from "./mute-button";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
 import { TrailProfile } from "./trail-profile";
@@ -42,7 +44,8 @@ export function Timer() {
     pause,
     reset,
   } = useTimer(plan);
-  const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft });
+  const { muted, setMuted } = useMuted();
+  const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft, muted });
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
     (done ? 0 : plan[phaseIndex].durationInSeconds - secondsLeft);
@@ -84,9 +87,14 @@ export function Timer() {
                   ? "Walk fast"
                   : "Walk slow"}
             </p>
-            <p className="text-base font-medium opacity-80">
-              {done ? "Time walked" : `Round ${round} of ${config.rounds}`}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-medium opacity-80">
+                {done ? "Time walked" : `Round ${round} of ${config.rounds}`}
+              </p>
+              {!done && (
+                <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
+              )}
+            </div>
           </div>
 
           <p
