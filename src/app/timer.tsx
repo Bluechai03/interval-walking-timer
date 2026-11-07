@@ -116,7 +116,7 @@ export function Timer() {
         <div className="flex gap-3 px-4 sm:px-0">
           {running ? (
             <button
-              className={`${BUTTON} bg-page-ink text-page`}
+              className={`${BUTTON} bg-action text-action-ink`}
               onClick={pause}
             >
               <PauseIcon aria-hidden="true" />
@@ -125,7 +125,7 @@ export function Timer() {
           ) : (
             !done && (
               <button
-                className={`${BUTTON} bg-page-ink text-page`}
+                className={`${BUTTON} bg-action text-action-ink`}
                 onClick={() => {
                   prime();
                   start();
