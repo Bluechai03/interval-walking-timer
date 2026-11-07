@@ -79,7 +79,7 @@ export function Timer() {
             PHASE_FIELD[done ? "done" : current.type]
           }`}
         >
-          <div className="flex items-baseline justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <p className="text-3xl font-semibold">
               {done
                 ? "Walk complete"
@@ -87,14 +87,12 @@ export function Timer() {
                   ? "Walk fast"
                   : "Walk slow"}
             </p>
-            <div className="flex items-center gap-2">
-              <p className="text-base font-medium opacity-80">
-                {done ? "Time walked" : `Round ${round} of ${config.rounds}`}
-              </p>
-              {!done && (
+            {/* The negative margin keeps the taller button from stretching the row. */}
+            {!done && (
+              <div className="-my-1">
                 <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           <p
@@ -113,12 +111,18 @@ export function Timer() {
 
           {!done && <HeartRate type={current.type} pulsing={running} />}
 
-          <TrailProfile
-            plan={plan}
-            phaseIndex={phaseIndex}
-            fractionLeft={fractionLeft}
-            done={done}
-          />
+          {/* Where you are in the walk, written above the trail it describes. */}
+          <div className="flex flex-col gap-2">
+            <p className="text-base font-medium opacity-80">
+              {done ? "Time walked" : `Round ${round} of ${config.rounds}`}
+            </p>
+            <TrailProfile
+              plan={plan}
+              phaseIndex={phaseIndex}
+              fractionLeft={fractionLeft}
+              done={done}
+            />
+          </div>
         </section>
 
         <div className="flex gap-3 px-4 sm:px-0">
