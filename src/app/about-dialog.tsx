@@ -88,7 +88,7 @@ export function AboutDialog() {
           <button
             type="button"
             onClick={() => ref.current?.close()}
-            className="h-14 rounded-lg bg-page-ink text-lg font-semibold text-page focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink"
+            className="h-14 rounded-lg bg-action text-lg font-semibold text-action-ink focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink"
           >
             Got it
           </button>

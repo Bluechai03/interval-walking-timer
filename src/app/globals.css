@@ -7,6 +7,10 @@
   --page-ink: #14213d;
   --page-quiet: #5a6579;
   --page-line: #d8dde5;
+  /* Filled buttons: navy in light mode, a mid blue in dark mode so they are
+     not a bright block on the dark page. */
+  --action: #14213d;
+  --action-ink: #f1f3f6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -15,6 +19,8 @@
     --page-ink: #e8edf3;
     --page-quiet: #9fb0c8;
     --page-line: #1c2a42;
+    --action: #3a5f94;
+    --action-ink: #e8edf3;
   }
 }
 
@@ -32,6 +38,8 @@
   --color-page-ink: var(--page-ink);
   --color-page-quiet: var(--page-quiet);
   --color-page-line: var(--page-line);
+  --color-action: var(--action);
+  --color-action-ink: var(--action-ink);
 }
 
 @theme inline {

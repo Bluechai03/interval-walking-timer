@@ -48,7 +48,7 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
           <button
             type="button"
             onClick={onEnable}
-            className="h-14 rounded-lg bg-page-ink text-lg font-semibold text-page"
+            className="h-14 rounded-lg bg-action text-lg font-semibold text-action-ink"
           >
             Yes, remind me
           </button>
