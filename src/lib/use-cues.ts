@@ -16,11 +16,12 @@ type Options = {
   started: boolean;
   done: boolean;
   secondsLeft?: number;
+  muted?: boolean;
 };
 
 // Plays a sound, vibration and spoken cue whenever the phase changes, with a
 // spoken heads-up shortly before.
-export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft }: Options) => {
+export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false }: Options) => {
   const audioContext = useRef<AudioContext | null>(null);
   const lastCued = useRef<string | null>(null);
   const lastWarned = useRef<number | null>(null);
@@ -44,7 +45,9 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft 
     if (lastCued.current === key) return;
     lastCued.current = key;
 
-    playCue(done ? "done" : plan[phaseIndex].type, audioContext.current);
+    playCue(done ? "done" : plan[phaseIndex].type, audioContext.current, muted);
+    // Muting mid-phase must not replay the cue, so muted is read but not a trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, phaseIndex, running, started, done]);
 
   useEffect(() => {
@@ -54,7 +57,8 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft 
     if (plan[phaseIndex].durationInSeconds < MIN_PHASE_FOR_HEADS_UP) return;
     if (lastWarned.current === phaseIndex) return;
     lastWarned.current = phaseIndex;
-    playHeadsUp();
+    playHeadsUp(muted);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, phaseIndex, running, started, done, secondsLeft]);
 
   return { prime };

@@ -49,8 +49,9 @@ const speak = (text: string) => {
   speechSynthesis.speak(utterance);
 };
 
-export const playCue = (cue: Cue, ctx: AudioContext | null) => {
-  if (ctx) {
+// Muting drops the beep and the spoken words; vibration still plays.
+export const playCue = (cue: Cue, ctx: AudioContext | null, muted = false) => {
+  if (ctx && !muted) {
     void ctx.resume();
     const frequency = CUE_TONE_HZ[cue];
     beep(ctx, frequency);
@@ -61,14 +62,14 @@ export const playCue = (cue: Cue, ctx: AudioContext | null) => {
     navigator.vibrate(cue === "done" ? [200, 100, 200] : 300);
   }
 
-  speak(spokenCue(cue));
+  if (!muted) speak(spokenCue(cue));
 };
 
 // A short spoken and felt warning so the walker can get ready for the change.
-export const playHeadsUp = () => {
+export const playHeadsUp = (muted = false) => {
   if (typeof navigator !== "undefined" && "vibrate" in navigator) {
     navigator.vibrate(100);
   }
 
-  speak("10 seconds");
+  if (!muted) speak("10 seconds");
 };
