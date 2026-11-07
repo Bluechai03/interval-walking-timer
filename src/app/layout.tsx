@@ -41,7 +41,7 @@ export default function RootLayout({
       lang="en"
       className={`${barlow.variable} ${barlowCondensed.variable} h-full antialiased`}
     >
-      <body className="min-h-dvh flex flex-col font-sans">
+      <body className="min-h-svh flex flex-col font-sans">
         {children}
         <ServiceWorkerRegister />
       </body>

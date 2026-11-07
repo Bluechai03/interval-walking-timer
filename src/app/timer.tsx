@@ -78,7 +78,7 @@ export function Timer() {
         <section
           aria-label="Current phase"
           // Tall enough on phones that the buttons land within thumb reach.
-          className={`[view-transition-name:phase-field] flex min-h-[64dvh] flex-col justify-between gap-6 px-5 pt-5 pb-6 sm:min-h-0 sm:rounded-xl ${
+          className={`[view-transition-name:phase-field] flex min-h-[64svh] flex-col justify-between gap-6 px-5 pt-5 pb-6 sm:min-h-0 sm:rounded-xl ${
             PHASE_FIELD[done ? "done" : current.type]
           }`}
         >

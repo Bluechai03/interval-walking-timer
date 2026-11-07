@@ -24,7 +24,7 @@ export function AboutDialog() {
       <dialog
         ref={ref}
         aria-labelledby="about-title"
-        className="m-auto max-h-[90dvh] w-[min(92vw,28rem)] overflow-y-auto rounded-xl border-2 border-page-line bg-page p-6 text-page-ink shadow-xl backdrop:bg-black/60"
+        className="m-auto max-h-[90svh] w-[min(92vw,28rem)] overflow-y-auto rounded-xl border-2 border-page-line bg-page p-6 text-page-ink shadow-xl backdrop:bg-black/60"
       >
         <div className="flex flex-col gap-5">
           <div className="flex items-start justify-between gap-4">
