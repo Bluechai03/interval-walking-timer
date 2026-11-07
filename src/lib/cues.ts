@@ -1,3 +1,4 @@
+import { heartRateTarget } from "./heart-rate";
 import type { Phase } from "./plan";
 
 export type Cue = Phase["type"] | "done";
@@ -8,11 +9,14 @@ const CUE_TONE_HZ: Record<Cue, number> = {
   done: 660,
 };
 
-const CUE_TEXT: Record<Cue, string> = {
-  fast: "Walk fast",
-  slow: "Walk slow",
-  done: "Walk complete",
-};
+const PACE_TEXT = { fast: "Fast", slow: "Slow" } as const;
+
+// What is spoken: the pace and the phase's target heart rate, or that the walk
+// is complete.
+export const spokenCue = (cue: Cue): string =>
+  cue === "done"
+    ? "Walk complete"
+    : `${PACE_TEXT[cue]}. Target heart rate ${heartRateTarget(cue).average}.`;
 
 const BEEP_SECONDS = 0.25;
 
@@ -47,7 +51,7 @@ export const playCue = (cue: Cue, ctx: AudioContext | null) => {
 
   if (typeof speechSynthesis !== "undefined") {
     speechSynthesis.cancel();
-    speechSynthesis.speak(new SpeechSynthesisUtterance(CUE_TEXT[cue]));
+    speechSynthesis.speak(new SpeechSynthesisUtterance(spokenCue(cue)));
   }
 };
 
