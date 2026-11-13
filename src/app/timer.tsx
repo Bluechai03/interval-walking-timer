@@ -8,14 +8,17 @@ import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
+import { useShortcutName } from "@/lib/use-shortcut-name";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { watchWorkoutUrl } from "@/lib/watch-workout";
 import { AboutDialog } from "./about-dialog";
 import { HeartRate } from "./heart-rate";
 import { MuteButton } from "./mute-button";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
 import { TrailProfile } from "./trail-profile";
+import { WatchWorkoutSetting } from "./watch-workout-setting";
 
 // Countdown blinks once this many seconds (or fewer) remain in a phase.
 const BLINK_THRESHOLD_SECONDS = 3;
@@ -45,6 +48,7 @@ export function Timer() {
     reset,
   } = useTimer(plan);
   const { muted, setMuted } = useMuted();
+  const { name: shortcutName } = useShortcutName();
   const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft, muted });
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
@@ -141,6 +145,12 @@ export function Timer() {
                 onClick={() => {
                   prime();
                   start();
+                  // Only at the very start; the timer is already running by the
+                  // time the page leaves, and it picks up again when we return.
+                  const workoutUrl = !started
+                    ? watchWorkoutUrl(shortcutName, `${window.location.origin}/`)
+                    : null;
+                  if (workoutUrl) window.location.href = workoutUrl;
                 }}
               >
                 <PlayIcon aria-hidden="true" />
@@ -178,6 +188,8 @@ export function Timer() {
         disabled={started}
         onChange={setConfig}
       />
+
+      <WatchWorkoutSetting />
     </div>
   );
 }
