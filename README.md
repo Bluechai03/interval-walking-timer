@@ -13,8 +13,6 @@ A phone-first Japanese interval walking timer that walks with you: strut fast, e
 - Lets you change the plan (fast and slow minutes, number of rounds); it's saved on your device.
 - Installs as an app on your home screen (PWA).
 
-Next up: live cadence (steps per minute) from your phone's motion sensors.
-
 ## Stack
 
 Next.js (App Router), React, TypeScript, Tailwind CSS, Vitest. Deployed on Vercel.
