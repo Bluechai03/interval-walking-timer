@@ -128,7 +128,7 @@ export function Timer() {
 
   // With the Watch switch on, Start goes to Shortcuts first and the walk begins
   // when we come back, so the timer and the workout begin together.
-  const [needsTap, setNeedsTap] = useState(false);
+  const [soundLocked, setSoundLocked] = useState(false);
   const [watchNote, setWatchNote] = useState<string | null>(null);
   const handledReturn = useRef(false);
   useEffect(() => {
@@ -143,12 +143,23 @@ export function Timer() {
       if (outcome !== "ok") {
         setWatchNote("Your Watch workout may not have started. You can start it on the Watch.");
       }
-      if (allowed) start();
-      else setNeedsTap(true);
+      // The walk always begins now. If sound is locked, the first touch unlocks it.
+      if (!allowed) setSoundLocked(true);
+      start();
     });
     // Runs once, when the page first loads after the Shortcut.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
+
+  useEffect(() => {
+    if (!soundLocked) return;
+    const unlockOnTouch = () => {
+      prime();
+      setSoundLocked(false);
+    };
+    document.addEventListener("pointerdown", unlockOnTouch, { once: true });
+    return () => document.removeEventListener("pointerdown", unlockOnTouch);
+  }, [soundLocked, prime]);
 
   const blinking = running && !counting && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
@@ -258,9 +269,8 @@ export function Timer() {
                 onClick={() => {
                   prime();
                   setWatchNote(null);
-                  if (started || needsTap) {
-                    // Resuming, or tapping Ready after coming back from Shortcuts.
-                    setNeedsTap(false);
+                  if (started) {
+                    // Resuming.
                     start();
                     return;
                   }
@@ -278,7 +288,7 @@ export function Timer() {
                 }}
               >
                 <PlayIcon aria-hidden="true" />
-                {started ? "Resume" : needsTap ? "Ready" : "Start"}
+                {started ? "Resume" : "Start"}
               </button>
             )
           )}
@@ -307,9 +317,9 @@ export function Timer() {
         </div>
 
         {watchNote && <p className="px-4 text-sm text-page-quiet sm:px-0">{watchNote}</p>}
-        {needsTap && !started && (
+        {soundLocked && (
           <p className="px-4 text-sm text-page-quiet sm:px-0">
-            Your Watch has been asked to start. Tap Ready when you are, and the countdown begins.
+            Tap anywhere to turn sound on. iOS keeps it off after coming back from Shortcuts.
           </p>
         )}
 
