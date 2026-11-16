@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Phase } from "./plan";
-import { getPosition } from "./timer";
+import { countdownLeft, getPosition } from "./timer";
 
 const plan: Phase[] = [
   { type: "fast", durationInSeconds: 10 },
@@ -55,5 +55,23 @@ describe("getPosition", () => {
       phaseIndex: 0,
       secondsLeft: 10,
     });
+  });
+});
+
+describe("countdownLeft", () => {
+  it("counts down whole seconds while elapsed time is negative", () => {
+    expect(countdownLeft(-5000)).toBe(5);
+    expect(countdownLeft(-4001)).toBe(5);
+    expect(countdownLeft(-1)).toBe(1);
+  });
+
+  it("is zero once the walk has started", () => {
+    expect(countdownLeft(0)).toBe(0);
+    expect(countdownLeft(12_000)).toBe(0);
+  });
+
+  it("leaves the walk on its first phase during the countdown", () => {
+    expect(getPosition(plan, -3000).phaseIndex).toBe(0);
+    expect(getPosition(plan, -3000).secondsLeft).toBe(10);
   });
 });

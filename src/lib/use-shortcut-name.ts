@@ -50,7 +50,7 @@ const setNameFor = (key: string, value: string) => {
   listeners.forEach((listener) => listener());
 };
 
-const useNamed = (key: string) => {
+export const useNamed = (key: string) => {
   const name = useSyncExternalStore(
     subscribe,
     getSnapshotFor(key),

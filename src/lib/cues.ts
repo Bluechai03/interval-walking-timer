@@ -73,3 +73,12 @@ export const playHeadsUp = (muted = false) => {
 
   if (!muted) speak("10 seconds");
 };
+
+// One short tick for each second of the "get ready" countdown.
+export const playTick = (ctx: AudioContext | null, muted = false) => {
+  if (ctx && !muted) {
+    void ctx.resume();
+    beep(ctx, 600);
+  }
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(40);
+};

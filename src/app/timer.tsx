@@ -1,13 +1,14 @@
 "use client";
 
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatTime } from "@/lib/format-time";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
+import { useGetReady } from "@/lib/use-get-ready";
 import { useWatchShortcuts } from "@/lib/use-shortcut-name";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
@@ -15,7 +16,9 @@ import {
   clearWorkoutFlag,
   isIos,
   markWorkoutStarted,
+  startReturnUrls,
   takeWorkoutEnd,
+  watchReturn,
   watchWorkoutUrl,
 } from "@/lib/watch-workout";
 import { AboutDialog } from "./about-dialog";
@@ -54,6 +57,7 @@ const BUTTON =
 
 export function Timer() {
   const { config, setConfig, hydrated } = usePlanConfig();
+  const getReady = useGetReady();
   const plan = useMemo(() => buildPlan(config), [config]);
   const {
     phaseIndex,
@@ -62,18 +66,36 @@ export function Timer() {
     done,
     ready,
     running,
+    getReadyLeft,
     started,
     start,
     pause,
     reset,
-  } = useTimer(plan);
+  } = useTimer(plan, getReady.seconds);
   const { muted, setMuted } = useMuted();
   const { startShortcut: shortcutName, endShortcut: endShortcutName } = useWatchShortcuts();
-  const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft, muted });
+  const counting = getReadyLeft > 0;
+  // The walk's cues and reminders begin when the countdown ends.
+  const { prime, unlock } = useCues({
+    plan,
+    phaseIndex,
+    running: running && !counting,
+    started: started && !counting,
+    done,
+    secondsLeft,
+    muted,
+    getReadyLeft,
+  });
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
     (done ? 0 : plan[phaseIndex].durationInSeconds - secondsLeft);
-  const phasePush = usePhasePush({ config, elapsedSeconds, ready, running, done });
+  const phasePush = usePhasePush({
+    config,
+    elapsedSeconds,
+    ready,
+    running: running && !counting,
+    done,
+  });
   // With reminders on, the phone can lock and still cue the walker.
   useWakeLock(running && phasePush.state !== "on");
   const current = plan[phaseIndex];
@@ -103,7 +125,32 @@ export function Timer() {
     const id = setTimeout(() => endWatchWorkout(), END_AFTER_DONE_MS);
     return () => clearTimeout(id);
   }, [done, endWatchWorkout]);
-  const blinking = running && secondsLeft <= BLINK_THRESHOLD_SECONDS;
+
+  // With the Watch switch on, Start goes to Shortcuts first and the walk begins
+  // when we come back, so the timer and the workout begin together.
+  const [needsTap, setNeedsTap] = useState(false);
+  const [watchNote, setWatchNote] = useState<string | null>(null);
+  const handledReturn = useRef(false);
+  useEffect(() => {
+    if (!ready || handledReturn.current) return;
+    handledReturn.current = true;
+    const outcome = watchReturn(window.location.search);
+    if (!outcome) return;
+    window.history.replaceState(null, "", window.location.pathname);
+    if (started) return;
+    // Sound is often locked after coming back; if so, one tap unlocks it and begins.
+    void (muted ? Promise.resolve(true) : unlock()).then((allowed) => {
+      if (outcome !== "ok") {
+        setWatchNote("Your Watch workout may not have started. You can start it on the Watch.");
+      }
+      if (allowed) start();
+      else setNeedsTap(true);
+    });
+    // Runs once, when the page first loads after the Shortcut.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
+  const blinking = running && !counting && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
   const round = Math.floor(phaseIndex / 2) + 1;
 
@@ -131,7 +178,9 @@ export function Timer() {
             <p className="text-3xl font-semibold">
               {done
                 ? "Walk complete"
-                : current.type === "fast"
+                : counting
+                  ? "Get ready"
+                  : current.type === "fast"
                   ? "Walk fast"
                   : "Walk slow"}
             </p>
@@ -148,33 +197,53 @@ export function Timer() {
             aria-label={
               done
                 ? `${formatTime(totalSeconds(plan))} walked`
-                : `${formatTime(secondsLeft)} left`
+                : counting
+                  ? `${getReadyLeft} seconds until the walk starts`
+                  : `${formatTime(secondsLeft)} left`
             }
             className={`-my-4 font-condensed text-[clamp(7rem,42vw,11rem)] leading-none tabular-nums ${
               blinking ? "animate-blink" : ""
             }`}
           >
-            {formatTime(done ? totalSeconds(plan) : secondsLeft)}
+            {counting ? getReadyLeft : formatTime(done ? totalSeconds(plan) : secondsLeft)}
           </p>
 
-          {!done && <HeartRate type={current.type} pulsing={running} />}
+          {!done && !counting && <HeartRate type={current.type} pulsing={running} />}
 
           {/* Where you are in the walk, written above the trail it describes. */}
-          <div className="flex flex-col gap-2">
+          {counting ? (
             <p className="text-base font-medium opacity-80">
-              {done ? "Time walked" : `Round ${round} of ${config.rounds}`}
+              {config.rounds} rounds of {formatTime(config.fastSeconds)} fast and{" "}
+              {formatTime(config.slowSeconds)} slow
             </p>
-            <TrailProfile
-              plan={plan}
-              phaseIndex={phaseIndex}
-              fractionLeft={fractionLeft}
-              done={done}
-            />
-          </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <p className="text-base font-medium opacity-80">
+                {done ? "Time walked" : `Round ${round} of ${config.rounds}`}
+              </p>
+              <TrailProfile
+                plan={plan}
+                phaseIndex={phaseIndex}
+                fractionLeft={fractionLeft}
+                done={done}
+              />
+            </div>
+          )}
         </section>
 
         <div className="flex gap-3 px-4 sm:px-0">
-          {running ? (
+          {running && counting ? (
+            // Backing out of the countdown, as if Start had not been tapped.
+            <button
+              className={`${BUTTON} border-2 border-page-ink`}
+              onClick={() => {
+                reset();
+                endWatchWorkout();
+              }}
+            >
+              Cancel
+            </button>
+          ) : running ? (
             <button
               className={`${BUTTON} bg-action text-action-ink`}
               onClick={pause}
@@ -188,22 +257,28 @@ export function Timer() {
                 className={`${BUTTON} bg-action text-action-ink`}
                 onClick={() => {
                   prime();
-                  start();
-                  // Only at the very start; the timer is already running by the
-                  // time the page leaves, and it picks up again when we return.
-                  if (!started) {
-                    const storage = store();
-                    const url = onIosDevice() ? watchWorkoutUrl(shortcutName, returnUrl()) : null;
-                    if (url && storage && markWorkoutStarted(storage)) {
-                      window.location.href = url;
-                    } else if (storage) {
-                      clearWorkoutFlag(storage);
-                    }
+                  setWatchNote(null);
+                  if (started || needsTap) {
+                    // Resuming, or tapping Ready after coming back from Shortcuts.
+                    setNeedsTap(false);
+                    start();
+                    return;
                   }
+                  const storage = store();
+                  const url = onIosDevice()
+                    ? watchWorkoutUrl(shortcutName, startReturnUrls(window.location.origin))
+                    : null;
+                  if (url && storage && markWorkoutStarted(storage)) {
+                    // The walk begins when we come back.
+                    window.location.href = url;
+                    return;
+                  }
+                  if (storage) clearWorkoutFlag(storage);
+                  start();
                 }}
               >
                 <PlayIcon aria-hidden="true" />
-                {started ? "Resume" : "Start"}
+                {started ? "Resume" : needsTap ? "Ready" : "Start"}
               </button>
             )
           )}
@@ -231,6 +306,13 @@ export function Timer() {
           )}
         </div>
 
+        {watchNote && <p className="px-4 text-sm text-page-quiet sm:px-0">{watchNote}</p>}
+        {needsTap && !started && (
+          <p className="px-4 text-sm text-page-quiet sm:px-0">
+            Your Watch has been asked to start. Tap Ready when you are, and the countdown begins.
+          </p>
+        )}
+
         <PhaseNotifications
           state={phasePush.state}
           failed={phasePush.failed}
@@ -247,6 +329,8 @@ export function Timer() {
         config={config}
         totalSeconds={totalSeconds(plan)}
         disabled={started}
+        getReadySeconds={getReady.seconds}
+        onGetReadyChange={getReady.setSeconds}
         onChange={setConfig}
       />
 

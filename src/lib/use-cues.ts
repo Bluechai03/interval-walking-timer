@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { createAudioContext, playCue, playHeadsUp } from "./cues";
+import { createAudioContext, playCue, playHeadsUp, playTick } from "./cues";
 import type { Phase } from "./plan";
 
 // Seconds before a phase ends that the heads-up is spoken, and the shortest
@@ -17,11 +17,13 @@ type Options = {
   done: boolean;
   secondsLeft?: number;
   muted?: boolean;
+  /** Seconds of "get ready" left; a tick plays for each. */
+  getReadyLeft?: number;
 };
 
 // Plays a sound, vibration and spoken cue whenever the phase changes, with a
 // spoken heads-up shortly before.
-export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false }: Options) => {
+export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false, getReadyLeft = 0 }: Options) => {
   const audioContext = useRef<AudioContext | null>(null);
   const lastCued = useRef<string | null>(null);
   const lastWarned = useRef<number | null>(null);
@@ -32,6 +34,24 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft,
     audioContext.current ??= createAudioContext();
     void audioContext.current?.resume();
   }, []);
+
+  // Resolves true if sound is allowed without a tap (it often isn't after
+  // coming back from another app). Gives up after a moment.
+  const unlock = useCallback(async (): Promise<boolean> => {
+    audioContext.current ??= createAudioContext();
+    const ctx = audioContext.current;
+    if (!ctx) return false;
+    if (ctx.state === "running") return true;
+    const allowed = ctx.resume().then(() => ctx.state === "running");
+    const gaveUp = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 300));
+    return Promise.race([allowed.catch(() => false), gaveUp]);
+  }, []);
+
+  useEffect(() => {
+    if (getReadyLeft > 0) playTick(audioContext.current, muted);
+    // Muting mid-countdown must not replay a tick, so muted is read but not a trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getReadyLeft]);
 
   // Coming back from another app can leave audio suspended.
   useEffect(() => {
@@ -70,5 +90,5 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, phaseIndex, running, started, done, secondsLeft]);
 
-  return { prime };
+  return { prime, unlock };
 };

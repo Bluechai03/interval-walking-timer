@@ -26,3 +26,7 @@ export const getPosition = (plan: Phase[], elapsedMs: number): TimerPosition => 
 
   return { phaseIndex: plan.length - 1, secondsLeft: 0, fractionLeft: 0, done: true };
 };
+
+/** Whole seconds of "get ready" left. Negative elapsed time is the countdown before the walk. */
+export const countdownLeft = (elapsedMs: number): number =>
+  elapsedMs < 0 ? Math.ceil(-elapsedMs / 1000) : 0;

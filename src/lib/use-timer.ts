@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { totalSeconds, type Phase } from "./plan";
-import { getPosition } from "./timer";
+import { countdownLeft, getPosition } from "./timer";
 
 const TICK_MS = 250;
 
@@ -45,7 +45,9 @@ const subscribeNever = () => () => {};
 
 // Elapsed time is derived from wall-clock timestamps rather than counted
 // ticks, so it stays accurate when the browser throttles background tabs.
-export const useTimer = (plan: Phase[]) => {
+// `getReadySeconds` is a countdown before a fresh walk. It is the walk's start
+// time pushed into the future, so elapsed time is negative until it ends.
+export const useTimer = (plan: Phase[], getReadySeconds = 0) => {
   const [accumulatedMs, setAccumulatedMs] = useState(0);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(0);
@@ -68,6 +70,7 @@ export const useTimer = (plan: Phase[]) => {
   const position = getPosition(plan, elapsedMs);
   // The clock stops ticking on its own once the last phase finishes.
   const running = startedAt !== null && !position.done;
+  const getReadyLeft = startedAt !== null ? countdownLeft(elapsedMs) : 0;
 
   useEffect(() => {
     if (ready) writeSaved(accumulatedMs, startedAt);
@@ -81,15 +84,17 @@ export const useTimer = (plan: Phase[]) => {
 
   const start = useCallback(() => {
     const t = Date.now();
+    // Only a fresh walk gets the countdown, not a resume.
+    const begins = t + (accumulatedMs === 0 ? getReadySeconds * 1000 : 0);
     setNow(t);
-    setStartedAt(t);
+    setStartedAt(begins);
     // Saved now, not after the next render, in case the page is left at once.
-    writeSaved(accumulatedMs, t);
-  }, [accumulatedMs]);
+    writeSaved(accumulatedMs, begins);
+  }, [accumulatedMs, getReadySeconds]);
 
   const pause = useCallback(() => {
     if (startedAt === null) return;
-    setAccumulatedMs((ms) => ms + Date.now() - startedAt);
+    setAccumulatedMs((ms) => ms + Math.max(0, Date.now() - startedAt));
     setStartedAt(null);
   }, [startedAt]);
 
@@ -103,6 +108,7 @@ export const useTimer = (plan: Phase[]) => {
     ...position,
     ready,
     running,
+    getReadyLeft,
     started: startedAt !== null || accumulatedMs > 0,
     start,
     pause,

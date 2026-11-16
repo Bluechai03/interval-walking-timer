@@ -1,6 +1,7 @@
 "use client";
 
 import { formatTime } from "@/lib/format-time";
+import { GET_READY_LIMITS } from "@/lib/use-get-ready";
 import {
   isValidPlanValue,
   PLAN_LIMITS,
@@ -18,12 +19,21 @@ type Props = {
   config: PlanConfig;
   totalSeconds: number;
   disabled: boolean;
+  getReadySeconds: number;
+  onGetReadyChange: (seconds: number) => void;
   onChange: (config: PlanConfig) => void;
 };
 
 // Inputs are uncontrolled so that half-typed values don't snap back; only
 // valid values are applied to the plan.
-export function PlanSettings({ config, totalSeconds, disabled, onChange }: Props) {
+export function PlanSettings({
+  config,
+  totalSeconds,
+  disabled,
+  getReadySeconds,
+  onGetReadyChange,
+  onChange,
+}: Props) {
   return (
     <section aria-labelledby="plan-heading" className="flex flex-col gap-3 px-4 sm:px-0">
       <div className="flex items-baseline justify-between border-b-2 border-page-ink pb-2">
@@ -67,6 +77,29 @@ export function PlanSettings({ config, totalSeconds, disabled, onChange }: Props
             </label>
           );
         })}
+        <label className="flex min-w-0 flex-col gap-1">
+          <span className="text-sm font-medium text-page-quiet">Get ready</span>
+          <span className="flex items-baseline gap-1 border-b border-page-line focus-within:border-page-ink">
+            <input
+              type="number"
+              inputMode="numeric"
+              className="w-full min-w-0 bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"
+              defaultValue={getReadySeconds}
+              min={GET_READY_LIMITS.min}
+              max={GET_READY_LIMITS.max}
+              disabled={disabled}
+              onChange={(event) => {
+                const value = event.target.valueAsNumber;
+                if (Number.isInteger(value) && value >= GET_READY_LIMITS.min && value <= GET_READY_LIMITS.max) {
+                  onGetReadyChange(value);
+                }
+              }}
+            />
+            <span aria-hidden="true" className="text-sm text-page-quiet">
+              sec
+            </span>
+          </span>
+        </label>
       </div>
       <p className={`text-sm text-page-quiet ${disabled ? "" : "invisible"}`}>
         Reset the timer to change the plan.

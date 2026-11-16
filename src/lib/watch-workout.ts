@@ -7,14 +7,21 @@ export const isIos = (userAgent: string, maxTouchPoints = 0): boolean =>
   (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
 
 // x-success, x-error and x-cancel all bring the walker back to the timer.
-export const watchWorkoutUrl = (shortcutName: string, returnUrl: string): string | null => {
+export const watchWorkoutUrl = (
+  shortcutName: string,
+  returnUrl: string | { success: string; error: string; cancel: string },
+): string | null => {
   const name = shortcutName.trim();
   if (!name) return null;
+  const back =
+    typeof returnUrl === "string"
+      ? { success: returnUrl, error: returnUrl, cancel: returnUrl }
+      : returnUrl;
   const params = new URLSearchParams({
     name,
-    "x-success": returnUrl,
-    "x-error": returnUrl,
-    "x-cancel": returnUrl,
+    "x-success": back.success,
+    "x-error": back.error,
+    "x-cancel": back.cancel,
   });
   // URLSearchParams writes spaces as "+", which Shortcuts reads literally.
   return `shortcuts://x-callback-url/run-shortcut?${params.toString().replaceAll("+", "%20")}`;
@@ -58,4 +65,19 @@ export const takeWorkoutEnd = (store: Store, force = false): boolean => {
   const flag = read(store);
   if (flag !== "started" && !(force && flag === "ended")) return false;
   return write(store, "ended");
+};
+
+export type WatchReturn = "ok" | "error" | "cancel";
+
+// Where the start Shortcut sends the walker back to, so the timer can begin
+// once the Watch has been asked to start.
+export const startReturnUrls = (origin: string) => ({
+  success: `${origin}/?watch=ok`,
+  error: `${origin}/?watch=error`,
+  cancel: `${origin}/?watch=cancel`,
+});
+
+export const watchReturn = (search: string): WatchReturn | null => {
+  const value = new URLSearchParams(search).get("watch");
+  return value === "ok" || value === "error" || value === "cancel" ? value : null;
 };

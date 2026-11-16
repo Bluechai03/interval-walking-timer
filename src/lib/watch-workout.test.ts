@@ -3,7 +3,9 @@ import {
   clearWorkoutFlag,
   isIos,
   markWorkoutStarted,
+  startReturnUrls,
   takeWorkoutEnd,
+  watchReturn,
   watchWorkoutUrl,
 } from "./watch-workout";
 
@@ -79,5 +81,23 @@ describe("ending the workout", () => {
       removeItem: () => {},
     } as unknown as Storage;
     expect(markWorkoutStarted(broken)).toBe(false);
+  });
+});
+
+describe("coming back from the start Shortcut", () => {
+  it("tells success, error and cancel apart", () => {
+    const back = startReturnUrls("https://strut.app");
+    const url = watchWorkoutUrl("Strut Outdoor", back) ?? "";
+    expect(url).toContain("x-success=https%3A%2F%2Fstrut.app%2F%3Fwatch%3Dok");
+    expect(url).toContain("x-error=https%3A%2F%2Fstrut.app%2F%3Fwatch%3Derror");
+    expect(url).toContain("x-cancel=https%3A%2F%2Fstrut.app%2F%3Fwatch%3Dcancel");
+  });
+
+  it("reads the outcome from the address", () => {
+    expect(watchReturn("?watch=ok")).toBe("ok");
+    expect(watchReturn("?watch=error")).toBe("error");
+    expect(watchReturn("?watch=cancel")).toBe("cancel");
+    expect(watchReturn("?watch=banana")).toBeNull();
+    expect(watchReturn("")).toBeNull();
   });
 });
