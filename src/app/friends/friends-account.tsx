@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { checkName, NAME_LIMITS, suggestName } from "@/lib/name-rules";
+import { checkName, NAME_LIMITS, suggestNickname } from "@/lib/name-rules";
 import { fetchDisplayName, saveDisplayName } from "@/lib/profile";
-import { signInWithGoogle, signOut, useAuth } from "@/lib/use-auth";
+import { signInAsGuest, useAuth } from "@/lib/use-auth";
 
 const BUTTON =
   "flex h-14 w-full items-center justify-center rounded-lg text-lg font-semibold focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink disabled:opacity-40";
@@ -23,45 +23,25 @@ export function FriendsAccount() {
     );
   }
 
-  if (auth.status === "signed-out") {
-    return (
-      <section className="flex flex-col gap-4">
-        <p className="text-lg">
-          Sign in to set your name. Soon you&apos;ll be able to start a room and walk in step with
-          friends.
-        </p>
-        <button
-          className={`${BUTTON} bg-action text-action-ink`}
-          onClick={() => void signInWithGoogle()}
-        >
-          Continue with Google
-        </button>
-        <p className="text-sm text-page-quiet">
-          Strut only keeps your name. Your email isn&apos;t shown to anyone.
-        </p>
-      </section>
-    );
-  }
-
+  // No account needed: the first name you pick creates one for this phone.
   return (
-    <SignedIn
-      // A fresh form for each person who signs in.
-      key={auth.user.id}
-      userId={auth.user.id}
-      suggestion={suggestName(auth.user.user_metadata?.full_name ?? auth.user.user_metadata?.name)}
+    <NameForm
+      key={auth.status === "signed-in" ? auth.user.id : "guest"}
+      userId={auth.status === "signed-in" ? auth.user.id : null}
     />
   );
 }
 
-function SignedIn({ userId, suggestion }: { userId: string; suggestion: string }) {
+function NameForm({ userId }: { userId: string | null }) {
   // undefined while loading, null when there is no name yet.
-  const [saved, setSaved] = useState<string | null | undefined>(undefined);
+  const [saved, setSaved] = useState<string | null | undefined>(userId ? undefined : null);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(suggestion);
+  const [draft, setDraft] = useState(() => suggestNickname());
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (!userId) return;
     let current = true;
     void fetchDisplayName(userId).then((result) => {
       if (!current) return;
@@ -81,12 +61,21 @@ function SignedIn({ userId, suggestion }: { userId: string; suggestion: string }
     const check = checkName(draft);
     if (!check.ok) return setMessage(check.message);
     setBusy(true);
-    const result = await saveDisplayName(userId, check.name);
+    setMessage(null);
+    let id = userId;
+    if (!id) {
+      const guest = await signInAsGuest();
+      if (!guest.ok) {
+        setBusy(false);
+        return setMessage(guest.message);
+      }
+      id = guest.userId;
+    }
+    const result = await saveDisplayName(id, check.name);
     setBusy(false);
     if (!result.ok) return setMessage(result.message);
     setSaved(result.value);
     setEditing(false);
-    setMessage(null);
   };
 
   if (saved === undefined) return <p className="text-page-quiet">One moment…</p>;
@@ -97,10 +86,13 @@ function SignedIn({ userId, suggestion }: { userId: string; suggestion: string }
     <section className="flex flex-col gap-4">
       {showForm ? (
         <form onSubmit={save} className="flex flex-col gap-4">
+          <p className="text-lg">
+            {saved === null
+              ? "Pick a name so your friends know it's you. No account needed."
+              : "Pick a new name."}
+          </p>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-page-quiet">
-              {saved === null ? "What should friends call you?" : "Your name"}
-            </span>
+            <span className="text-sm font-medium text-page-quiet">Your name</span>
             <input
               type="text"
               // text-2xl keeps it above 16px, so iOS Safari doesn't zoom in.
@@ -116,7 +108,11 @@ function SignedIn({ userId, suggestion }: { userId: string; suggestion: string }
             {busy ? "Saving…" : "Save my name"}
           </button>
           {saved !== null && (
-            <button type="button" className={`${BUTTON} border-2 border-page-ink`} onClick={() => setEditing(false)}>
+            <button
+              type="button"
+              className={`${BUTTON} border-2 border-page-ink`}
+              onClick={() => setEditing(false)}
+            >
               Cancel
             </button>
           )}
@@ -125,7 +121,7 @@ function SignedIn({ userId, suggestion }: { userId: string; suggestion: string }
         <>
           <p className="text-3xl font-semibold">Hi, {saved}</p>
           <p className="text-page-quiet">Rooms are on their way. Your name is ready for them.</p>
-          <button className={`${BUTTON} border-2 border-page-ink`} onClick={() => setEditing(true)}>
+          <button className={`${BUTTON} border-2 border-page-ink`} onClick={() => { setDraft(saved); setEditing(true); }}>
             Change my name
           </button>
         </>
@@ -135,9 +131,6 @@ function SignedIn({ userId, suggestion }: { userId: string; suggestion: string }
           {message}
         </p>
       )}
-      <button className="self-start text-sm font-medium text-page-quiet underline underline-offset-4" onClick={() => void signOut()}>
-        Sign out
-      </button>
     </section>
   );
 }

@@ -4,27 +4,22 @@ import type { AuthState } from "@/lib/use-auth";
 import { FriendsAccount } from "./friends-account";
 
 const auth = vi.hoisted(() => ({ state: { status: "signed-out" } as AuthState }));
-const signInWithGoogle = vi.hoisted(() => vi.fn());
+const signInAsGuest = vi.hoisted(() => vi.fn());
 const fetchDisplayName = vi.hoisted(() => vi.fn());
 const saveDisplayName = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/use-auth", () => ({
-  useAuth: () => auth.state,
-  signInWithGoogle,
-  signOut: vi.fn(),
-}));
+vi.mock("@/lib/use-auth", () => ({ useAuth: () => auth.state, signInAsGuest }));
 vi.mock("@/lib/profile", () => ({ fetchDisplayName, saveDisplayName }));
 
-const signedIn = (name?: string): AuthState =>
-  ({
-    status: "signed-in",
-    user: { id: "u1", user_metadata: name ? { full_name: name } : {} },
-  }) as unknown as AuthState;
+const signedIn = (): AuthState => ({ status: "signed-in", user: { id: "u1" } }) as unknown as AuthState;
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
 });
+
+const typeName = async (value: string) =>
+  fireEvent.change(await screen.findByRole("textbox"), { target: { value } });
 
 describe("FriendsAccount", () => {
   it("says so when Supabase isn't set up", () => {
@@ -33,39 +28,56 @@ describe("FriendsAccount", () => {
     expect(screen.getByText(/isn't switched on here yet/)).toBeTruthy();
   });
 
-  it("offers Google sign-in when signed out", async () => {
+  it("asks a new visitor for a name, with a friendly suggestion, and no sign-in", async () => {
     auth.state = { status: "signed-out" };
     render(<FriendsAccount />);
-    fireEvent.click(screen.getByRole("button", { name: "Continue with Google" }));
-    expect(signInWithGoogle).toHaveBeenCalledOnce();
+    const input = (await screen.findByRole("textbox")) as HTMLInputElement;
+    expect(input.value).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
+    expect(screen.queryByText(/Google/)).toBeNull();
   });
 
-  it("asks for a name, suggesting the Google one, when there is no profile yet", async () => {
-    auth.state = signedIn("Anna Montero");
-    fetchDisplayName.mockResolvedValue({ ok: true, value: null });
-    saveDisplayName.mockResolvedValue({ ok: true, value: "Anna Montero" });
+  it("makes a guest account the first time a name is saved", async () => {
+    auth.state = { status: "signed-out" };
+    signInAsGuest.mockResolvedValue({ ok: true, userId: "u9" });
+    saveDisplayName.mockResolvedValue({ ok: true, value: "Anna" });
     render(<FriendsAccount />);
-    const input = await screen.findByRole("textbox");
-    expect((input as HTMLInputElement).value).toBe("Anna Montero");
+    await typeName("Anna");
     fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
-    expect(saveDisplayName).toHaveBeenCalledWith("u1", "Anna Montero");
-    expect(await screen.findByText("Hi, Anna Montero")).toBeTruthy();
+    expect(await screen.findByText("Hi, Anna")).toBeTruthy();
+    expect(signInAsGuest).toHaveBeenCalledOnce();
+    expect(saveDisplayName).toHaveBeenCalledWith("u9", "Anna");
   });
 
-  it("explains a bad name without saving it", async () => {
-    auth.state = signedIn();
-    fetchDisplayName.mockResolvedValue({ ok: true, value: null });
+  it("explains a bad name without making an account", async () => {
+    auth.state = { status: "signed-out" };
     render(<FriendsAccount />);
-    fireEvent.change(await screen.findByRole("textbox"), { target: { value: "A" } });
+    await typeName("A");
+    fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(signInAsGuest).not.toHaveBeenCalled();
+  });
+
+  it("says so kindly when a guest account can't be made", async () => {
+    auth.state = { status: "signed-out" };
+    signInAsGuest.mockResolvedValue({ ok: false, message: "That didn't work just now." });
+    render(<FriendsAccount />);
+    await typeName("Anna");
     fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(saveDisplayName).not.toHaveBeenCalled();
   });
 
-  it("greets someone who already has a name", async () => {
+  it("greets a returning guest and lets them change their name", async () => {
     auth.state = signedIn();
     fetchDisplayName.mockResolvedValue({ ok: true, value: "Anna" });
+    saveDisplayName.mockResolvedValue({ ok: true, value: "Anna M" });
     render(<FriendsAccount />);
     await waitFor(() => expect(screen.getByText("Hi, Anna")).toBeTruthy());
+    fireEvent.click(screen.getByRole("button", { name: "Change my name" }));
+    await typeName("Anna M");
+    fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
+    expect(await screen.findByText("Hi, Anna M")).toBeTruthy();
+    expect(signInAsGuest).not.toHaveBeenCalled();
+    expect(saveDisplayName).toHaveBeenCalledWith("u1", "Anna M");
   });
 });

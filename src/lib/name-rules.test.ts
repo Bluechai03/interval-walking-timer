@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkName, cleanName, suggestName } from "./name-rules";
+import { checkName, cleanName, suggestNickname } from "./name-rules";
 
 describe("cleanName", () => {
   it("trims and collapses spaces", () => {
@@ -33,12 +33,15 @@ describe("checkName", () => {
   });
 });
 
-describe("suggestName", () => {
-  it("cuts a long full name to fit", () => {
-    expect(suggestName("Anna Katreena Montero Santos").length).toBeLessThanOrEqual(16);
+describe("suggestNickname", () => {
+  it("makes a friendly two-word name", () => {
+    expect(suggestNickname(() => 0)).toBe("Brisk Fox");
   });
 
-  it("returns nothing for a missing name", () => {
-    expect(suggestName(undefined)).toBe("");
+  it("always passes the name rules, whichever words are picked", () => {
+    for (let i = 0; i < 100; i++) {
+      expect(checkName(suggestNickname()).ok).toBe(true);
+    }
+    expect(checkName(suggestNickname(() => 0.999999)).ok).toBe(true);
   });
 });

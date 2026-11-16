@@ -20,6 +20,12 @@ export const checkName = (raw: string): NameCheck => {
   return { ok: true, name };
 };
 
-// A first guess from a sign-in provider's full name, cut to fit.
-export const suggestName = (fullName: unknown): string =>
-  typeof fullName === "string" ? cleanName(fullName).slice(0, NAME_LIMITS.max).trim() : "";
+const ADJECTIVES = ["Brisk", "Swift", "Jolly", "Sunny", "Merry", "Plucky", "Zippy", "Bouncy", "Breezy", "Cheery"];
+const ANIMALS = ["Fox", "Heron", "Otter", "Finch", "Badger", "Hare", "Robin", "Lynx", "Panda", "Crane"];
+
+// A friendly starting point such as "Brisk Fox", which the walker can change.
+// Always within the name limits.
+export const suggestNickname = (random: () => number = Math.random): string => {
+  const pick = <T,>(list: readonly T[]) => list[Math.floor(random() * list.length)];
+  return `${pick(ADJECTIVES)} ${pick(ANIMALS)}`;
+};

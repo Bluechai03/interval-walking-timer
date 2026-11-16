@@ -39,15 +39,18 @@ const subscribe = (listener: () => void) => {
 const getSnapshot = () => state;
 const getServerSnapshot = () => LOADING;
 
-export const signInWithGoogle = async () => {
-  await getSupabase()?.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${window.location.origin}/friends` },
-  });
-};
+export type GuestResult = { ok: true; userId: string } | { ok: false; message: string };
 
-export const signOut = async () => {
-  await getSupabase()?.auth.signOut();
+// Everyone is a guest: Supabase makes a nameless account for this browser, and
+// the name is saved to it afterwards.
+export const signInAsGuest = async (): Promise<GuestResult> => {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, message: "That didn't work just now. Please try again in a moment." };
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error || !data.user) {
+    return { ok: false, message: "That didn't work just now. Please try again in a moment." };
+  }
+  return { ok: true, userId: data.user.id };
 };
 
 export const useAuth = (): AuthState =>

@@ -18,6 +18,10 @@ until docker exec "$NAME" psql -U supabase_admin -d postgres -Atc "select 1" >/d
 
 psql_in() { docker exec -i "$NAME" psql -v ON_ERROR_STOP=1 -q -U supabase_admin -d postgres; }
 
+# Hosted Supabase projects no longer grant new tables to anyone by default. The
+# image does, so undo that here, and the migrations must grant what they need.
+echo "alter default privileges for role supabase_admin in schema public revoke all on tables from anon, authenticated, service_role;" | psql_in
+
 for file in supabase/migrations/*.sql; do
   echo "migration: $file"
   psql_in < "$file"
