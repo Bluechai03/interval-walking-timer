@@ -145,3 +145,41 @@ describe("useTimer across a reload", () => {
     expect(result.current).toMatchObject({ started: false, secondsLeft: 10 });
   });
 });
+
+describe("useTimer with a get ready countdown", () => {
+  it("counts down before the first phase starts", () => {
+    const { result } = renderHook(() => useTimer(plan, 5));
+    act(() => result.current.start());
+    advance(2000);
+    expect(result.current).toMatchObject({ getReadyLeft: 3, started: true, secondsLeft: 10 });
+    advance(3000);
+    expect(result.current).toMatchObject({ getReadyLeft: 0, secondsLeft: 10 });
+    advance(4000);
+    expect(result.current.secondsLeft).toBe(6);
+  });
+
+  it("keeps counting down after a reload", () => {
+    const first = renderHook(() => useTimer(plan, 5));
+    act(() => first.result.current.start());
+    advance(1000);
+    first.unmount();
+    const second = renderHook(() => useTimer(plan, 5));
+    advance(1000);
+    expect(second.result.current.getReadyLeft).toBe(3);
+  });
+
+  it("does not repeat the countdown on resume", () => {
+    const { result } = renderHook(() => useTimer(plan, 5));
+    act(() => result.current.start());
+    advance(8000);
+    act(() => result.current.pause());
+    act(() => result.current.start());
+    expect(result.current.getReadyLeft).toBe(0);
+  });
+
+  it("starts straight away with no countdown", () => {
+    const { result } = renderHook(() => useTimer(plan, 0));
+    act(() => result.current.start());
+    expect(result.current.getReadyLeft).toBe(0);
+  });
+});
