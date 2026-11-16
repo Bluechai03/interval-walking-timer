@@ -1,0 +1,186 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import QRCode from "qrcode";
+import { useEffect, useState } from "react";
+import { formatTime } from "@/lib/format-time";
+import { leaveRoom, removeMember, roomLink, type Room } from "@/lib/rooms";
+import { useAuth } from "@/lib/use-auth";
+import { useRoom } from "@/lib/use-room";
+import { LINK, PRIMARY, SECONDARY } from "./styles";
+
+export function Lobby({ roomId }: { roomId: string }) {
+  const auth = useAuth();
+  const state = useRoom(roomId);
+
+  if (auth.status === "loading" || state.status === "loading") {
+    return <p className="text-page-quiet">One moment…</p>;
+  }
+
+  if (auth.status === "unavailable") {
+    return <p className="text-page-quiet">Walking with friends isn&apos;t switched on here yet.</p>;
+  }
+
+  if (auth.status === "signed-out" || state.status === "missing") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="text-lg">
+          This room isn&apos;t available to you. It may have closed, or you may need to join it
+          with the code first.
+        </p>
+        <Link href="/friends" className={PRIMARY}>
+          Back to Walk with friends
+        </Link>
+      </div>
+    );
+  }
+
+  if (state.status === "error") {
+    return <p role="alert" className="text-page-quiet">{state.message}</p>;
+  }
+
+  const me = auth.user.id;
+  const isHost = state.room.host_id === me;
+
+  return (
+    <section className="flex flex-col gap-8">
+      <RoomCode room={state.room} />
+
+      <p className="text-page-quiet">
+        {state.room.rounds} rounds of {formatTime(state.room.fast_seconds)} fast and{" "}
+        {formatTime(state.room.slow_seconds)} slow.
+      </p>
+
+      <div className="flex flex-col gap-2">
+        <h2 className="border-b-2 border-page-ink pb-2 text-xl font-semibold">
+          Here now ({state.here.length})
+        </h2>
+        <ul className="flex flex-col">
+          {state.here.map((member) => (
+            <li
+              key={member.user_id}
+              className="flex items-center justify-between gap-3 border-b border-page-line py-3"
+            >
+              <span className="text-xl font-semibold">
+                {member.nickname}
+                {member.user_id === me && <span className="font-normal text-page-quiet"> (you)</span>}
+                {member.user_id === state.room.host_id && (
+                  <span className="text-sm font-medium text-page-quiet"> · host</span>
+                )}
+              </span>
+              {isHost && member.user_id !== me && (
+                <RemoveButton roomId={roomId} memberId={member.user_id} name={member.nickname} />
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="text-page-quiet">
+        {isHost
+          ? "Starting the walk together is coming next. For now you can gather everyone here."
+          : "Waiting for the host. Starting the walk together is coming next."}
+      </p>
+
+      <LeaveButton roomId={roomId} />
+    </section>
+  );
+}
+
+function RoomCode({ room }: { room: Room }) {
+  const [link, setLink] = useState("");
+  const [qr, setQr] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const canShare = typeof navigator !== "undefined" && "share" in navigator;
+
+  useEffect(() => {
+    // The link needs the browser's address, so it is made once the page is showing.
+    const url = roomLink(window.location.origin, room.code);
+    let current = true;
+    void QRCode.toDataURL(url, { margin: 1, width: 240 }).then((data) => {
+      if (!current) return;
+      setLink(url);
+      setQr(data);
+    });
+    return () => {
+      current = false;
+    };
+  }, [room.code]);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard blocked: the link is still shown to copy by hand.
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-4 rounded-xl bg-action px-5 py-6 text-action-ink">
+      <p className="text-sm font-medium opacity-80">Room code</p>
+      <p aria-label={`Room code ${room.code.split("").join(" ")}`} className="font-condensed text-[5.5rem] leading-none tracking-[0.18em]">
+        {room.code}
+      </p>
+      {qr && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={qr} alt="QR code that opens the room" width={160} height={160} className="rounded-md bg-white p-1" />
+      )}
+      {link && <p className="max-w-full break-all text-center text-sm opacity-80">{link}</p>}
+      <div className="flex w-full gap-3">
+        <button
+          className="flex h-12 flex-1 items-center justify-center rounded-lg border-2 border-action-ink text-base font-semibold"
+          onClick={() => void copy()}
+        >
+          {copied ? "Copied" : "Copy link"}
+        </button>
+        {canShare && (
+          <button
+            className="flex h-12 flex-1 items-center justify-center rounded-lg border-2 border-action-ink text-base font-semibold"
+            onClick={() => void navigator.share({ title: "Walk with me on Strut", url: link }).catch(() => {})}
+          >
+            Share
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function RemoveButton({ roomId, memberId, name }: { roomId: string; memberId: string; name: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      className={LINK}
+      disabled={busy}
+      aria-label={`Remove ${name}`}
+      onClick={async () => {
+        setBusy(true);
+        await removeMember(roomId, memberId);
+        setBusy(false);
+      }}
+    >
+      Remove
+    </button>
+  );
+}
+
+function LeaveButton({ roomId }: { roomId: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      className={SECONDARY}
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        await leaveRoom(roomId);
+        router.push("/friends");
+      }}
+    >
+      Leave the room
+    </button>
+  );
+}

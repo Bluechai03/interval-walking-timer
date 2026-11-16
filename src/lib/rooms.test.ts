@@ -1,0 +1,70 @@
+import { describe, expect, it } from "vitest";
+import { isCompleteCode, membersHere, normalizeCode, roomLink, roomMessage, type Member } from "./rooms";
+
+describe("normalizeCode", () => {
+  it("accepts any case and ignores spaces and dashes", () => {
+    expect(normalizeCode("kl-qm")).toBe("KLQM");
+    expect(normalizeCode(" b c d f ")).toBe("BCDF");
+  });
+
+  it("keeps only four letters", () => {
+    expect(normalizeCode("BCDFGH")).toBe("BCDF");
+  });
+});
+
+describe("isCompleteCode", () => {
+  it("accepts four consonants", () => {
+    expect(isCompleteCode("BCDF")).toBe(true);
+  });
+
+  it("rejects short codes and vowels", () => {
+    expect(isCompleteCode("BCD")).toBe(false);
+    expect(isCompleteCode("BCDA")).toBe(false);
+  });
+});
+
+describe("roomLink", () => {
+  it("points at the join page", () => {
+    expect(roomLink("https://strutwalk.vercel.app", "BCDF")).toBe(
+      "https://strutwalk.vercel.app/friends/join/BCDF",
+    );
+  });
+});
+
+describe("membersHere", () => {
+  const now = Date.parse("2026-11-17T10:00:00Z");
+  const member = (id: string, secondsAgo: number, removed = false): Member => ({
+    user_id: id,
+    nickname: id,
+    removed,
+    last_seen_at: new Date(now - secondsAgo * 1000).toISOString(),
+  });
+
+  it("drops people who have gone quiet for over 30 seconds", () => {
+    const list = membersHere([member("a", 5), member("b", 31), member("c", 30)], "a", now);
+    expect(list.map((m) => m.user_id)).toEqual(["a", "c"]);
+  });
+
+  it("leaves out removed people", () => {
+    expect(membersHere([member("a", 1), member("b", 1, true)], "a", now).map((m) => m.user_id)).toEqual(["a"]);
+  });
+
+  it("puts the host first and otherwise keeps the order", () => {
+    const list = membersHere([member("b", 1), member("c", 1), member("host", 1)], "host", now);
+    expect(list.map((m) => m.user_id)).toEqual(["host", "b", "c"]);
+  });
+});
+
+describe("roomMessage", () => {
+  it("explains the known problems kindly", () => {
+    expect(roomMessage({ message: "room_full" })).toContain("full");
+    expect(roomMessage({ message: "room_not_found" })).toContain("couldn't find");
+    expect(roomMessage({ message: "name_taken" })).toContain("already has that name");
+    expect(roomMessage({ message: "removed" })).toContain("host");
+  });
+
+  it("falls back for anything else", () => {
+    expect(roomMessage({ message: "boom" })).toContain("didn't work");
+    expect(roomMessage(null)).toContain("didn't work");
+  });
+});
