@@ -11,7 +11,12 @@ A phone-first Japanese interval walking timer that walks with you: strut fast, e
 - Keeps the screen awake while a walk is running.
 - Shows the target heart rate for each phase (currently set for age 23).
 - Lets you change the plan (fast and slow minutes, number of rounds); it's saved on your device.
+- Counts you in before the walk starts, 5 seconds by default (change it with Get ready in the plan, or set 0 for none).
 - Installs as an app on your home screen (PWA).
+
+## Apple Watch workout (iPhone)
+
+Strut can start a workout on your Apple Watch when you tap Start, and end it when the walk finishes. It does this by running Shortcuts you make once, so turn on **Start my Watch too** in the app and follow [`docs/watch-workout.md`](./docs/watch-workout.md). The walk begins when the Watch workout does. Pause only pauses the timer, because Shortcuts can't pause a workout.
 
 ## Stack
 
