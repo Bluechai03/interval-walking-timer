@@ -71,15 +71,15 @@ A shared walk that several people take at the same time. One host creates it, ev
 _Avoid_: Lobby, group, party, session
 
 **Host**:
-The signed-in person who creates a room, sets its plan, starts the walk and can remove people.
+The member who creates a room, sets its plan, starts the walk and can remove people. Anyone can host.
 _Avoid_: Owner, leader, admin
 
 **Member**:
-Anyone in a room, including the host. A member is either signed in or a guest.
+Anyone in a room, including the host.
 _Avoid_: Player, participant, user
 
 **Guest**:
-A member who joined with a join code and a nickname, without signing in. A guest can walk but cannot host, and can sign in later to keep their walks.
+Everyone who uses a room: a person with a name and no account, whose name and walks stay on their phone. Later, a guest may be able to keep their walks by signing in.
 _Avoid_: Anonymous user, visitor
 
 **Join code**:
