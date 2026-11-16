@@ -6,11 +6,16 @@ export const isIos = (userAgent: string, maxTouchPoints = 0): boolean =>
   // iPadOS reports itself as a Mac.
   (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
 
-// x-success brings the walker back to the timer once the Shortcut has run.
+// x-success, x-error and x-cancel all bring the walker back to the timer.
 export const watchWorkoutUrl = (shortcutName: string, returnUrl: string): string | null => {
   const name = shortcutName.trim();
   if (!name) return null;
-  const params = new URLSearchParams({ name, "x-success": returnUrl });
+  const params = new URLSearchParams({
+    name,
+    "x-success": returnUrl,
+    "x-error": returnUrl,
+    "x-cancel": returnUrl,
+  });
   // URLSearchParams writes spaces as "+", which Shortcuts reads literally.
   return `shortcuts://x-callback-url/run-shortcut?${params.toString().replaceAll("+", "%20")}`;
 };

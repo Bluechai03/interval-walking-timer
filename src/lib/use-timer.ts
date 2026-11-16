@@ -83,7 +83,9 @@ export const useTimer = (plan: Phase[]) => {
     const t = Date.now();
     setNow(t);
     setStartedAt(t);
-  }, []);
+    // Saved now, not after the next render, in case the page is left at once.
+    writeSaved(accumulatedMs, t);
+  }, [accumulatedMs]);
 
   const pause = useCallback(() => {
     if (startedAt === null) return;

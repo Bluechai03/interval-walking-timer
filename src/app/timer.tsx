@@ -11,7 +11,7 @@ import { usePlanConfig } from "@/lib/use-plan-config";
 import { useShortcutName } from "@/lib/use-shortcut-name";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
-import { watchWorkoutUrl } from "@/lib/watch-workout";
+import { isIos, watchWorkoutUrl } from "@/lib/watch-workout";
 import { AboutDialog } from "./about-dialog";
 import { HeartRate } from "./heart-rate";
 import { MuteButton } from "./mute-button";
@@ -49,11 +49,25 @@ export function Timer() {
   } = useTimer(plan);
   const { muted, setMuted } = useMuted();
   const { name: shortcutName } = useShortcutName();
-  const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft, muted });
+  const { prime } = useCues({
+    plan,
+    phaseIndex,
+    running,
+    started,
+    done,
+    secondsLeft,
+    muted,
+  });
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
     (done ? 0 : plan[phaseIndex].durationInSeconds - secondsLeft);
-  const phasePush = usePhasePush({ config, elapsedSeconds, ready, running, done });
+  const phasePush = usePhasePush({
+    config,
+    elapsedSeconds,
+    ready,
+    running,
+    done,
+  });
   // With reminders on, the phone can lock and still cue the walker.
   useWakeLock(running && phasePush.state !== "on");
   const current = plan[phaseIndex];
@@ -147,9 +161,14 @@ export function Timer() {
                   start();
                   // Only at the very start; the timer is already running by the
                   // time the page leaves, and it picks up again when we return.
-                  const workoutUrl = !started
-                    ? watchWorkoutUrl(shortcutName, `${window.location.origin}/`)
-                    : null;
+                  const workoutUrl =
+                    !started &&
+                    isIos(navigator.userAgent, navigator.maxTouchPoints)
+                      ? watchWorkoutUrl(
+                          shortcutName,
+                          `${window.location.origin}/`,
+                        )
+                      : null;
                   if (workoutUrl) window.location.href = workoutUrl;
                 }}
               >

@@ -4,7 +4,7 @@ import { isIos, watchWorkoutUrl } from "./watch-workout";
 describe("watchWorkoutUrl", () => {
   it("opens the named Shortcut and comes back to the timer", () => {
     expect(watchWorkoutUrl("Strut outdoor", "https://strut.app/")).toBe(
-      "shortcuts://x-callback-url/run-shortcut?name=Strut%20outdoor&x-success=https%3A%2F%2Fstrut.app%2F",
+      "shortcuts://x-callback-url/run-shortcut?name=Strut%20outdoor&x-success=https%3A%2F%2Fstrut.app%2F&x-error=https%3A%2F%2Fstrut.app%2F&x-cancel=https%3A%2F%2Fstrut.app%2F",
     );
   });
 

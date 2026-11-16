@@ -33,6 +33,15 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft,
     void audioContext.current?.resume();
   }, []);
 
+  // Coming back from another app can leave audio suspended.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && started) void audioContext.current?.resume();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [started]);
+
   useEffect(() => {
     if (!started) {
       lastCued.current = null;

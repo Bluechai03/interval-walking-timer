@@ -11,4 +11,6 @@ When you tap **Start**, Strut starts the timer, flashes the Shortcuts app for a 
 
 Nothing can end the workout from Shortcuts. End it on your Watch, or from the bar at the top of your phone.
 
-If the Shortcut name is empty or wrong, the timer still starts as normal.
+Start runs the Shortcut each time you start a new walk, including after Reset, so end the old workout on your Watch first.
+
+If the Shortcut name is empty, the timer starts as normal. If it is wrong, Shortcuts shows an error for a moment, then you return to a timer that is already running.
