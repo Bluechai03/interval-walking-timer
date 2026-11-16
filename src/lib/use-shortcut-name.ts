@@ -4,6 +4,10 @@ import { useSyncExternalStore } from "react";
 
 const START_KEY = "watch-shortcut";
 const END_KEY = "watch-shortcut-end";
+const ENABLED_KEY = "watch-enabled";
+
+export const DEFAULT_START_SHORTCUT = "Strut Outdoor";
+export const DEFAULT_END_SHORTCUT = "Strut End";
 
 const listeners = new Set<() => void>();
 
@@ -60,3 +64,20 @@ export const useShortcutName = () => useNamed(START_KEY);
 
 // The name of the Shortcut that ends it. Empty means the walker ends it on the Watch.
 export const useEndShortcutName = () => useNamed(END_KEY);
+
+// The switch, plus the Shortcut names Start and the finish should run (empty
+// when the switch is off). A name saved before the switch existed turns it on once.
+export const useWatchShortcuts = () => {
+  const start = useShortcutName();
+  const end = useEndShortcutName();
+  const flag = useNamed(ENABLED_KEY);
+  const enabled = flag.name === "" ? start.name.trim() !== "" : flag.name === "1";
+  return {
+    enabled,
+    setEnabled: (on: boolean) => flag.setName(on ? "1" : "0"),
+    start,
+    end,
+    startShortcut: enabled ? start.name.trim() || DEFAULT_START_SHORTCUT : "",
+    endShortcut: enabled ? end.name.trim() || DEFAULT_END_SHORTCUT : "",
+  };
+};

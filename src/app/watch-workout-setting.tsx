@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { isIos } from "@/lib/watch-workout";
-import { useEndShortcutName, useShortcutName } from "@/lib/use-shortcut-name";
+import {
+  DEFAULT_END_SHORTCUT,
+  DEFAULT_START_SHORTCUT,
+  useWatchShortcuts,
+} from "@/lib/use-shortcut-name";
 
 const subscribe = () => () => {};
 const onIos = () => isIos(navigator.userAgent, navigator.maxTouchPoints);
@@ -10,8 +14,9 @@ const onIos = () => isIos(navigator.userAgent, navigator.maxTouchPoints);
 // Only offered on iPhone and iPad, where Shortcuts exists.
 export function WatchWorkoutSetting() {
   const ios = useSyncExternalStore(subscribe, onIos, () => false);
-  const { name, setName } = useShortcutName();
-  const { name: endName, setName: setEndName } = useEndShortcutName();
+  const { enabled, setEnabled, start, end } = useWatchShortcuts();
+  const { name, setName } = start;
+  const { name: endName, setName: setEndName } = end;
   const details = useRef<HTMLDetailsElement>(null);
   // Open on load when something is saved, then leave it to the walker's taps.
   const decided = useRef(false);
@@ -30,9 +35,23 @@ export function WatchWorkoutSetting() {
     >
       <summary className="flex cursor-pointer list-none items-baseline justify-between border-b-2 border-page-ink pb-2 [&::-webkit-details-marker]:hidden">
         <h2 className="text-xl font-semibold">Start my Watch too</h2>
-        <span aria-hidden="true" className="text-base group-open:hidden">
-          Set up
-        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          aria-label="Start my Watch too"
+          onClick={() => setEnabled(!enabled)}
+          className={`relative h-7 w-12 shrink-0 self-center rounded-full border-2 border-page-ink transition-colors ${
+            enabled ? "bg-page-ink" : "bg-transparent"
+          }`}
+        >
+          <span
+            aria-hidden="true"
+            className={`absolute top-0.5 left-0.5 size-5 rounded-full transition-transform ${
+              enabled ? "translate-x-5 bg-page" : "bg-page-ink"
+            }`}
+          />
+        </button>
       </summary>
       <div className="flex flex-col gap-3 pt-3">
         <label className="flex flex-col gap-1">
@@ -42,7 +61,7 @@ export function WatchWorkoutSetting() {
           <input
             type="text"
             className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold outline-none focus:border-page-ink"
-            placeholder="Strut outdoor"
+            placeholder={DEFAULT_START_SHORTCUT}
             autoCapitalize="none"
             autoCorrect="off"
             value={name}
@@ -56,7 +75,7 @@ export function WatchWorkoutSetting() {
           <input
             type="text"
             className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold outline-none focus:border-page-ink"
-            placeholder="Strut end"
+            placeholder={DEFAULT_END_SHORTCUT}
             autoCapitalize="none"
             autoCorrect="off"
             value={endName}

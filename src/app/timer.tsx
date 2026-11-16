@@ -8,7 +8,7 @@ import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
-import { useEndShortcutName, useShortcutName } from "@/lib/use-shortcut-name";
+import { useWatchShortcuts } from "@/lib/use-shortcut-name";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import {
@@ -68,8 +68,7 @@ export function Timer() {
     reset,
   } = useTimer(plan);
   const { muted, setMuted } = useMuted();
-  const { name: shortcutName } = useShortcutName();
-  const { name: endShortcutName } = useEndShortcutName();
+  const { startShortcut: shortcutName, endShortcut: endShortcutName } = useWatchShortcuts();
   const { prime } = useCues({ plan, phaseIndex, running, started, done, secondsLeft, muted });
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
