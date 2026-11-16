@@ -2,17 +2,18 @@
 
 import { useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "watch-shortcut";
+const START_KEY = "watch-shortcut";
+const END_KEY = "watch-shortcut-end";
 
 const listeners = new Set<() => void>();
 
 // Kept in memory as well as localStorage, so it still works when storage is
 // unavailable (e.g. private windows).
-let current: string | undefined;
+const cache = new Map<string, string>();
 
-const readStorage = (): string => {
+const readStorage = (key: string): string => {
   try {
-    return localStorage.getItem(STORAGE_KEY) ?? "";
+    return localStorage.getItem(key) ?? "";
   } catch {
     return "";
   }
@@ -23,24 +24,39 @@ const subscribe = (listener: () => void) => {
   return () => void listeners.delete(listener);
 };
 
-const getSnapshot = (): string => (current ??= readStorage());
+const getSnapshotFor = (key: string) => (): string => {
+  let value = cache.get(key);
+  if (value === undefined) {
+    value = readStorage(key);
+    cache.set(key, value);
+  }
+  return value;
+};
 
 // Off on the server, and while hydrating.
 const getServerSnapshot = (): string => "";
 
-const setName = (value: string) => {
-  current = value;
+const setNameFor = (key: string, value: string) => {
+  cache.set(key, value);
   try {
-    localStorage.setItem(STORAGE_KEY, value);
+    localStorage.setItem(key, value);
   } catch {
     // Not persisted, but the in-memory value still applies.
   }
   listeners.forEach((listener) => listener());
 };
 
-// The name of the Shortcut that starts a Watch workout. Empty means off.
-export const useShortcutName = () => {
-  const name = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  return { name, setName };
+const useNamed = (key: string) => {
+  const name = useSyncExternalStore(
+    subscribe,
+    getSnapshotFor(key),
+    getServerSnapshot,
+  );
+  return { name, setName: (value: string) => setNameFor(key, value) };
 };
 
+// The name of the Shortcut that starts a Watch workout. Empty means off.
+export const useShortcutName = () => useNamed(START_KEY);
+
+// The name of the Shortcut that ends it. Empty means the walker ends it on the Watch.
+export const useEndShortcutName = () => useNamed(END_KEY);

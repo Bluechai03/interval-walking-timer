@@ -1,14 +1,14 @@
 "use client";
 
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { formatTime } from "@/lib/format-time";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
-import { useShortcutName } from "@/lib/use-shortcut-name";
+import { useEndShortcutName, useShortcutName } from "@/lib/use-shortcut-name";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { isIos, watchWorkoutUrl } from "@/lib/watch-workout";
@@ -22,6 +22,11 @@ import { WatchWorkoutSetting } from "./watch-workout-setting";
 
 // Countdown blinks once this many seconds (or fewer) remain in a phase.
 const BLINK_THRESHOLD_SECONDS = 3;
+
+// Remembers that this walk's workout was ended, so returning from Shortcuts
+// doesn't run it again. Cleared by Start.
+const ENDED_KEY = "watch-workout-ended";
+const END_AFTER_DONE_MS = 2500;
 
 const PHASE_FIELD = {
   fast: "bg-brick text-mist",
@@ -49,6 +54,7 @@ export function Timer() {
   } = useTimer(plan);
   const { muted, setMuted } = useMuted();
   const { name: shortcutName } = useShortcutName();
+  const { name: endShortcutName } = useEndShortcutName();
   const { prime } = useCues({
     plan,
     phaseIndex,
@@ -73,6 +79,27 @@ export function Timer() {
   const current = plan[phaseIndex];
   // Between Start and the finish the header is out of the way.
   const walking = started && !done;
+
+  // Ends the Watch workout once per walk, by running the walker's second Shortcut.
+  const endWatchWorkout = useCallback(() => {
+    if (!isIos(navigator.userAgent, navigator.maxTouchPoints)) return;
+    const url = watchWorkoutUrl(endShortcutName, `${window.location.origin}/`);
+    if (!url || localStorage.getItem(ENDED_KEY)) return;
+    try {
+      localStorage.setItem(ENDED_KEY, "1");
+    } catch {
+      // Without storage we could loop on return, so don't run at all.
+      return;
+    }
+    window.location.href = url;
+  }, [endShortcutName]);
+
+  // When the walk finishes, let the last cue play out before leaving the page.
+  useEffect(() => {
+    if (!done) return;
+    const id = setTimeout(endWatchWorkout, END_AFTER_DONE_MS);
+    return () => clearTimeout(id);
+  }, [done, endWatchWorkout]);
   const blinking = running && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
   const round = Math.floor(phaseIndex / 2) + 1;
@@ -159,6 +186,13 @@ export function Timer() {
                 onClick={() => {
                   prime();
                   start();
+                  if (!started) {
+                    try {
+                      localStorage.removeItem(ENDED_KEY);
+                    } catch {
+                      // Not remembered; ending is skipped without storage.
+                    }
+                  }
                   // Only at the very start; the timer is already running by the
                   // time the page leaves, and it picks up again when we return.
                   const workoutUrl =
@@ -181,7 +215,10 @@ export function Timer() {
           {started && !running && (
             <button
               className={`${BUTTON} border-2 border-page-ink`}
-              onClick={reset}
+              onClick={() => {
+                reset();
+                endWatchWorkout();
+              }}
             >
               <RotateCcwIcon aria-hidden="true" />
               Reset

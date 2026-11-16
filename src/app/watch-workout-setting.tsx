@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { isIos } from "@/lib/watch-workout";
-import { useShortcutName } from "@/lib/use-shortcut-name";
+import { useEndShortcutName, useShortcutName } from "@/lib/use-shortcut-name";
 
 const subscribe = () => () => {};
 const onIos = () => isIos(navigator.userAgent, navigator.maxTouchPoints);
@@ -11,6 +11,7 @@ const onIos = () => isIos(navigator.userAgent, navigator.maxTouchPoints);
 export function WatchWorkoutSetting() {
   const ios = useSyncExternalStore(subscribe, onIos, () => false);
   const { name, setName } = useShortcutName();
+  const { name: endName, setName: setEndName } = useEndShortcutName();
   if (!ios) return null;
 
   return (
@@ -40,10 +41,25 @@ export function WatchWorkoutSetting() {
             onChange={(event) => setName(event.target.value)}
           />
         </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-page-quiet">
+            Shortcut to end it
+          </span>
+          <input
+            type="text"
+            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold outline-none focus:border-page-ink"
+            placeholder="Strut end"
+            autoCapitalize="none"
+            autoCorrect="off"
+            value={endName}
+            onChange={(event) => setEndName(event.target.value)}
+          />
+        </label>
         <p className="text-sm text-page-quiet">
-          Optional. Start runs this Shortcut to begin a workout on your Watch,
-          then brings you back here. You end the workout on your Watch, or from
-          the bar at the top of your phone.
+          Both are optional. Start runs the first Shortcut to begin a workout on
+          your Watch, then brings you back here. When your walk finishes, or you
+          tap Reset, the second one ends it. Pause only pauses this timer, so
+          your Watch keeps counting until the workout ends.
         </p>
       </div>
     </details>
