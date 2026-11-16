@@ -83,10 +83,10 @@ export function WatchWorkoutSetting() {
           />
         </label>
         <p className="text-sm text-page-quiet">
-          Both are optional. Start runs the first Shortcut to begin a workout on
-          your Watch, then brings you back here. When your walk finishes, or you
-          tap Reset, the second one ends it. Pause only pauses this timer, so
-          your Watch keeps counting until the workout ends.
+          With the switch on, Start runs the first Shortcut to begin a workout on your Watch, then
+          brings you back here. When your walk finishes, or you tap Reset, the second one ends it.
+          Leave a name blank to use the one shown. Pause only pauses this timer, so your Watch
+          keeps counting until the workout ends.
         </p>
       </div>
     </details>
