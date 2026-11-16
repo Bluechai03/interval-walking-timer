@@ -21,3 +21,10 @@ jobs:
       - run: pnpm lint
       - run: pnpm exec tsc --noEmit
       - run: pnpm test
+
+  # The access rules on the database, tested on Supabase's Postgres image.
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/test-db.sh
