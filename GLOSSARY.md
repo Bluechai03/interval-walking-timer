@@ -63,3 +63,43 @@ _Avoid_: bpm, pace, step rate
 **Tempo**:
 A song's beats per minute, used when matching music to a phase.
 _Avoid_: bpm (on its own), speed
+
+## Walking with friends
+
+**Room**:
+A shared walk that several people take at the same time. One host creates it, everyone follows the host's plan on the same clock, and it closes a few hours after the walk ends. Holds up to 8 people.
+_Avoid_: Lobby, group, party, session
+
+**Host**:
+The signed-in person who creates a room, sets its plan, starts the walk and can remove people.
+_Avoid_: Owner, leader, admin
+
+**Member**:
+Anyone in a room, including the host. A member is either signed in or a guest.
+_Avoid_: Player, participant, user
+
+**Guest**:
+A member who joined with a join code and a nickname, without signing in. A guest can walk but cannot host, and can sign in later to keep their walks.
+_Avoid_: Anonymous user, visitor
+
+**Join code**:
+The four letters shown on the host's screen that let someone join a room, along with a link. It stops working when the room closes.
+_Avoid_: Room ID, PIN, invite code
+
+**Nickname**:
+The name a guest picks, 2 to 16 characters and unique within the room.
+_Avoid_: Username, handle
+
+## Steps
+
+**Steps**:
+The number of steps taken during a walk, read from the walker's Apple Watch through Health when the walk ends. Not counted live.
+_Avoid_: Step count (for the setting), distance
+
+**Step goal**:
+An optional number of steps the walker aims for in one walk, set in the plan. Shown at the end as met or not met. Not a daily goal.
+_Avoid_: Target steps, daily goal
+
+**Get ready**:
+The countdown, 5 seconds by default, between tapping Start and the first phase. Can be set to 0 for none.
+_Avoid_: Pre-roll, warm-up
