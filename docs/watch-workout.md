@@ -11,6 +11,8 @@ When you tap **Start**, Strut starts the timer, flashes the Shortcuts app for a 
 
 Ending is optional. Make a second Shortcut with the **End Workout** action, name it (for example **Strut end**), and type that name under **Shortcut to end it**. Strut runs it when your walk finishes, or when you tap Reset. Without it, end the workout on your Watch, or from the bar at the top of your phone.
 
+If iOS blocks the automatic end, tap **End Watch workout** on the finished screen.
+
 Shortcuts has no way to pause a workout, so Pause only pauses the timer. Your Watch keeps counting until the workout ends.
 
 Start runs the Shortcut each time you start a new walk, including after Reset, so end the old workout on your Watch first.

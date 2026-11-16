@@ -12,43 +12,21 @@ const STORAGE_KEY = "walk-state";
 const FORGET_AFTER_DONE_MS = 5 * 60 * 1000;
 const FORGET_PAUSED_AFTER_MS = 6 * 60 * 60 * 1000;
 
-type Saved = {
-  accumulatedMs: number;
-  startedAt: number | null;
-  savedAt: number;
-};
-type Restored = {
-  accumulatedMs: number;
-  startedAt: number | null;
-  now: number;
-};
+type Saved = { accumulatedMs: number; startedAt: number | null; savedAt: number };
+type Restored = { accumulatedMs: number; startedAt: number | null; now: number };
 
 const readSaved = (plan: Phase[]): Restored | null => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const saved = JSON.parse(raw) as Saved;
-    if (
-      typeof saved.accumulatedMs !== "number" ||
-      typeof saved.savedAt !== "number"
-    )
-      return null;
+    if (typeof saved.accumulatedMs !== "number" || typeof saved.savedAt !== "number") return null;
     const now = Date.now();
     const totalMs = totalSeconds(plan) * 1000;
-    const elapsed =
-      saved.accumulatedMs +
-      (typeof saved.startedAt === "number" ? now - saved.startedAt : 0);
+    const elapsed = saved.accumulatedMs + (typeof saved.startedAt === "number" ? now - saved.startedAt : 0);
     if (elapsed >= totalMs + FORGET_AFTER_DONE_MS) return null;
-    if (
-      typeof saved.startedAt !== "number" &&
-      now - saved.savedAt > FORGET_PAUSED_AFTER_MS
-    )
-      return null;
-    return {
-      accumulatedMs: saved.accumulatedMs,
-      startedAt: saved.startedAt ?? null,
-      now,
-    };
+    if (typeof saved.startedAt !== "number" && now - saved.savedAt > FORGET_PAUSED_AFTER_MS) return null;
+    return { accumulatedMs: saved.accumulatedMs, startedAt: saved.startedAt ?? null, now };
   } catch {
     return null;
   }
@@ -56,13 +34,8 @@ const readSaved = (plan: Phase[]): Restored | null => {
 
 const writeSaved = (accumulatedMs: number, startedAt: number | null) => {
   try {
-    if (accumulatedMs === 0 && startedAt === null)
-      localStorage.removeItem(STORAGE_KEY);
-    else
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ accumulatedMs, startedAt, savedAt: Date.now() }),
-      );
+    if (accumulatedMs === 0 && startedAt === null) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify({ accumulatedMs, startedAt, savedAt: Date.now() }));
   } catch {
     // Storage unavailable: the walk just won't survive a reload.
   }
@@ -78,11 +51,7 @@ export const useTimer = (plan: Phase[]) => {
   const [now, setNow] = useState(0);
 
   // False while the server renders and the page hydrates, true afterwards.
-  const hydrated = useSyncExternalStore(
-    subscribeNever,
-    () => true,
-    () => false,
-  );
+  const hydrated = useSyncExternalStore(subscribeNever, () => true, () => false);
   const [ready, setReady] = useState(false);
   if (hydrated && !ready) {
     // Pick the walk up where a reload or a locked phone left it.
@@ -127,7 +96,6 @@ export const useTimer = (plan: Phase[]) => {
   const reset = useCallback(() => {
     setAccumulatedMs(0);
     setStartedAt(null);
-    // Saved now, in case the page is left at once.
     writeSaved(0, null);
   }, []);
 

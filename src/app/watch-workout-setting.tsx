@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { isIos } from "@/lib/watch-workout";
 import { useEndShortcutName, useShortcutName } from "@/lib/use-shortcut-name";
 
@@ -12,6 +12,14 @@ export function WatchWorkoutSetting() {
   const ios = useSyncExternalStore(subscribe, onIos, () => false);
   const { name, setName } = useShortcutName();
   const { name: endName, setName: setEndName } = useEndShortcutName();
+  const details = useRef<HTMLDetailsElement>(null);
+  // Open on load when something is saved, then leave it to the walker's taps.
+  const decided = useRef(false);
+  useEffect(() => {
+    if (decided.current || !details.current) return;
+    decided.current = true;
+    if (name || endName) details.current.open = true;
+  }, [ios, name, endName]);
   if (!ios) return null;
 
   return (
