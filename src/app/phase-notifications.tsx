@@ -6,6 +6,8 @@ import type { PushSupport } from "@/lib/use-phase-push";
 
 type Props = {
   state: PushSupport;
+  // A walk is under way.
+  walking?: boolean;
   failed: boolean;
   shouldAsk: boolean;
   onEnable: () => void;
@@ -62,8 +64,25 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
 }
 
 // Alert-style note under the controls: a tinted card with an icon, a title and one clear action.
-export function PhaseNotifications({ state, failed, shouldAsk, onEnable, onDisable, onDismissAsk }: Props) {
+export function PhaseNotifications({ state, walking = false, failed, shouldAsk, onEnable, onDisable, onDismissAsk }: Props) {
   if (state === "unsupported") return null;
+
+  if (state === "install" && walking) {
+    return (
+      <div className="px-4 sm:px-0">
+        <div role="alert" className={`${ALERT} border-blaze bg-page text-page-ink`}>
+          <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold">This walk is in a browser tab</p>
+            <p>
+              Lock-screen reminders only work from the Strut app on your Home Screen. Keep this
+              screen on, and open the Home Screen app for your next walk.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (state === "install") {
     return (
