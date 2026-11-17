@@ -2,7 +2,6 @@
 
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { formatTime } from "@/lib/format-time";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
@@ -22,15 +21,10 @@ import {
   watchWorkoutUrl,
 } from "@/lib/watch-workout";
 import { AboutDialog } from "./about-dialog";
-import { HeartRate } from "./heart-rate";
-import { MuteButton } from "./mute-button";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
-import { TrailProfile } from "./trail-profile";
+import { WalkDisplay } from "./walk-display";
 import { WatchWorkoutSetting } from "./watch-workout-setting";
-
-// Countdown blinks once this many seconds (or fewer) remain in a phase.
-const BLINK_THRESHOLD_SECONDS = 3;
 
 // Lets the final cue play out before we leave for the end Shortcut.
 const END_AFTER_DONE_MS = 2500;
@@ -43,12 +37,6 @@ const store = (): Storage | null => {
   } catch {
     return null;
   }
-};
-
-const PHASE_FIELD = {
-  fast: "bg-brick text-mist",
-  slow: "bg-slate text-mist",
-  done: "bg-charcoal text-mist",
 };
 
 const BUTTON =
@@ -103,7 +91,6 @@ export function Timer() {
   });
   // With reminders on, the phone can lock and still cue the walker.
   useWakeLock(running && phasePush.state !== "on");
-  const current = plan[phaseIndex];
   // Between Start and the finish the header is out of the way.
   const walking = started && !done;
 
@@ -159,10 +146,6 @@ export function Timer() {
     return () => document.removeEventListener("pointerdown", unlockOnTouch);
   }, [soundLocked, prime]);
 
-  const blinking = running && !counting && secondsLeft <= BLINK_THRESHOLD_SECONDS;
-  // Each round is one fast phase followed by one slow phase.
-  const round = Math.floor(phaseIndex / 2) + 1;
-
   return (
     <div className="flex w-full flex-col gap-8">
       {/* Mid-walk the header fades out so the countdown is the only thing on screen. It keeps its space, so nothing moves when a walk starts, and inert keeps the help button out of tab order. */}
@@ -176,69 +159,21 @@ export function Timer() {
         <AboutDialog />
       </div>
       <div className="flex flex-col gap-3">
-        <section
-          aria-label="Current phase"
-          // Tall enough on phones that the buttons land within thumb reach.
-          className={`flex min-h-[64svh] flex-col justify-between gap-6 px-5 pt-5 pb-6 transition-colors duration-500 sm:min-h-0 sm:rounded-xl ${
-            PHASE_FIELD[done ? "done" : current.type]
-          }`}
-        >
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-3xl font-semibold">
-              {done
-                ? "Walk complete"
-                : counting
-                  ? "Get ready"
-                  : current.type === "fast"
-                  ? "Walk fast"
-                  : "Walk slow"}
-            </p>
-            {/* The negative margin keeps the taller button from stretching the row. */}
-            {!done && (
-              <div className="-my-1">
-                <MuteButton muted={muted} onToggle={() => setMuted(!muted)} />
-              </div>
-            )}
-          </div>
-
-          <p
-            role="timer"
-            aria-label={
-              done
-                ? `${formatTime(totalSeconds(plan))} walked`
-                : counting
-                  ? `${getReadyLeft} seconds until the walk starts`
-                  : `${formatTime(secondsLeft)} left`
-            }
-            className={`-my-4 font-condensed text-[clamp(7rem,42vw,11rem)] leading-none tabular-nums ${
-              blinking ? "animate-blink" : ""
-            }`}
-          >
-            {counting ? getReadyLeft : formatTime(done ? totalSeconds(plan) : secondsLeft)}
-          </p>
-
-          {!done && !counting && <HeartRate type={current.type} pulsing={running} />}
-
-          {/* Where you are in the walk, written above the trail it describes. */}
-          {counting ? (
-            <p className="text-base font-medium opacity-80">
-              {config.rounds} rounds of {formatTime(config.fastSeconds)} fast and{" "}
-              {formatTime(config.slowSeconds)} slow
-            </p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-base font-medium opacity-80">
-                {done ? "Time walked" : `Round ${round} of ${config.rounds}`}
-              </p>
-              <TrailProfile
-                plan={plan}
-                phaseIndex={phaseIndex}
-                fractionLeft={fractionLeft}
-                done={done}
-              />
-            </div>
-          )}
-        </section>
+        <WalkDisplay
+          plan={plan}
+          rounds={config.rounds}
+          fastSeconds={config.fastSeconds}
+          slowSeconds={config.slowSeconds}
+          phaseIndex={phaseIndex}
+          secondsLeft={secondsLeft}
+          fractionLeft={fractionLeft}
+          done={done}
+          counting={counting}
+          getReadyLeft={getReadyLeft}
+          running={running}
+          muted={muted}
+          onToggleMute={() => setMuted(!muted)}
+        />
 
         <div className="flex gap-3 px-4 sm:px-0">
           {running && counting ? (

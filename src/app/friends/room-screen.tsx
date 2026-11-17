@@ -5,14 +5,22 @@ import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { formatTime } from "@/lib/format-time";
-import { leaveRoom, removeMember, roomLink, type Room } from "@/lib/rooms";
+import { leaveRoom, removeMember, roomLink, startRoom, type Room } from "@/lib/rooms";
+import { primeAudio } from "@/lib/use-cues";
 import { useAuth } from "@/lib/use-auth";
 import { useRoom } from "@/lib/use-room";
+import { RoomWalk } from "./room-walk";
 import { LINK, PRIMARY, SECONDARY } from "./styles";
 
-export function Lobby({ roomId }: { roomId: string }) {
+export function RoomScreen({ roomId }: { roomId: string }) {
   const auth = useAuth();
   const state = useRoom(roomId);
+
+  // A phone only allows sound after a tap, so any tap while waiting counts.
+  useEffect(() => {
+    document.addEventListener("pointerdown", primeAudio, { once: true });
+    return () => document.removeEventListener("pointerdown", primeAudio);
+  }, []);
 
   if (auth.status === "loading" || state.status === "loading") {
     return <p className="text-page-quiet">One moment…</p>;
@@ -39,6 +47,20 @@ export function Lobby({ roomId }: { roomId: string }) {
   if (state.status === "error") {
     return <p role="alert" className="text-page-quiet">{state.message}</p>;
   }
+
+  if (state.room.status === "closed") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="text-lg">This room has closed. The host may have left before the walk began.</p>
+        <Link href="/friends" className={PRIMARY}>
+          Back to Walk with friends
+        </Link>
+      </div>
+    );
+  }
+
+  // Once the host has started, the room becomes the walk.
+  if (state.room.start_at !== null) return <RoomWalk room={state.room} roomId={roomId} />;
 
   const me = auth.user.id;
   const isHost = state.room.host_id === me;
@@ -77,14 +99,50 @@ export function Lobby({ roomId }: { roomId: string }) {
         </ul>
       </div>
 
-      <p className="text-page-quiet">
-        {isHost
-          ? "Starting the walk together is coming next. For now you can gather everyone here."
-          : "Waiting for the host. Starting the walk together is coming next."}
-      </p>
+      {isHost ? (
+        <StartButton roomId={roomId} getReady={state.room.get_ready_seconds} onStarted={state.reload} />
+      ) : (
+        <p className="text-page-quiet">Waiting for the host to start the walk.</p>
+      )}
 
-      <LeaveButton roomId={roomId} />
+      <LeaveButton roomId={roomId} isHost={isHost} />
     </section>
+  );
+}
+
+function StartButton({ roomId, getReady, onStarted }: { roomId: string; getReady: number; onStarted: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        className={PRIMARY}
+        disabled={busy}
+        onClick={async () => {
+          // This tap is what lets this phone play sound for the walk.
+          primeAudio();
+          setBusy(true);
+          setMessage(null);
+          const result = await startRoom(roomId);
+          setBusy(false);
+          if (!result.ok) return setMessage(result.message);
+          onStarted();
+        }}
+      >
+        Start the walk
+      </button>
+      <p className="text-sm text-page-quiet">
+        {getReady > 0
+          ? `Everyone sees a ${getReady} second countdown at the same moment.`
+          : "Everyone starts at the same moment."}
+      </p>
+      {message && (
+        <p role="alert" className="text-sm text-page-quiet">
+          {message}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -120,8 +178,8 @@ function RoomCode({ room }: { room: Room }) {
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl bg-action px-5 py-6 text-action-ink">
-      <p className="text-sm font-medium opacity-80">Room code</p>
-      <p aria-label={`Room code ${room.code.split("").join(" ")}`} className="font-condensed text-[5.5rem] leading-none tracking-[0.18em]">
+      <p className="text-sm font-medium opacity-80">Join code</p>
+      <p aria-label={`Join code ${room.code.split("").join(" ")}`} className="font-condensed text-[5.5rem] leading-none tracking-[0.18em]">
         {room.code}
       </p>
       {qr && (
@@ -167,7 +225,7 @@ function RemoveButton({ roomId, memberId, name }: { roomId: string; memberId: st
   );
 }
 
-function LeaveButton({ roomId }: { roomId: string }) {
+function LeaveButton({ roomId, isHost }: { roomId: string; isHost: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   return (
@@ -180,7 +238,7 @@ function LeaveButton({ roomId }: { roomId: string }) {
         router.push("/friends");
       }}
     >
-      Leave the room
+      {isHost ? "Close the room" : "Leave the room"}
     </button>
   );
 }

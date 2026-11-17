@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { FriendsShell } from "../../friends-shell";
-import { Lobby } from "../../lobby";
+import { RoomScreen } from "../../room-screen";
 
 export const metadata: Metadata = {
   title: "Your room · Strut",
@@ -10,7 +10,7 @@ export default async function RoomPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   return (
     <FriendsShell>
-      <Lobby roomId={id} />
+      <RoomScreen roomId={id} />
     </FriendsShell>
   );
 }

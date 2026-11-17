@@ -147,8 +147,12 @@ export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: O
     };
 
     if (!running) {
-      // After the last phase the final notification is already on its way.
-      if (!done) cancel();
+      // After the last phase the final notification is already on its way, so the
+      // run is simply forgotten, and the next walk can set up its own.
+      if (done) {
+        runId.current = null;
+        rememberRun(null);
+      } else cancel();
       return;
     }
 

@@ -45,6 +45,17 @@ describe("membersHere", () => {
     expect(list.map((m) => m.user_id)).toEqual(["a", "c"]);
   });
 
+  it("judges 'here' on the time it is given, so a phone with a wrong clock isn't fooled", () => {
+    // This phone's clock is a minute fast. Told the server's time, it still
+    // sees someone who was last seen 5 seconds ago as here.
+    const phoneNow = now + 60_000;
+    const serverOffset = -60_000;
+    const list = membersHere([member("a", 5)], "a", phoneNow + serverOffset);
+    expect(list.map((m) => m.user_id)).toEqual(["a"]);
+    // Without the correction the same person looks long gone.
+    expect(membersHere([member("a", 5)], "a", phoneNow)).toEqual([]);
+  });
+
   it("leaves out removed people", () => {
     expect(membersHere([member("a", 1), member("b", 1, true)], "a", now).map((m) => m.user_id)).toEqual(["a"]);
   });
@@ -59,8 +70,14 @@ describe("roomMessage", () => {
   it("explains the known problems kindly", () => {
     expect(roomMessage({ message: "room_full" })).toContain("full");
     expect(roomMessage({ message: "room_not_found" })).toContain("couldn't find");
-    expect(roomMessage({ message: "name_taken" })).toContain("already has that name");
+    expect(roomMessage({ message: "name_taken" })).toContain("goes by that name");
     expect(roomMessage({ message: "removed" })).toContain("host");
+    expect(roomMessage({ message: "already_started" })).toContain("already begun");
+  });
+
+  it("is kind about what only the host can do, and never gives a bare command", () => {
+    expect(roomMessage({ message: "not_host" })).toContain("host");
+    expect(roomMessage({ message: "cannot_remove_self" })).toContain("leave the room");
   });
 
   it("falls back for anything else", () => {

@@ -42,10 +42,11 @@ export const membersHere = (members: Member[], hostId: string, now: number): Mem
 const MESSAGES: Record<string, string> = {
   room_not_found: "We couldn't find that room. Check the four letters and try again.",
   room_full: "That room is full. Rooms hold up to 8 people.",
-  name_taken: "Someone in that room already has that name. Change your name and try again.",
+  name_taken: "Someone in that room already goes by that name. Try a different one.",
   removed: "The host has taken you out of that room.",
-  not_host: "Only the host can do that.",
-  cannot_remove_self: "You can't remove yourself. Use Leave instead.",
+  not_host: "That one is up to the host. You could ask them.",
+  already_started: "That walk has already begun, so there's nothing more to start.",
+  cannot_remove_self: "That's you! If you want to go, you can leave the room.",
   try_again: "That didn't work just now. Please try again.",
 };
 
@@ -115,4 +116,17 @@ export const fetchRoom = async (
   // No row means the room is closed, gone, or this person isn't in it.
   if (!room.data) return { ok: true, value: null };
   return { ok: true, value: { room: room.data as Room, members: members.data as Member[] } };
+};
+
+// Starts the walk for everyone. The answer is the moment the first phase begins.
+export const startRoom = async (room: string): Promise<Result<null>> => call("start_room", { room });
+
+// The server's clock, in milliseconds since 1970, or null if it couldn't be read.
+export const fetchServerTime = async (): Promise<number | null> => {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("server_time");
+  if (error || typeof data !== "string") return null;
+  const ms = Date.parse(data);
+  return Number.isNaN(ms) ? null : ms;
 };

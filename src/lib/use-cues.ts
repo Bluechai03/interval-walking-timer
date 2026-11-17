@@ -4,6 +4,16 @@ import { useCallback, useEffect, useRef } from "react";
 import { createAudioContext, playCue, playHeadsUp, playTick } from "./cues";
 import type { Phase } from "./plan";
 
+// One audio context for the whole app. A phone only allows sound after a tap, so
+// a tap anywhere earlier (such as joining a room) unlocks it for the walk that
+// follows on another screen.
+let shared: AudioContext | null = null;
+const sharedContext = (): AudioContext | null => (shared ??= createAudioContext());
+
+export const primeAudio = () => {
+  void sharedContext()?.resume();
+};
+
 // Seconds before a phase ends that the heads-up is spoken, and the shortest
 // phase that gets one (a shorter phase would be warned as soon as it starts).
 const HEADS_UP_SECONDS = 10;
@@ -24,21 +34,21 @@ type Options = {
 // Plays a sound, vibration and spoken cue whenever the phase changes, with a
 // spoken heads-up shortly before.
 export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false, getReadyLeft = 0 }: Options) => {
-  const audioContext = useRef<AudioContext | null>(null);
+  const audioContext = useRef<AudioContext | null>(shared);
   const lastCued = useRef<string | null>(null);
   const lastWarned = useRef<number | null>(null);
 
   // Browsers only allow audio after a user gesture, so call this from the
   // start button's click handler.
   const prime = useCallback(() => {
-    audioContext.current ??= createAudioContext();
+    audioContext.current = sharedContext();
     void audioContext.current?.resume();
   }, []);
 
   // Resolves true if sound is allowed without a tap (it often isn't after
   // coming back from another app). Gives up after a moment.
   const unlock = useCallback(async (): Promise<boolean> => {
-    audioContext.current ??= createAudioContext();
+    audioContext.current = sharedContext();
     const ctx = audioContext.current;
     if (!ctx) return false;
     if (ctx.state === "running") return true;
@@ -48,7 +58,7 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft,
   }, []);
 
   useEffect(() => {
-    if (getReadyLeft > 0) playTick(audioContext.current, muted);
+    if (getReadyLeft > 0) playTick((audioContext.current ??= shared), muted);
     // Muting mid-countdown must not replay a tick, so muted is read but not a trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getReadyLeft]);
@@ -74,7 +84,7 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft,
     if (lastCued.current === key) return;
     lastCued.current = key;
 
-    playCue(done ? "done" : plan[phaseIndex].type, audioContext.current, muted);
+    playCue(done ? "done" : plan[phaseIndex].type, (audioContext.current ??= shared), muted);
     // Muting mid-phase must not replay the cue, so muted is read but not a trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, phaseIndex, running, started, done]);
