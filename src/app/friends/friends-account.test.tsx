@@ -58,6 +58,26 @@ describe("FriendsAccount", () => {
     expect(saveDisplayName).toHaveBeenCalledWith("u9", "Anna");
   });
 
+  it("keeps the form through the moment the guest account is made", async () => {
+    // Making the account makes useAuth report a signed-in person halfway through
+    // saving. The form must not be rebuilt then, or the name seems to vanish.
+    auth.state = { status: "signed-out" };
+    signInAsGuest.mockResolvedValue({ ok: true, userId: "u9" });
+    fetchDisplayName.mockResolvedValue({ ok: true, value: null });
+    let rerender: (ui: React.ReactElement) => void = () => {};
+    saveDisplayName.mockImplementation(async () => {
+      auth.state = { status: "signed-in", user: { id: "u9" } } as unknown as AuthState;
+      rerender(<FriendsAccount />);
+      return { ok: true, value: "Anna" };
+    });
+    ({ rerender } = render(<FriendsAccount />));
+    await typeName("Anna");
+    fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
+    expect(await screen.findByText("Hi, Anna")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Save my name" })).toBeNull();
+    expect(fetchDisplayName).not.toHaveBeenCalled();
+  });
+
   it("explains a bad name without making an account", async () => {
     auth.state = { status: "signed-out" };
     render(<FriendsAccount />);

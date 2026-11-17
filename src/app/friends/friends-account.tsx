@@ -25,28 +25,36 @@ export function FriendsAccount({ joinCode }: { joinCode?: string }) {
     );
   }
 
-  // No account needed: the first name you pick creates one for this phone.
+  // No account needed: the first name you pick creates one for this phone. The
+  // form must not be rebuilt when that happens, so it only reads who was signed
+  // in when it first appeared.
   return (
     <NameForm
-      key={auth.status === "signed-in" ? auth.user.id : "guest"}
-      userId={auth.status === "signed-in" ? auth.user.id : null}
+      initialUserId={auth.status === "signed-in" ? auth.user.id : null}
       joinCode={joinCode}
     />
   );
 }
 
-function NameForm({ userId, joinCode }: { userId: string | null; joinCode?: string }) {
+function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; joinCode?: string }) {
+  // Who was signed in when this form appeared. Fixed on purpose: the guest
+  // account made by saving a name must not look like a new arrival.
+  const [arrivedAs] = useState(initialUserId);
+  // Set once a guest account is made here, so the next save reuses it.
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const userId = createdId ?? arrivedAs;
   // undefined while loading, null when there is no name yet.
-  const [saved, setSaved] = useState<string | null | undefined>(userId ? undefined : null);
+  const [saved, setSaved] = useState<string | null | undefined>(arrivedAs ? undefined : null);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(() => suggestNickname());
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Looks up a name already saved by someone who was signed in on arrival.
   useEffect(() => {
-    if (!userId) return;
+    if (!arrivedAs) return;
     let current = true;
-    void fetchDisplayName(userId).then((result) => {
+    void fetchDisplayName(arrivedAs).then((result) => {
       if (!current) return;
       if (result.ok) setSaved(result.value);
       else {
@@ -57,7 +65,7 @@ function NameForm({ userId, joinCode }: { userId: string | null; joinCode?: stri
     return () => {
       current = false;
     };
-  }, [userId]);
+  }, [arrivedAs]);
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -73,6 +81,7 @@ function NameForm({ userId, joinCode }: { userId: string | null; joinCode?: stri
         return setMessage(guest.message);
       }
       id = guest.userId;
+      setCreatedId(id);
     }
     const result = await saveDisplayName(id, check.name);
     setBusy(false);
