@@ -128,3 +128,53 @@ describe("RoomWalk", () => {
     expect(leaveRoom).toHaveBeenCalledWith("r1");
   });
 });
+
+describe("RoomWalk, the host leaving", () => {
+  it("asks the host first, and says the walk carries on", () => {
+    render(<RoomWalk room={room(-30)} roomId="r1" isHost />);
+    fireEvent.click(screen.getByRole("button", { name: "Leave this walk" }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent).toContain("Leave the walk?");
+    expect(dialog.textContent).toContain("carries on for everyone else");
+    expect(leaveRoom).not.toHaveBeenCalled();
+  });
+
+  it("stays in the walk if the host changes their mind", () => {
+    render(<RoomWalk room={room(-30)} roomId="r1" isHost />);
+    fireEvent.click(screen.getByRole("button", { name: "Leave this walk" }));
+    fireEvent.click(screen.getByRole("button", { name: "Stay in the walk" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(leaveRoom).not.toHaveBeenCalled();
+  });
+
+  it("leaves once the host confirms", async () => {
+    leaveRoom.mockResolvedValue({ ok: true, value: null });
+    render(<RoomWalk room={room(-30)} roomId="r1" isHost />);
+    fireEvent.click(screen.getByRole("button", { name: "Leave this walk" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Leave the walk" }));
+    });
+    expect(leaveRoom).toHaveBeenCalledWith("r1");
+    expect(push).toHaveBeenCalledWith("/friends");
+  });
+
+  it("does not ask a guest", async () => {
+    leaveRoom.mockResolvedValue({ ok: true, value: null });
+    render(<RoomWalk room={room(-30)} roomId="r1" />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Leave this walk" }));
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(leaveRoom).toHaveBeenCalledWith("r1");
+  });
+
+  it("does not ask the host once the walk is over", async () => {
+    leaveRoom.mockResolvedValue({ ok: true, value: null });
+    render(<RoomWalk room={room(-500)} roomId="r1" isHost />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Leave the room" }));
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(leaveRoom).toHaveBeenCalledWith("r1");
+  });
+});

@@ -9,6 +9,7 @@ import { leaveRoom, removeMember, roomLink, startRoom, type Room } from "@/lib/r
 import { primeAudio } from "@/lib/use-cues";
 import { useAuth } from "@/lib/use-auth";
 import { useRoom } from "@/lib/use-room";
+import { ConfirmDialog } from "./confirm-dialog";
 import { RoomWalk } from "./room-walk";
 import { LINK, PRIMARY, SECONDARY } from "./styles";
 
@@ -59,11 +60,13 @@ export function RoomScreen({ roomId }: { roomId: string }) {
     );
   }
 
-  // Once the host has started, the room becomes the walk.
-  if (state.room.start_at !== null) return <RoomWalk room={state.room} roomId={roomId} />;
-
   const me = auth.user.id;
   const isHost = state.room.host_id === me;
+
+  // Once the host has started, the room becomes the walk.
+  if (state.room.start_at !== null) {
+    return <RoomWalk room={state.room} roomId={roomId} isHost={isHost} />;
+  }
 
   return (
     <section className="flex flex-col gap-8">
@@ -228,17 +231,35 @@ function RemoveButton({ roomId, memberId, name }: { roomId: string; memberId: st
 function LeaveButton({ roomId, isHost }: { roomId: string; isHost: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  const leave = async () => {
+    setBusy(true);
+    await leaveRoom(roomId);
+    router.push("/friends");
+  };
+
   return (
-    <button
-      className={SECONDARY}
-      disabled={busy}
-      onClick={async () => {
-        setBusy(true);
-        await leaveRoom(roomId);
-        router.push("/friends");
-      }}
-    >
-      {isHost ? "Close the room" : "Leave the room"}
-    </button>
+    <>
+      <button
+        className={SECONDARY}
+        disabled={busy}
+        // Leaving as the host closes the room for everyone, so ask first.
+        onClick={() => (isHost ? setConfirming(true) : void leave())}
+      >
+        {isHost ? "Close the room" : "Leave the room"}
+      </button>
+      {confirming && (
+        <ConfirmDialog
+          title="Close this room?"
+          body="You're the host, so leaving closes the room for everyone. Your friends will see that it has closed, and the code will stop working."
+          cancelLabel="Keep the room"
+          confirmLabel="Close the room"
+          busy={busy}
+          onCancel={() => setConfirming(false)}
+          onConfirm={() => void leave()}
+        />
+      )}
+    </>
   );
 }

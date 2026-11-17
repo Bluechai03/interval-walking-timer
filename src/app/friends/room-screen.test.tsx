@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Member, Room } from "@/lib/rooms";
 import type { AuthState } from "@/lib/use-auth";
 import type { RoomState } from "@/lib/use-room";
@@ -181,5 +181,48 @@ describe("RoomScreen, starting the walk", () => {
     render(<RoomScreen roomId="r1" />);
     expect(screen.getByText("THE WALK")).toBeTruthy();
     expect(screen.queryByText("Join code")).toBeNull();
+  });
+});
+
+describe("RoomScreen, the host leaving", () => {
+  beforeEach(() => {
+    auth.state = as("host");
+    room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
+    leaveRoom.mockResolvedValue({ ok: true, value: null });
+  });
+
+  it("asks first, and says leaving closes the room for everyone", () => {
+    render(<RoomScreen roomId="r1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Close the room" }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Close this room?")).toBeTruthy();
+    expect(dialog.textContent).toContain("closes the room for everyone");
+    expect(dialog.textContent).toContain("code will stop working");
+    expect(leaveRoom).not.toHaveBeenCalled();
+  });
+
+  it("keeps the room open when the host changes their mind", () => {
+    render(<RoomScreen roomId="r1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Close the room" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Keep the room" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(leaveRoom).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("closes the room and goes back once the host confirms", async () => {
+    render(<RoomScreen roomId="r1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Close the room" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Close the room" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/friends"));
+    expect(leaveRoom).toHaveBeenCalledWith("r1");
+  });
+
+  it("does not ask a guest, who can leave without closing anything", async () => {
+    auth.state = as("g1");
+    render(<RoomScreen roomId="r1" />);
+    fireEvent.click(screen.getByRole("button", { name: "Leave the room" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() => expect(leaveRoom).toHaveBeenCalledWith("r1"));
   });
 });
