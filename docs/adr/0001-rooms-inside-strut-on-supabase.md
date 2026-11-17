@@ -14,7 +14,7 @@ Walking with friends is built into the existing Strut app, under `/friends`, in 
 
 ## Consequences
 
-- The timer code and the room code share one repo, so the timer's tests keep guarding the solo path.
+- The timer's source and the rooms' source share one repo, so the timer's tests keep guarding the solo path.
 - Anonymous sign-ins are open to abuse. There is no CAPTCHA at first; add one if guest sign-ins near a free limit.
 - Without accounts, "My walks" and a name are per browser, and a lost browser is a lost history. The optional account upgrade is the answer if that matters.
 - New Supabase projects do not grant tables to anyone by default, so every migration must grant what it needs. The database tests remove the default grants to match.

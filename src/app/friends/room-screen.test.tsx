@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Member, Room } from "@/lib/rooms";
 import type { AuthState } from "@/lib/use-auth";
 import type { RoomState } from "@/lib/use-room";
-import { Lobby } from "./lobby";
+import { RoomScreen } from "./room-screen";
 
 const auth = vi.hoisted(() => ({ state: {} as AuthState }));
 const room = vi.hoisted(() => ({ state: {} as RoomState }));
@@ -53,12 +53,15 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("Lobby", () => {
+describe("RoomScreen", () => {
   it("shows the code, the plan and who is here", async () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.getByText("BCDF")).toBeTruthy();
+    // The glossary calls it a Join code, so that is what people read and hear.
+    expect(screen.getByText("Join code")).toBeTruthy();
+    expect(screen.getByLabelText("Join code B C D F")).toBeTruthy();
     expect(screen.getByText(/4 rounds of 3:00 fast and 2:00 slow/)).toBeTruthy();
     expect(screen.getByText("Here now (2)")).toBeTruthy();
     expect(screen.getByText("Ben")).toBeTruthy();
@@ -68,7 +71,7 @@ describe("Lobby", () => {
   it("marks you and the host", () => {
     auth.state = as("g1");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.getByText("(you)")).toBeTruthy();
     expect(screen.getByText("· host")).toBeTruthy();
   });
@@ -77,7 +80,7 @@ describe("Lobby", () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
     removeMember.mockResolvedValue({ ok: true, value: null });
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.getAllByRole("button", { name: /^Remove/ })).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Remove Ben" }));
     await waitFor(() => expect(removeMember).toHaveBeenCalledWith("r1", "g1"));
@@ -86,7 +89,7 @@ describe("Lobby", () => {
   it("gives a guest no Remove buttons", () => {
     auth.state = as("g1");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"), person("g2", "Cara"));
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.queryByRole("button", { name: /^Remove/ })).toBeNull();
   });
 
@@ -94,7 +97,7 @@ describe("Lobby", () => {
     auth.state = as("g1");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
     leaveRoom.mockResolvedValue({ ok: true, value: null });
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     fireEvent.click(screen.getByRole("button", { name: "Leave the room" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/friends"));
     expect(leaveRoom).toHaveBeenCalledWith("r1");
@@ -103,16 +106,16 @@ describe("Lobby", () => {
   it("is kind when the room isn't available", () => {
     auth.state = as("g1");
     room.state = { status: "missing" };
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.getByText(/isn't available to you/)).toBeTruthy();
   });
 });
 
-describe("Lobby, closing and leaving", () => {
+describe("RoomScreen, closing and leaving", () => {
   it("tells the host that leaving closes the room", () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.getByRole("button", { name: "Close the room" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Leave the room" })).toBeNull();
   });
@@ -125,23 +128,23 @@ describe("Lobby, closing and leaving", () => {
       here: [person("g1", "Ben")],
       reload,
     };
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.getByText(/This room has closed/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Start the walk" })).toBeNull();
   });
 });
 
-describe("Lobby, starting the walk", () => {
+describe("RoomScreen, starting the walk", () => {
   it("lets only the host start, and tells guests to wait", () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
-    const { unmount } = render(<Lobby roomId="r1" />);
+    const { unmount } = render(<RoomScreen roomId="r1" />);
     expect(screen.getByRole("button", { name: "Start the walk" })).toBeTruthy();
     expect(screen.getByText(/5 second countdown/)).toBeTruthy();
     unmount();
 
     auth.state = as("g1");
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.queryByRole("button", { name: "Start the walk" })).toBeNull();
     expect(screen.getByText("Waiting for the host to start the walk.")).toBeTruthy();
   });
@@ -150,7 +153,7 @@ describe("Lobby, starting the walk", () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"));
     startRoom.mockResolvedValue({ ok: true, value: null });
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     fireEvent.click(screen.getByRole("button", { name: "Start the walk" }));
     await waitFor(() => expect(reload).toHaveBeenCalled());
     expect(startRoom).toHaveBeenCalledWith("r1");
@@ -161,7 +164,7 @@ describe("Lobby, starting the walk", () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"));
     startRoom.mockResolvedValue({ ok: false, message: "That walk has already started." });
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     fireEvent.click(screen.getByRole("button", { name: "Start the walk" }));
     expect((await screen.findByRole("alert")).textContent).toContain("already started");
     expect(reload).not.toHaveBeenCalled();
@@ -175,8 +178,8 @@ describe("Lobby, starting the walk", () => {
       here: [person("host", "Anna"), person("g1", "Ben")],
       reload,
     };
-    render(<Lobby roomId="r1" />);
+    render(<RoomScreen roomId="r1" />);
     expect(screen.getByText("THE WALK")).toBeTruthy();
-    expect(screen.queryByText("Room code")).toBeNull();
+    expect(screen.queryByText("Join code")).toBeNull();
   });
 });

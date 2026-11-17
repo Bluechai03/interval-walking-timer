@@ -70,9 +70,14 @@ describe("roomMessage", () => {
   it("explains the known problems kindly", () => {
     expect(roomMessage({ message: "room_full" })).toContain("full");
     expect(roomMessage({ message: "room_not_found" })).toContain("couldn't find");
-    expect(roomMessage({ message: "name_taken" })).toContain("already has that name");
+    expect(roomMessage({ message: "name_taken" })).toContain("goes by that name");
     expect(roomMessage({ message: "removed" })).toContain("host");
-    expect(roomMessage({ message: "already_started" })).toContain("already started");
+    expect(roomMessage({ message: "already_started" })).toContain("already begun");
+  });
+
+  it("is kind about what only the host can do, and never gives a bare command", () => {
+    expect(roomMessage({ message: "not_host" })).toContain("host");
+    expect(roomMessage({ message: "cannot_remove_self" })).toContain("leave the room");
   });
 
   it("falls back for anything else", () => {

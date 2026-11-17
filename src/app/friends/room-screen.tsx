@@ -12,7 +12,7 @@ import { useRoom } from "@/lib/use-room";
 import { RoomWalk } from "./room-walk";
 import { LINK, PRIMARY, SECONDARY } from "./styles";
 
-export function Lobby({ roomId }: { roomId: string }) {
+export function RoomScreen({ roomId }: { roomId: string }) {
   const auth = useAuth();
   const state = useRoom(roomId);
 
@@ -178,8 +178,8 @@ function RoomCode({ room }: { room: Room }) {
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl bg-action px-5 py-6 text-action-ink">
-      <p className="text-sm font-medium opacity-80">Room code</p>
-      <p aria-label={`Room code ${room.code.split("").join(" ")}`} className="font-condensed text-[5.5rem] leading-none tracking-[0.18em]">
+      <p className="text-sm font-medium opacity-80">Join code</p>
+      <p aria-label={`Join code ${room.code.split("").join(" ")}`} className="font-condensed text-[5.5rem] leading-none tracking-[0.18em]">
         {room.code}
       </p>
       {qr && (

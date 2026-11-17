@@ -42,11 +42,11 @@ export const membersHere = (members: Member[], hostId: string, now: number): Mem
 const MESSAGES: Record<string, string> = {
   room_not_found: "We couldn't find that room. Check the four letters and try again.",
   room_full: "That room is full. Rooms hold up to 8 people.",
-  name_taken: "Someone in that room already has that name. Change your name and try again.",
+  name_taken: "Someone in that room already goes by that name. Try a different one.",
   removed: "The host has taken you out of that room.",
-  not_host: "Only the host can do that.",
-  already_started: "That walk has already started.",
-  cannot_remove_self: "You can't remove yourself. Use Leave instead.",
+  not_host: "That one is up to the host. You could ask them.",
+  already_started: "That walk has already begun, so there's nothing more to start.",
+  cannot_remove_self: "That's you! If you want to go, you can leave the room.",
   try_again: "That didn't work just now. Please try again.",
 };
 
