@@ -11,6 +11,8 @@ Open Strut from your **Home Screen** icon, not from Safari. Only the Home Screen
 
 When you tap **Start**, Strut starts its countdown in the app and opens your Shortcut. Your Watch starts the workout a few seconds later. Switch back to Strut afterwards (the app switcher, or the small arrow at the top left of the screen). Strut's timer keeps running while you're away.
 
+**Optional: go back to Strut automatically.** Strut doesn't appear in Shortcuts' Open App list, because that list doesn't include Home Screen web apps. On at least one iPhone, ending your Strut Shortcut with an **Open URLs** action set to `webapp://` brings the Home Screen app back to the front. This isn't documented by Apple. It seems to open the web app you used most recently, which is Strut when you've just tapped Start there, so if it ever opens a different one, delete the action and switch back by hand.
+
 **Keeping the Watch and Strut in step.** With the switch on, Strut's countdown lasts as long as the **Watch delay** (6 seconds to begin with) instead of Get ready. The walk begins when the countdown ends, so it should start on the same beat as the Watch's workout. To tune it, tap Start and watch your Watch: if the Watch's timer reads 0:00 before Strut says go, make the delay shorter. If it reads 0:00 after, make it longer. It's the same every walk once it's right.
 
 To end the workout too, make a second Shortcut with the **End Workout** action and name it **Strut End**. If you used another name, type it under **Shortcut to end it**. Strut runs it when your walk finishes, or when you tap Reset. Without it, end the workout on your Watch, or from the bar at the top of your phone.
