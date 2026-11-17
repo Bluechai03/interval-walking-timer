@@ -9,13 +9,15 @@ export type RoomState =
   // Closed, gone, or you aren't in it. The database doesn't say which.
   | { status: "missing" }
   | { status: "error"; message: string }
-  | { status: "ready"; room: Room; here: Member[] };
+  | { status: "ready"; room: Room; here: Member[]; reload: () => void };
 
-const REFRESH_MS = 10_000;
+// Short, so a guest still hears about the start quickly if live updates are missed.
+const REFRESH_MS = 4_000;
 const TICK_MS = 5_000;
 
 // A room as the people in it see it: the room, who is here, kept up to date.
 export const useRoom = (roomId: string): RoomState => {
+  const [reloadCount, setReloadCount] = useState(0);
   const [loaded, setLoaded] = useState<
     { status: "loading" } | { status: "missing" } | { status: "error"; message: string } | { status: "ready"; room: Room; members: Member[] }
   >({ status: "loading" });
@@ -53,7 +55,7 @@ export const useRoom = (roomId: string): RoomState => {
       clearInterval(poll);
       if (channel) void supabase?.removeChannel(channel);
     };
-  }, [roomId]);
+  }, [roomId, reloadCount]);
 
   // Tell the others we're here, while this page is showing.
   useEffect(() => {
@@ -76,5 +78,11 @@ export const useRoom = (roomId: string): RoomState => {
   }, []);
 
   if (loaded.status !== "ready") return loaded;
-  return { status: "ready", room: loaded.room, here: membersHere(loaded.members, loaded.room.host_id, now) };
+  return {
+    status: "ready",
+    room: loaded.room,
+    here: membersHere(loaded.members, loaded.room.host_id, now),
+    // For right after our own change, so the screen doesn't wait for the next refresh.
+    reload: () => setReloadCount((count) => count + 1),
+  };
 };

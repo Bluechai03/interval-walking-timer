@@ -5,14 +5,22 @@ import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { formatTime } from "@/lib/format-time";
-import { leaveRoom, removeMember, roomLink, type Room } from "@/lib/rooms";
+import { leaveRoom, removeMember, roomLink, startRoom, type Room } from "@/lib/rooms";
+import { primeAudio } from "@/lib/use-cues";
 import { useAuth } from "@/lib/use-auth";
 import { useRoom } from "@/lib/use-room";
+import { RoomWalk } from "./room-walk";
 import { LINK, PRIMARY, SECONDARY } from "./styles";
 
 export function Lobby({ roomId }: { roomId: string }) {
   const auth = useAuth();
   const state = useRoom(roomId);
+
+  // A phone only allows sound after a tap, so any tap while waiting counts.
+  useEffect(() => {
+    document.addEventListener("pointerdown", primeAudio, { once: true });
+    return () => document.removeEventListener("pointerdown", primeAudio);
+  }, []);
 
   if (auth.status === "loading" || state.status === "loading") {
     return <p className="text-page-quiet">One moment…</p>;
@@ -39,6 +47,9 @@ export function Lobby({ roomId }: { roomId: string }) {
   if (state.status === "error") {
     return <p role="alert" className="text-page-quiet">{state.message}</p>;
   }
+
+  // Once the host has started, the room becomes the walk.
+  if (state.room.start_at !== null) return <RoomWalk room={state.room} roomId={roomId} />;
 
   const me = auth.user.id;
   const isHost = state.room.host_id === me;
@@ -77,14 +88,50 @@ export function Lobby({ roomId }: { roomId: string }) {
         </ul>
       </div>
 
-      <p className="text-page-quiet">
-        {isHost
-          ? "Starting the walk together is coming next. For now you can gather everyone here."
-          : "Waiting for the host. Starting the walk together is coming next."}
-      </p>
+      {isHost ? (
+        <StartButton roomId={roomId} getReady={state.room.get_ready_seconds} onStarted={state.reload} />
+      ) : (
+        <p className="text-page-quiet">Waiting for the host to start the walk.</p>
+      )}
 
       <LeaveButton roomId={roomId} />
     </section>
+  );
+}
+
+function StartButton({ roomId, getReady, onStarted }: { roomId: string; getReady: number; onStarted: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        className={PRIMARY}
+        disabled={busy}
+        onClick={async () => {
+          // This tap is what lets this phone play sound for the walk.
+          primeAudio();
+          setBusy(true);
+          setMessage(null);
+          const result = await startRoom(roomId);
+          setBusy(false);
+          if (!result.ok) return setMessage(result.message);
+          onStarted();
+        }}
+      >
+        Start the walk
+      </button>
+      <p className="text-sm text-page-quiet">
+        {getReady > 0
+          ? `Everyone sees a ${getReady} second countdown at the same moment.`
+          : "Everyone starts at the same moment."}
+      </p>
+      {message && (
+        <p role="alert" className="text-sm text-page-quiet">
+          {message}
+        </p>
+      )}
+    </div>
   );
 }
 

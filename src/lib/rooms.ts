@@ -45,6 +45,7 @@ const MESSAGES: Record<string, string> = {
   name_taken: "Someone in that room already has that name. Change your name and try again.",
   removed: "The host has taken you out of that room.",
   not_host: "Only the host can do that.",
+  already_started: "That walk has already started.",
   cannot_remove_self: "You can't remove yourself. Use Leave instead.",
   try_again: "That didn't work just now. Please try again.",
 };
@@ -115,4 +116,17 @@ export const fetchRoom = async (
   // No row means the room is closed, gone, or this person isn't in it.
   if (!room.data) return { ok: true, value: null };
   return { ok: true, value: { room: room.data as Room, members: members.data as Member[] } };
+};
+
+// Starts the walk for everyone. The answer is the moment the first phase begins.
+export const startRoom = async (room: string): Promise<Result<null>> => call("start_room", { room });
+
+// The server's clock, in milliseconds since 1970, or null if it couldn't be read.
+export const fetchServerTime = async (): Promise<number | null> => {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("server_time");
+  if (error || typeof data !== "string") return null;
+  const ms = Date.parse(data);
+  return Number.isNaN(ms) ? null : ms;
 };

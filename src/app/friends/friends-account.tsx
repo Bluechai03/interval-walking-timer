@@ -8,6 +8,7 @@ import { usePlanConfig } from "@/lib/use-plan-config";
 import { useGetReady } from "@/lib/use-get-ready";
 import { createRoom, isCompleteCode, joinRoom, normalizeCode } from "@/lib/rooms";
 import { signInAsGuest, useAuth } from "@/lib/use-auth";
+import { primeAudio } from "@/lib/use-cues";
 import { PRIMARY, SECONDARY } from "./styles";
 
 export function FriendsAccount({ joinCode }: { joinCode?: string }) {
@@ -163,6 +164,7 @@ function RoomActions({ name }: { name: string }) {
   const [message, setMessage] = useState<string | null>(null);
 
   const start = async () => {
+    primeAudio();
     setBusy(true);
     setMessage(null);
     const result = await createRoom(
@@ -178,6 +180,7 @@ function RoomActions({ name }: { name: string }) {
 
   const join = async (event: React.FormEvent) => {
     event.preventDefault();
+    primeAudio();
     setBusy(true);
     setMessage(null);
     const result = await joinRoom(code, name);
@@ -241,6 +244,7 @@ function JoinLink({ code, name }: { code: string; name: string }) {
   }
 
   const join = async () => {
+    primeAudio();
     setBusy(true);
     setMessage(null);
     const result = await joinRoom(clean, name);

@@ -61,6 +61,7 @@ describe("roomMessage", () => {
     expect(roomMessage({ message: "room_not_found" })).toContain("couldn't find");
     expect(roomMessage({ message: "name_taken" })).toContain("already has that name");
     expect(roomMessage({ message: "removed" })).toContain("host");
+    expect(roomMessage({ message: "already_started" })).toContain("already started");
   });
 
   it("falls back for anything else", () => {
