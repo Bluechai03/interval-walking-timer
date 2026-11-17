@@ -82,11 +82,11 @@ begin
   select count(*) into n from public.rooms;
   if n <> 0 then raise exception 'FAIL: a removed person still sees the walk'; end if;
 
-  ---------------------------------------------------------------- a host who has left cannot start a new walk
+  ---------------------------------------------------------------- a host who has left cannot start (the room closed)
   perform pg_temp.become(4);
   select c.room_id, c.code into room_id, code from public.create_room(60, 60, 1, 0, 'Solo') c;
   perform public.leave_room(room_id);
-  perform pg_temp.fails(format('select public.start_room(%L)', room_id), 'not_host');
+  perform pg_temp.fails(format('select public.start_room(%L)', room_id), 'room_not_found');
 
   ---------------------------------------------------------------- a walk with no countdown
   perform pg_temp.become(5);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchRoom, HEARTBEAT_MS, membersHere, touchRoom, type Member, type Room } from "./rooms";
 import { getSupabase } from "./supabase";
+import { useServerOffset } from "./use-server-offset";
 
 export type RoomState =
   | { status: "loading" }
@@ -22,6 +23,8 @@ export const useRoom = (roomId: string): RoomState => {
     { status: "loading" } | { status: "missing" } | { status: "error"; message: string } | { status: "ready"; room: Room; members: Member[] }
   >({ status: "loading" });
   const [now, setNow] = useState(() => Date.now());
+  // last_seen_at comes from the server, so compare it with the server's time.
+  const serverOffset = useServerOffset() ?? 0;
 
   useEffect(() => {
     let active = true;
@@ -81,7 +84,7 @@ export const useRoom = (roomId: string): RoomState => {
   return {
     status: "ready",
     room: loaded.room,
-    here: membersHere(loaded.members, loaded.room.host_id, now),
+    here: membersHere(loaded.members, loaded.room.host_id, now + serverOffset),
     // For right after our own change, so the screen doesn't wait for the next refresh.
     reload: () => setReloadCount((count) => count + 1),
   };

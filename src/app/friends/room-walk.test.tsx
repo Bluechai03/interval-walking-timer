@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Room } from "@/lib/rooms";
 import { RoomWalk } from "./room-walk";
 
-const offset = vi.hoisted(() => ({ value: 0 as number | null }));
+const offset = vi.hoisted(() => ({ value: 0 as number | null, approximate: false }));
 const push = vi.hoisted(() => vi.fn());
 const leaveRoom = vi.hoisted(() => vi.fn());
 const useCues = vi.hoisted(() => vi.fn(() => ({ prime: () => {}, unlock: () => Promise.resolve(true) })));
@@ -11,7 +11,9 @@ const usePhasePush = vi.hoisted(() =>
   vi.fn(() => ({ state: "off", failed: false, enable: () => {}, disable: () => {}, shouldAsk: false, dismissAsk: () => {} })),
 );
 
-vi.mock("@/lib/use-server-offset", () => ({ useServerOffset: () => offset.value }));
+vi.mock("@/lib/use-server-offset", () => ({
+  useOffsetOrFallback: () => ({ offset: offset.value, approximate: offset.approximate }),
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/rooms", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/rooms")>()),
@@ -38,6 +40,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
   offset.value = 0;
+  offset.approximate = false;
 });
 afterEach(() => {
   cleanup();
@@ -50,6 +53,18 @@ describe("RoomWalk", () => {
     offset.value = null;
     render(<RoomWalk room={room(5)} roomId="r1" />);
     expect(screen.getByText("One moment…")).toBeTruthy();
+  });
+
+  it("says so when it had to use the phone's own clock", () => {
+    offset.value = 0;
+    offset.approximate = true;
+    render(<RoomWalk room={room(5)} roomId="r1" />);
+    expect(screen.getByText(/couldn't check the clock/)).toBeTruthy();
+  });
+
+  it("says nothing about the clock when it was read", () => {
+    render(<RoomWalk room={room(5)} roomId="r1" />);
+    expect(screen.queryByText(/couldn't check the clock/)).toBeNull();
   });
 
   it("counts everyone in, then starts the first phase together", () => {

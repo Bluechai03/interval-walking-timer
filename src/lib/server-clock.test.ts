@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { measureOffset, offsetFromSamples } from "./server-clock";
+import { collectSamples, measureOffset, offsetFromSamples } from "./server-clock";
 
 describe("offsetFromSamples", () => {
   it("is the server's time minus ours, taken at the middle of the round trip", () => {
@@ -37,5 +37,20 @@ describe("measureOffset", () => {
     );
     expect(calls).toBe(4);
     expect(offset).toBe(1025);
+  });
+});
+
+describe("collectSamples", () => {
+  it("keeps what came back and drops what didn't", async () => {
+    let call = 0;
+    const samples = await collectSamples(async () => (++call % 2 === 0 ? null : 1000), 4, () => 0);
+    expect(samples).toHaveLength(2);
+  });
+
+  it("lets several rounds be combined, so one noisy round can't move the offset", () => {
+    // A steady round, then a later round that was slow and so less trustworthy.
+    const steady = [{ sentAt: 0, receivedAt: 40, server: 1020 }];
+    const noisy = [{ sentAt: 100_000, receivedAt: 100_900, server: 101_000 }];
+    expect(offsetFromSamples([...steady, ...noisy])).toBe(1000);
   });
 });

@@ -18,13 +18,13 @@ export const offsetFromSamples = (samples: ClockSample[]): number | null => {
   return best.server - (best.sentAt + best.receivedAt) / 2;
 };
 
-// Asks for the server's time a few times and returns the offset, or null if no
-// answer came back.
-export const measureOffset = async (
+// Asks for the server's time a few times and returns what came back. An answer
+// that never came is left out.
+export const collectSamples = async (
   readServerTime: () => Promise<number | null>,
   tries = 4,
   now: () => number = Date.now,
-): Promise<number | null> => {
+): Promise<ClockSample[]> => {
   const samples: ClockSample[] = [];
   for (let i = 0; i < tries; i++) {
     const sentAt = now();
@@ -32,5 +32,12 @@ export const measureOffset = async (
     const receivedAt = now();
     if (server !== null) samples.push({ sentAt, receivedAt, server });
   }
-  return offsetFromSamples(samples);
+  return samples;
 };
+
+// The offset from one round of asking, or null if no answer came back.
+export const measureOffset = async (
+  readServerTime: () => Promise<number | null>,
+  tries = 4,
+  now: () => number = Date.now,
+): Promise<number | null> => offsetFromSamples(await collectSamples(readServerTime, tries, now));

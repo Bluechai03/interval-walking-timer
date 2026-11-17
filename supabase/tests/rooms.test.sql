@@ -137,10 +137,15 @@ begin
   end loop;
   perform pg_temp.become(9);
   perform pg_temp.fails(format('select public.join_room(%L, %L)', code_b, 'Late'), 'room_full');
-  -- someone who went quiet no longer takes a place
+  -- someone whose phone is asleep still has their place (a walker with a locked
+  -- screen must not lose it), until the host removes them
   perform pg_temp.admin();
   update public.room_members set last_seen_at = now() - interval '10 minutes'
   where room_id = room_b and user_id = pg_temp.u(8);
+  perform pg_temp.become(9);
+  perform pg_temp.fails(format('select public.join_room(%L, %L)', code_b, 'Late'), 'room_full');
+  perform pg_temp.become(1);
+  perform public.remove_member(room_b, pg_temp.u(8));
   perform pg_temp.become(9);
   perform public.join_room(code_b, 'Late');
 

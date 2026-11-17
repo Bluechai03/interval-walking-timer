@@ -9,7 +9,7 @@ import { primeAudio, useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { useRoomTimer } from "@/lib/use-room-timer";
-import { useServerOffset } from "@/lib/use-server-offset";
+import { useOffsetOrFallback } from "@/lib/use-server-offset";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { PhaseNotifications } from "../phase-notifications";
 import { WalkDisplay } from "../walk-display";
@@ -18,11 +18,13 @@ import { LINK, SECONDARY } from "./styles";
 // A walk everyone in the room is taking together. It follows the host's start
 // moment on the server's clock, so it needs no Start, Pause or Reset of its own.
 export function RoomWalk({ room, roomId }: { room: Room; roomId: string }) {
-  const offset = useServerOffset();
+  const { offset, approximate } = useOffsetOrFallback();
   if (offset === null || room.start_at === null) {
     return <p className="text-page-quiet">One moment…</p>;
   }
-  return <Walking room={room} roomId={roomId} startAt={room.start_at} offset={offset} />;
+  return (
+    <Walking room={room} roomId={roomId} startAt={room.start_at} offset={offset} approximate={approximate} />
+  );
 }
 
 function Walking({
@@ -30,11 +32,14 @@ function Walking({
   roomId,
   startAt,
   offset,
+  approximate,
 }: {
   room: Room;
   roomId: string;
   startAt: string;
   offset: number;
+  // We couldn't read the server's clock, so this phone's own is standing in.
+  approximate: boolean;
 }) {
   const router = useRouter();
   const config = useMemo(
@@ -115,6 +120,12 @@ function Walking({
         muted={muted}
         onToggleMute={() => setMuted(!muted)}
       />
+
+      {approximate && (
+        <p className="text-sm text-page-quiet">
+          We couldn&apos;t check the clock, so your timer may be a second or two off from your friends&apos;.
+        </p>
+      )}
 
       {soundLocked && (
         <p className="text-sm text-page-quiet">Tap anywhere to turn sound on.</p>

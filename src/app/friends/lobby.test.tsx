@@ -108,6 +108,29 @@ describe("Lobby", () => {
   });
 });
 
+describe("Lobby, closing and leaving", () => {
+  it("tells the host that leaving closes the room", () => {
+    auth.state = as("host");
+    room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
+    render(<Lobby roomId="r1" />);
+    expect(screen.getByRole("button", { name: "Close the room" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Leave the room" })).toBeNull();
+  });
+
+  it("tells a guest the room has closed when the host left before the start", () => {
+    auth.state = as("g1");
+    room.state = {
+      status: "ready",
+      room: { ...theRoom, status: "closed" },
+      here: [person("g1", "Ben")],
+      reload,
+    };
+    render(<Lobby roomId="r1" />);
+    expect(screen.getByText(/This room has closed/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Start the walk" })).toBeNull();
+  });
+});
+
 describe("Lobby, starting the walk", () => {
   it("lets only the host start, and tells guests to wait", () => {
     auth.state = as("host");

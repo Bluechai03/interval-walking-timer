@@ -48,6 +48,17 @@ export function Lobby({ roomId }: { roomId: string }) {
     return <p role="alert" className="text-page-quiet">{state.message}</p>;
   }
 
+  if (state.room.status === "closed") {
+    return (
+      <div className="flex flex-col gap-4">
+        <p className="text-lg">This room has closed. The host may have left before the walk began.</p>
+        <Link href="/friends" className={PRIMARY}>
+          Back to Walk with friends
+        </Link>
+      </div>
+    );
+  }
+
   // Once the host has started, the room becomes the walk.
   if (state.room.start_at !== null) return <RoomWalk room={state.room} roomId={roomId} />;
 
@@ -94,7 +105,7 @@ export function Lobby({ roomId }: { roomId: string }) {
         <p className="text-page-quiet">Waiting for the host to start the walk.</p>
       )}
 
-      <LeaveButton roomId={roomId} />
+      <LeaveButton roomId={roomId} isHost={isHost} />
     </section>
   );
 }
@@ -214,7 +225,7 @@ function RemoveButton({ roomId, memberId, name }: { roomId: string; memberId: st
   );
 }
 
-function LeaveButton({ roomId }: { roomId: string }) {
+function LeaveButton({ roomId, isHost }: { roomId: string; isHost: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   return (
@@ -227,7 +238,7 @@ function LeaveButton({ roomId }: { roomId: string }) {
         router.push("/friends");
       }}
     >
-      Leave the room
+      {isHost ? "Close the room" : "Leave the room"}
     </button>
   );
 }
