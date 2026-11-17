@@ -24,3 +24,12 @@ Shortcuts has no way to pause a workout, so Pause only pauses the timer. Your Wa
 Start runs the Shortcut each time you start a new walk, including after Reset, so end the old workout on your Watch first.
 
 With the switch off, the timer starts as normal, with the Get ready countdown. If a name is wrong, Shortcuts shows an error, and you can switch back to Strut, where the timer is already running.
+
+## In a room
+
+Walking with friends works with the same Shortcuts and the same switch.
+
+- A room counts down for at least 10 seconds, so there is time for your Watch to start before the walk does.
+- Strut tries to open your start Shortcut by itself, one Watch delay before the walk begins, so the workout and the walk start on the same beat. iOS may refuse to open an app that nobody tapped for, so there is always a **Start my Watch** button on the countdown screen. Tap it if your Watch hasn't started.
+- If you join after the walk has begun, tap **Start my Watch** yourself. Your Watch workout will begin a few seconds into your walk.
+- When the walk finishes, Strut runs your end Shortcut after the last cue. It also runs it if you leave the walk early. **End Watch workout** on the finished screen is there in case iOS blocks it.

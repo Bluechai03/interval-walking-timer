@@ -126,7 +126,8 @@ describe("rooms", () => {
     fireEvent.click(screen.getByRole("button", { name: "Start a room" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-1"));
     expect(createRoom).toHaveBeenCalledWith(
-      expect.objectContaining({ fast: 180, slow: 180, rounds: 5, getReady: 5 }),
+      // A room counts down for at least 10 seconds, so a Watch has time to start.
+      expect.objectContaining({ fast: 180, slow: 180, rounds: 5, getReady: 10 }),
       "Anna",
     );
   });

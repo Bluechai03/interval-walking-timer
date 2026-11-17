@@ -6,7 +6,7 @@ import { checkName, NAME_LIMITS, suggestNickname } from "@/lib/name-rules";
 import { fetchDisplayName, saveDisplayName } from "@/lib/profile";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useGetReady } from "@/lib/use-get-ready";
-import { createRoom, isCompleteCode, joinRoom, normalizeCode } from "@/lib/rooms";
+import { createRoom, isCompleteCode, joinRoom, normalizeCode, roomCountdownSeconds } from "@/lib/rooms";
 import { signInAsGuest, useAuth } from "@/lib/use-auth";
 import { primeAudio } from "@/lib/use-cues";
 import { PRIMARY, SECONDARY } from "./styles";
@@ -168,7 +168,7 @@ function RoomActions({ name }: { name: string }) {
     setBusy(true);
     setMessage(null);
     const result = await createRoom(
-      { fast: config.fastSeconds, slow: config.slowSeconds, rounds: config.rounds, getReady: getReady.seconds },
+      { fast: config.fastSeconds, slow: config.slowSeconds, rounds: config.rounds, getReady: roomCountdownSeconds(getReady.seconds) },
       name,
     );
     if (!result.ok) {

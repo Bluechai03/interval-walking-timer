@@ -1,43 +1,21 @@
 "use client";
 
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useGetReady } from "@/lib/use-get-ready";
-import { useIos } from "@/lib/use-ios";
-import { useWatchDelay } from "@/lib/use-watch-delay";
-import { useWatchShortcuts } from "@/lib/use-shortcut-name";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
-import {
-  clearWorkoutFlag,
-  isIos,
-  markWorkoutStarted,
-  takeWorkoutEnd,
-  watchWorkoutUrl,
-} from "@/lib/watch-workout";
+import { useWatchSetup, useWatchWorkout } from "@/lib/use-watch-workout";
 import { AboutDialog } from "./about-dialog";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
 import { WalkDisplay } from "./walk-display";
 import { WatchWorkoutSetting } from "./watch-workout-setting";
-
-// Lets the final cue play out before we leave for the end Shortcut.
-const END_AFTER_DONE_MS = 2500;
-
-const onIosDevice = () => isIos(navigator.userAgent, navigator.maxTouchPoints);
-// Reading localStorage can itself throw (blocked storage).
-const store = (): Storage | null => {
-  try {
-    return localStorage;
-  } catch {
-    return null;
-  }
-};
 
 const BUTTON =
   "flex h-16 flex-1 items-center justify-center gap-2 rounded-lg text-xl font-semibold transition-[colors,transform] motion-safe:active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink disabled:opacity-40";
@@ -45,13 +23,11 @@ const BUTTON =
 export function Timer() {
   const { config, setConfig, hydrated } = usePlanConfig();
   const getReady = useGetReady();
-  const watchDelay = useWatchDelay();
-  const ios = useIos();
-  const { startShortcut: shortcutName, endShortcut: endShortcutName } = useWatchShortcuts();
+  const watchSetup = useWatchSetup();
   // With the Watch workout on, the countdown lasts as long as the Watch takes to
   // start, so the workout and the walk begin on the same beat.
-  const watchOn = ios && shortcutName !== "";
-  const countdownSeconds = watchOn ? watchDelay.seconds : getReady.seconds;
+  const watchOn = watchSetup.on;
+  const countdownSeconds = watchOn ? watchSetup.delaySeconds : getReady.seconds;
   const plan = useMemo(() => buildPlan(config), [config]);
   const {
     phaseIndex,
@@ -94,57 +70,9 @@ export function Timer() {
   // Between Start and the finish the header is out of the way.
   const walking = started && !done;
 
-  // Runs the walker's end Shortcut, once per walk and only if Strut started
-  // the workout. `force` is for their own tap on the finished screen.
-  const endWatchWorkout = useCallback(
-    (force = false) => {
-      const storage = store();
-      if (!storage || !onIosDevice()) return;
-      const url = watchWorkoutUrl(endShortcutName);
-      if (url && takeWorkoutEnd(storage, force)) window.location.href = url;
-    },
-    [endShortcutName],
-  );
-
-  // Only a walk that finishes while we watch it ends the workout, not one
-  // restored from storage after the page was reopened.
-  const sawRunning = useRef(false);
-  useEffect(() => {
-    if (running) sawRunning.current = true;
-  }, [running]);
-  useEffect(() => {
-    if (!done || !sawRunning.current) return;
-    const id = setTimeout(() => endWatchWorkout(), END_AFTER_DONE_MS);
-    return () => clearTimeout(id);
-  }, [done, endWatchWorkout]);
-
-  // Start opens the Shortcut from the app, so we are still the same walk when the
-  // walker switches back. iOS often keeps sound locked after that; if it does,
-  // the first touch unlocks it.
-  const [soundLocked, setSoundLocked] = useState(false);
-  const leftForShortcut = useRef(false);
-  useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState !== "visible" || !leftForShortcut.current) return;
-      leftForShortcut.current = false;
-      if (muted) return;
-      void unlock().then((allowed) => {
-        if (!allowed) setSoundLocked(true);
-      });
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [muted, unlock]);
-
-  useEffect(() => {
-    if (!soundLocked) return;
-    const unlockOnTouch = () => {
-      prime();
-      setSoundLocked(false);
-    };
-    document.addEventListener("pointerdown", unlockOnTouch, { once: true });
-    return () => document.removeEventListener("pointerdown", unlockOnTouch);
-  }, [soundLocked, prime]);
+  // Start and end the Watch workout through the walker's Shortcuts. Start opens
+  // the Shortcut from this app, so it is still the same walk when they switch back.
+  const watch = useWatchWorkout(watchSetup, { running, done, muted, prime, unlock });
 
   return (
     <div className="flex w-full flex-col gap-8">
@@ -182,7 +110,7 @@ export function Timer() {
               className={`${BUTTON} border-2 border-page-ink`}
               onClick={() => {
                 reset();
-                endWatchWorkout();
+                watch.end();
               }}
             >
               Cancel
@@ -205,15 +133,7 @@ export function Timer() {
                   // The walk starts here, in the app, so its reminders work. The
                   // countdown gives the Watch time to start its workout.
                   start();
-                  if (!first) return;
-                  const storage = store();
-                  const url = ios ? watchWorkoutUrl(shortcutName) : null;
-                  if (url && storage && markWorkoutStarted(storage)) {
-                    leftForShortcut.current = true;
-                    window.location.href = url;
-                  } else if (storage) {
-                    clearWorkoutFlag(storage);
-                  }
+                  if (first) watch.start();
                 }}
               >
                 <PlayIcon aria-hidden="true" />
@@ -227,7 +147,7 @@ export function Timer() {
               className={`${BUTTON} border-2 border-page-ink`}
               onClick={() => {
                 reset();
-                endWatchWorkout();
+                watch.end();
               }}
             >
               <RotateCcwIcon aria-hidden="true" />
@@ -235,17 +155,17 @@ export function Timer() {
             </button>
           )}
           {/* The automatic end can be blocked by iOS, so the walker can always tap it. */}
-          {done && endShortcutName && onIosDevice() && (
+          {done && watchSetup.canEnd && (
             <button
               className={`${BUTTON} border-2 border-page-ink`}
-              onClick={() => endWatchWorkout(true)}
+              onClick={() => watch.end(true)}
             >
               End Watch workout
             </button>
           )}
         </div>
 
-        {soundLocked && (
+        {watch.soundLocked && (
           <p className="px-4 text-sm text-page-quiet sm:px-0">
             Tap anywhere to turn sound on. iOS keeps it off after a trip to Shortcuts.
           </p>
