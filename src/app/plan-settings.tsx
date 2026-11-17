@@ -20,6 +20,8 @@ type Props = {
   totalSeconds: number;
   disabled: boolean;
   getReadySeconds: number;
+  // The Watch workout sets the countdown, so this field has no effect.
+  getReadyFromWatch?: boolean;
   onGetReadyChange: (seconds: number) => void;
   onChange: (config: PlanConfig) => void;
 };
@@ -31,6 +33,7 @@ export function PlanSettings({
   totalSeconds,
   disabled,
   getReadySeconds,
+  getReadyFromWatch = false,
   onGetReadyChange,
   onChange,
 }: Props) {
@@ -78,7 +81,9 @@ export function PlanSettings({
           );
         })}
         <label className="flex min-w-0 flex-col gap-1">
-          <span className="text-sm font-medium text-page-quiet">Get ready</span>
+          <span className="text-sm font-medium text-page-quiet">
+            Get ready{getReadyFromWatch && <span className="font-normal"> · set by Watch</span>}
+          </span>
           <span className="flex items-baseline gap-1 border-b border-page-line focus-within:border-page-ink">
             <input
               type="number"
@@ -87,7 +92,7 @@ export function PlanSettings({
               defaultValue={getReadySeconds}
               min={GET_READY_LIMITS.min}
               max={GET_READY_LIMITS.max}
-              disabled={disabled}
+              disabled={disabled || getReadyFromWatch}
               onChange={(event) => {
                 const value = event.target.valueAsNumber;
                 if (Number.isInteger(value) && value >= GET_READY_LIMITS.min && value <= GET_READY_LIMITS.max) {

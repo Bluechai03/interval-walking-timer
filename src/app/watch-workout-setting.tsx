@@ -1,19 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
-import { isIos } from "@/lib/watch-workout";
+import { useEffect, useRef } from "react";
+import { useIos } from "@/lib/use-ios";
+import { useWatchDelay, WATCH_DELAY_LIMITS } from "@/lib/use-watch-delay";
 import {
   DEFAULT_END_SHORTCUT,
   DEFAULT_START_SHORTCUT,
   useWatchShortcuts,
 } from "@/lib/use-shortcut-name";
 
-const subscribe = () => () => {};
-const onIos = () => isIos(navigator.userAgent, navigator.maxTouchPoints);
-
 // Only offered on iPhone and iPad, where Shortcuts exists.
 export function WatchWorkoutSetting() {
-  const ios = useSyncExternalStore(subscribe, onIos, () => false);
+  const ios = useIos();
+  const delay = useWatchDelay();
   const { enabled, setEnabled, start, end } = useWatchShortcuts();
   const { name, setName } = start;
   const { name: endName, setName: setEndName } = end;
@@ -82,11 +81,29 @@ export function WatchWorkoutSetting() {
             onChange={(event) => setEndName(event.target.value)}
           />
         </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-page-quiet">Watch delay (seconds)</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none focus:border-page-ink"
+            defaultValue={delay.seconds}
+            min={WATCH_DELAY_LIMITS.min}
+            max={WATCH_DELAY_LIMITS.max}
+            onChange={(event) => {
+              const value = event.target.valueAsNumber;
+              if (Number.isInteger(value) && value >= WATCH_DELAY_LIMITS.min && value <= WATCH_DELAY_LIMITS.max) {
+                delay.setSeconds(value);
+              }
+            }}
+          />
+        </label>
         <p className="text-sm text-page-quiet">
-          With the switch on, Start runs the first Shortcut to begin a workout on your Watch, then
-          brings you back here. When your walk finishes, or you tap Reset, the second one ends it.
-          Leave a name blank to use the one shown. Pause only pauses this timer, so your Watch
-          keeps counting until the workout ends.
+          With the switch on, Start begins the walk in this app and runs your Shortcut. Switch back
+          to Strut afterwards. The countdown lasts the Watch delay, so Strut&apos;s timer and your
+          Watch&apos;s workout start together. If your Watch is ahead of Strut, make the delay shorter.
+          If it is behind, make it longer. Pause only pauses this timer, so your Watch keeps counting
+          until the workout ends. Leave a name blank to use the one shown.
         </p>
       </div>
     </details>

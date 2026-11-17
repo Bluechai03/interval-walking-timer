@@ -3,9 +3,7 @@ import {
   clearWorkoutFlag,
   isIos,
   markWorkoutStarted,
-  startReturnUrls,
   takeWorkoutEnd,
-  watchReturn,
   watchWorkoutUrl,
 } from "./watch-workout";
 
@@ -19,15 +17,18 @@ const fakeStore = (): Storage => {
 };
 
 describe("watchWorkoutUrl", () => {
-  it("opens the named Shortcut and comes back to the timer", () => {
-    expect(watchWorkoutUrl("Strut outdoor", "https://strut.app/")).toBe(
-      "shortcuts://x-callback-url/run-shortcut?name=Strut%20outdoor&x-success=https%3A%2F%2Fstrut.app%2F&x-error=https%3A%2F%2Fstrut.app%2F&x-cancel=https%3A%2F%2Fstrut.app%2F",
-    );
+  it("opens the named Shortcut", () => {
+    expect(watchWorkoutUrl("Strut Outdoor")).toBe("shortcuts://run-shortcut?name=Strut%20Outdoor");
+  });
+
+  it("asks for no way back, so iOS never opens Safari", () => {
+    expect(watchWorkoutUrl("Strut Outdoor")).not.toContain("x-success");
+    expect(watchWorkoutUrl("Strut Outdoor")).not.toContain("x-callback-url");
   });
 
   it("makes nothing when no name is set", () => {
-    expect(watchWorkoutUrl("", "https://strut.app/")).toBeNull();
-    expect(watchWorkoutUrl("   ", "https://strut.app/")).toBeNull();
+    expect(watchWorkoutUrl("")).toBeNull();
+    expect(watchWorkoutUrl("   ")).toBeNull();
   });
 });
 
@@ -81,23 +82,5 @@ describe("ending the workout", () => {
       removeItem: () => {},
     } as unknown as Storage;
     expect(markWorkoutStarted(broken)).toBe(false);
-  });
-});
-
-describe("coming back from the start Shortcut", () => {
-  it("tells success, error and cancel apart", () => {
-    const back = startReturnUrls("https://strut.app");
-    const url = watchWorkoutUrl("Strut Outdoor", back) ?? "";
-    expect(url).toContain("x-success=https%3A%2F%2Fstrut.app%2F%3Fwatch%3Dok");
-    expect(url).toContain("x-error=https%3A%2F%2Fstrut.app%2F%3Fwatch%3Derror");
-    expect(url).toContain("x-cancel=https%3A%2F%2Fstrut.app%2F%3Fwatch%3Dcancel");
-  });
-
-  it("reads the outcome from the address", () => {
-    expect(watchReturn("?watch=ok")).toBe("ok");
-    expect(watchReturn("?watch=error")).toBe("error");
-    expect(watchReturn("?watch=cancel")).toBe("cancel");
-    expect(watchReturn("?watch=banana")).toBeNull();
-    expect(watchReturn("")).toBeNull();
   });
 });

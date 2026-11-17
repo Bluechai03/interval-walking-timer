@@ -9,6 +9,8 @@ import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useGetReady } from "@/lib/use-get-ready";
+import { useIos } from "@/lib/use-ios";
+import { useWatchDelay } from "@/lib/use-watch-delay";
 import { useWatchShortcuts } from "@/lib/use-shortcut-name";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
@@ -16,9 +18,7 @@ import {
   clearWorkoutFlag,
   isIos,
   markWorkoutStarted,
-  startReturnUrls,
   takeWorkoutEnd,
-  watchReturn,
   watchWorkoutUrl,
 } from "@/lib/watch-workout";
 import { AboutDialog } from "./about-dialog";
@@ -36,7 +36,6 @@ const BLINK_THRESHOLD_SECONDS = 3;
 const END_AFTER_DONE_MS = 2500;
 
 const onIosDevice = () => isIos(navigator.userAgent, navigator.maxTouchPoints);
-const returnUrl = () => `${window.location.origin}/`;
 // Reading localStorage can itself throw (blocked storage).
 const store = (): Storage | null => {
   try {
@@ -58,6 +57,13 @@ const BUTTON =
 export function Timer() {
   const { config, setConfig, hydrated } = usePlanConfig();
   const getReady = useGetReady();
+  const watchDelay = useWatchDelay();
+  const ios = useIos();
+  const { startShortcut: shortcutName, endShortcut: endShortcutName } = useWatchShortcuts();
+  // With the Watch workout on, the countdown lasts as long as the Watch takes to
+  // start, so the workout and the walk begin on the same beat.
+  const watchOn = ios && shortcutName !== "";
+  const countdownSeconds = watchOn ? watchDelay.seconds : getReady.seconds;
   const plan = useMemo(() => buildPlan(config), [config]);
   const {
     phaseIndex,
@@ -71,9 +77,8 @@ export function Timer() {
     start,
     pause,
     reset,
-  } = useTimer(plan, getReady.seconds);
+  } = useTimer(plan, countdownSeconds);
   const { muted, setMuted } = useMuted();
-  const { startShortcut: shortcutName, endShortcut: endShortcutName } = useWatchShortcuts();
   const counting = getReadyLeft > 0;
   // The walk's cues and reminders begin when the countdown ends.
   const { prime, unlock } = useCues({
@@ -108,7 +113,7 @@ export function Timer() {
     (force = false) => {
       const storage = store();
       if (!storage || !onIosDevice()) return;
-      const url = watchWorkoutUrl(endShortcutName, returnUrl());
+      const url = watchWorkoutUrl(endShortcutName);
       if (url && takeWorkoutEnd(storage, force)) window.location.href = url;
     },
     [endShortcutName],
@@ -126,30 +131,23 @@ export function Timer() {
     return () => clearTimeout(id);
   }, [done, endWatchWorkout]);
 
-  // With the Watch switch on, Start goes to Shortcuts first and the walk begins
-  // when we come back, so the timer and the workout begin together.
+  // Start opens the Shortcut from the app, so we are still the same walk when the
+  // walker switches back. iOS often keeps sound locked after that; if it does,
+  // the first touch unlocks it.
   const [soundLocked, setSoundLocked] = useState(false);
-  const [watchNote, setWatchNote] = useState<string | null>(null);
-  const handledReturn = useRef(false);
+  const leftForShortcut = useRef(false);
   useEffect(() => {
-    if (!ready || handledReturn.current) return;
-    handledReturn.current = true;
-    const outcome = watchReturn(window.location.search);
-    if (!outcome) return;
-    window.history.replaceState(null, "", window.location.pathname);
-    if (started) return;
-    // Sound is often locked after coming back; if so, one tap unlocks it and begins.
-    void (muted ? Promise.resolve(true) : unlock()).then((allowed) => {
-      if (outcome !== "ok") {
-        setWatchNote("Your Watch workout may not have started. You can start it on the Watch.");
-      }
-      // The walk always begins now. If sound is locked, the first touch unlocks it.
-      if (!allowed) setSoundLocked(true);
-      start();
-    });
-    // Runs once, when the page first loads after the Shortcut.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || !leftForShortcut.current) return;
+      leftForShortcut.current = false;
+      if (muted) return;
+      void unlock().then((allowed) => {
+        if (!allowed) setSoundLocked(true);
+      });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [muted, unlock]);
 
   useEffect(() => {
     if (!soundLocked) return;
@@ -268,23 +266,19 @@ export function Timer() {
                 className={`${BUTTON} bg-action text-action-ink`}
                 onClick={() => {
                   prime();
-                  setWatchNote(null);
-                  if (started) {
-                    // Resuming.
-                    start();
-                    return;
-                  }
-                  const storage = store();
-                  const url = onIosDevice()
-                    ? watchWorkoutUrl(shortcutName, startReturnUrls(window.location.origin))
-                    : null;
-                  if (url && storage && markWorkoutStarted(storage)) {
-                    // The walk begins when we come back.
-                    window.location.href = url;
-                    return;
-                  }
-                  if (storage) clearWorkoutFlag(storage);
+                  const first = !started;
+                  // The walk starts here, in the app, so its reminders work. The
+                  // countdown gives the Watch time to start its workout.
                   start();
+                  if (!first) return;
+                  const storage = store();
+                  const url = ios ? watchWorkoutUrl(shortcutName) : null;
+                  if (url && storage && markWorkoutStarted(storage)) {
+                    leftForShortcut.current = true;
+                    window.location.href = url;
+                  } else if (storage) {
+                    clearWorkoutFlag(storage);
+                  }
                 }}
               >
                 <PlayIcon aria-hidden="true" />
@@ -316,15 +310,15 @@ export function Timer() {
           )}
         </div>
 
-        {watchNote && <p className="px-4 text-sm text-page-quiet sm:px-0">{watchNote}</p>}
         {soundLocked && (
           <p className="px-4 text-sm text-page-quiet sm:px-0">
-            Tap anywhere to turn sound on. iOS keeps it off after coming back from Shortcuts.
+            Tap anywhere to turn sound on. iOS keeps it off after a trip to Shortcuts.
           </p>
         )}
 
         <PhaseNotifications
           state={phasePush.state}
+          walking={walking}
           failed={phasePush.failed}
           shouldAsk={phasePush.shouldAsk}
           onEnable={() => void phasePush.enable()}
@@ -340,6 +334,7 @@ export function Timer() {
         totalSeconds={totalSeconds(plan)}
         disabled={started}
         getReadySeconds={getReady.seconds}
+        getReadyFromWatch={watchOn}
         onGetReadyChange={getReady.setSeconds}
         onChange={setConfig}
       />
