@@ -165,6 +165,12 @@ export function Timer() {
           )}
         </div>
 
+        {watchSetup.blockedInBrowser && walking && (
+          <p className="px-4 text-sm text-page-quiet sm:px-0">
+            Your Watch workout only starts from the Strut app on your Home Screen, so it
+            didn&apos;t start here. Open Strut from there next time.
+          </p>
+        )}
         {watch.soundLocked && (
           <p className="px-4 text-sm text-page-quiet sm:px-0">
             Tap anywhere to turn sound on. iOS keeps it off after a trip to Shortcuts.

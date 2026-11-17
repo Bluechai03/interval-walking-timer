@@ -167,6 +167,13 @@ function Walking({
         soundLocked && <p className="text-sm text-page-quiet">Tap anywhere to turn sound on.</p>
       )}
 
+      {watchSetup.blockedInBrowser && !done && (
+        <p className="text-sm text-page-quiet">
+          Your Watch workout only starts from the Strut app on your Home Screen, so it won&apos;t
+          start from this browser tab. Open Strut from your Home Screen next time.
+        </p>
+      )}
+
       {watchSetup.on && !watch.started && !done && (
         <div className="flex flex-col gap-2">
           <button className={PRIMARY} onClick={() => watch.start()}>

@@ -2,10 +2,11 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useWatchSetup, useWatchWorkout } from "./use-watch-workout";
 
-const watchState = vi.hoisted(() => ({ ios: true, start: "Strut Outdoor", end: "Strut End", delay: 6 }));
+const watchState = vi.hoisted(() => ({ ios: true, standalone: true, start: "Strut Outdoor", end: "Strut End", delay: 6 }));
 const openShortcut = vi.hoisted(() => vi.fn());
 
 vi.mock("./use-ios", () => ({ useIos: () => watchState.ios }));
+vi.mock("./use-standalone", () => ({ useStandalone: () => watchState.standalone }));
 vi.mock("./use-shortcut-name", () => ({
   useWatchShortcuts: () => ({ startShortcut: watchState.start, endShortcut: watchState.end }),
 }));
@@ -34,6 +35,7 @@ const setup = (walk: Walk) =>
 beforeEach(() => {
   localStorage.clear();
   watchState.ios = true;
+  watchState.standalone = true;
   watchState.start = "Strut Outdoor";
   watchState.end = "Strut End";
   watchState.delay = 6;
@@ -57,6 +59,34 @@ describe("useWatchSetup", () => {
     watchState.start = "Strut Outdoor";
     watchState.ios = false;
     expect(setup({ running: false, done: false }).result.current.setup.on).toBe(false);
+  });
+});
+
+describe("in a browser tab", () => {
+  beforeEach(() => {
+    watchState.standalone = false;
+  });
+
+  it("is off, and says it is the browser that is the problem", () => {
+    const { result } = setup({ running: true, done: false });
+    expect(result.current.setup).toMatchObject({ on: false, canEnd: false, blockedInBrowser: true });
+  });
+
+  it("never opens a Shortcut, because it would pull the walker out of the tab", () => {
+    const { result } = setup({ running: true, done: false });
+    let launched = true;
+    act(() => {
+      launched = result.current.watch.start();
+    });
+    expect(launched).toBe(false);
+    act(() => result.current.watch.end(true));
+    expect(openShortcut).not.toHaveBeenCalled();
+  });
+
+  it("has nothing to block when the switch is off", () => {
+    watchState.start = "";
+    const { result } = setup({ running: true, done: false });
+    expect(result.current.setup.blockedInBrowser).toBe(false);
   });
 });
 

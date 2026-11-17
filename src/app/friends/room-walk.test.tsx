@@ -6,7 +6,7 @@ import { RoomWalk } from "./room-walk";
 const offset = vi.hoisted(() => ({ value: 0 as number | null, approximate: false }));
 const push = vi.hoisted(() => vi.fn());
 const leaveRoom = vi.hoisted(() => vi.fn());
-const watchState = vi.hoisted(() => ({ ios: false, start: "", end: "", delay: 6 }));
+const watchState = vi.hoisted(() => ({ ios: false, standalone: true, start: "", end: "", delay: 6 }));
 const openShortcut = vi.hoisted(() => vi.fn());
 const useCues = vi.hoisted(() => vi.fn(() => ({ prime: () => {}, unlock: () => Promise.resolve(true) })));
 const usePhasePush = vi.hoisted(() =>
@@ -22,6 +22,7 @@ vi.mock("@/lib/rooms", async (importOriginal) => ({
   leaveRoom,
 }));
 vi.mock("@/lib/use-ios", () => ({ useIos: () => watchState.ios }));
+vi.mock("@/lib/use-standalone", () => ({ useStandalone: () => watchState.standalone }));
 vi.mock("@/lib/use-shortcut-name", () => ({
   useWatchShortcuts: () => ({ startShortcut: watchState.start, endShortcut: watchState.end }),
 }));
@@ -53,7 +54,7 @@ beforeEach(() => {
   offset.value = 0;
   offset.approximate = false;
   localStorage.clear();
-  Object.assign(watchState, { ios: false, start: "", end: "", delay: 6 });
+  Object.assign(watchState, { ios: false, standalone: true, start: "", end: "", delay: 6 });
 });
 afterEach(() => {
   cleanup();
@@ -254,6 +255,22 @@ describe("RoomWalk, the Apple Watch", () => {
     Object.assign(watchState, { ios: false, start: "Strut Outdoor" });
     render(<RoomWalk room={room(10)} roomId="r1" />);
     expect(screen.queryByRole("button", { name: "Start my Watch" })).toBeNull();
+  });
+
+  it("in a browser tab, says so and neither launches nor offers the Watch", () => {
+    watchOn();
+    watchState.standalone = false;
+    render(<RoomWalk room={room(10)} roomId="r1" />);
+    expect(screen.getByText(/only starts from the Strut app on your Home Screen/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Start my Watch" })).toBeNull();
+    act(() => vi.advanceTimersByTime(20_000));
+    expect(openShortcut).not.toHaveBeenCalled();
+  });
+
+  it("stays quiet about browser tabs in the Home Screen app", () => {
+    watchOn();
+    render(<RoomWalk room={room(10)} roomId="r1" />);
+    expect(screen.queryByText(/only starts from the Strut app on your Home Screen/)).toBeNull();
   });
 
   it("ends the workout a moment after the walk finishes", () => {

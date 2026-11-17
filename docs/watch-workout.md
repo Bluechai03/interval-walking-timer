@@ -5,9 +5,9 @@ iPhone with an Apple Watch only. The timer cannot start a workout by itself, so 
 1. Open **Shortcuts** on your iPhone and tap **+**.
 2. Add the **Start Workout** action. Set Type to **Walking**, Location to **Outdoor** (make a second one for **Indoor**), Goal to **Open**.
 3. Name it **Strut Outdoor** (or anything you like), and tap **Done**.
-4. In Strut, turn on **Start my Watch too**. If you used another name, open the section and type the exact name.
+4. In Strut, turn on **Start my Watch too**. It is off until you do. If you used another name, open the section and type the exact name.
 
-Open Strut from your **Home Screen** icon, not from Safari. Only the Home Screen app can send lock-screen reminders, and iOS won't send you back to it from Shortcuts, so Strut doesn't ask.
+Open Strut from your **Home Screen** icon, not from Safari. In a Safari tab, Strut won't run your Shortcuts at all and tells you why: a Shortcut that ends by opening the Home Screen app would pull you away from the tab where your walk is running. Only the Home Screen app can send lock-screen reminders, and iOS won't send you back to it from Shortcuts, so Strut doesn't ask.
 
 When you tap **Start**, Strut starts its countdown in the app and opens your Shortcut. Your Watch starts the workout a few seconds later. Switch back to Strut afterwards (the app switcher, or the small arrow at the top left of the screen). Strut's timer keeps running while you're away.
 
