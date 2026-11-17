@@ -17,6 +17,11 @@ export const watchWorkoutUrl = (shortcutName: string): string | null => {
   return `shortcuts://run-shortcut?${params.toString().replaceAll("+", "%20")}`;
 };
 
+// Leaves for Shortcuts. The page stays alive underneath, so the walk carries on.
+export const openShortcut = (url: string): void => {
+  window.location.href = url;
+};
+
 // What Strut has done for the current walk. Kept in storage because the page
 // may be reloaded while the walker is away in Shortcuts.
 const FLAG_KEY = "watch-workout";

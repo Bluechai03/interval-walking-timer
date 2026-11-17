@@ -99,7 +99,7 @@ export function WatchWorkoutSetting() {
           />
         </label>
         <p className="text-sm text-page-quiet">
-          With the switch on, Start begins the walk in this app and runs your Shortcut. Switch back
+          With the switch on, Start begins the walk in this app and runs your Shortcut. This works from the Home Screen app only, not from a Safari tab. Switch back
           to Strut afterwards. The countdown lasts the Watch delay, so Strut&apos;s timer and your
           Watch&apos;s workout start together. If your Watch is ahead of Strut, make the delay shorter.
           If it is behind, make it longer. Pause only pauses this timer, so your Watch keeps counting

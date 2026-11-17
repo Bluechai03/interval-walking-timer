@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { buildPlan } from "@/lib/plan";
 import { leaveRoom, type Room } from "@/lib/rooms";
 import { primeAudio, useCues } from "@/lib/use-cues";
@@ -11,10 +11,11 @@ import { usePhasePush } from "@/lib/use-phase-push";
 import { useRoomTimer } from "@/lib/use-room-timer";
 import { useOffsetOrFallback } from "@/lib/use-server-offset";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { useWatchSetup, useWatchWorkout } from "@/lib/use-watch-workout";
 import { PhaseNotifications } from "../phase-notifications";
 import { ConfirmDialog } from "./confirm-dialog";
 import { WalkDisplay } from "../walk-display";
-import { LINK, SECONDARY } from "./styles";
+import { LINK, PRIMARY, SECONDARY } from "./styles";
 
 // A walk everyone in the room is taking together. It follows the host's start
 // moment on the server's clock, so it needs no Start, Pause or Reset of its own.
@@ -57,7 +58,7 @@ function Walking({
   const [leaving, setLeaving] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  const { unlock } = useCues({
+  const { prime, unlock } = useCues({
     plan,
     phaseIndex,
     running: running && !counting,
@@ -77,6 +78,28 @@ function Walking({
     done,
   });
   useWakeLock(running && phasePush.state !== "on");
+
+  // The Apple Watch workout, through the walker's Shortcuts.
+  const watchSetup = useWatchSetup();
+  const watch = useWatchWorkout(watchSetup, { running, done, muted, prime, unlock });
+
+  // Try to open the Shortcut by itself, one Watch delay before the walk begins, so
+  // the workout and the walk start on the same beat. iOS may refuse a launch nobody
+  // tapped for, which is why the button below is always there too. Someone who joins
+  // after the start would be late, so they use the button.
+  const autoLaunched = useRef(false);
+  const startWatch = watch.start;
+  useEffect(() => {
+    if (!watchSetup.on || watch.started || autoLaunched.current) return;
+    const untilStartMs = Date.parse(startAt) - (Date.now() + offset);
+    if (untilStartMs <= 0) return;
+    const wait = Math.max(0, untilStartMs - watchSetup.delaySeconds * 1000);
+    const id = setTimeout(() => {
+      autoLaunched.current = true;
+      startWatch();
+    }, wait);
+    return () => clearTimeout(id);
+  }, [watchSetup.on, watchSetup.delaySeconds, watch.started, startAt, offset, startWatch]);
 
   // Sound needs a tap on this phone. Joining or starting usually gave it; if
   // not, the first touch anywhere does.
@@ -105,6 +128,8 @@ function Walking({
     setLeaving(true);
     await leaveRoom(roomId);
     router.push("/friends");
+    // Leaving early ends the Watch workout too, as Reset does in the solo timer.
+    watch.end();
   };
 
   // Once the walk is done, leaving changes nothing for anyone, so no need to ask.
@@ -134,8 +159,31 @@ function Walking({
         </p>
       )}
 
-      {soundLocked && (
-        <p className="text-sm text-page-quiet">Tap anywhere to turn sound on.</p>
+      {watch.soundLocked ? (
+        <p className="text-sm text-page-quiet">
+          Tap anywhere to turn sound on. iOS keeps it off after a trip to Shortcuts.
+        </p>
+      ) : (
+        soundLocked && <p className="text-sm text-page-quiet">Tap anywhere to turn sound on.</p>
+      )}
+
+      {watchSetup.blockedInBrowser && !done && (
+        <p className="text-sm text-page-quiet">
+          Your Watch workout only starts from the Strut app on your Home Screen, so it won&apos;t
+          start from this browser tab. Open Strut from your Home Screen next time.
+        </p>
+      )}
+
+      {watchSetup.on && !watch.started && !done && (
+        <div className="flex flex-col gap-2">
+          <button className={PRIMARY} onClick={() => watch.start()}>
+            Start my Watch
+          </button>
+          <p className="text-sm text-page-quiet">
+            Opens your Shortcut to start the workout. Strut tries to do this for you as the
+            countdown runs, so tap it if your Watch hasn&apos;t started.
+          </p>
+        </div>
       )}
 
       <PhaseNotifications
@@ -151,6 +199,12 @@ function Walking({
 
       {done ? (
         <div className="flex flex-col gap-3">
+          {watchSetup.canEnd && (
+            // The automatic end can be blocked by iOS, so the walker can always tap it.
+            <button className={SECONDARY} onClick={() => watch.end(true)}>
+              End Watch workout
+            </button>
+          )}
           <button className={SECONDARY} disabled={leaving} onClick={() => void leave()}>
             Leave the room
           </button>

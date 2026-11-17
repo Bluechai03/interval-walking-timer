@@ -65,13 +65,17 @@ export const useShortcutName = () => useNamed(START_KEY);
 // The name of the Shortcut that ends it. Empty means the walker ends it on the Watch.
 export const useEndShortcutName = () => useNamed(END_KEY);
 
+// The Watch switch is off until the walker turns it on. Saving a Shortcut name
+// does not turn it on.
+export const isWatchEnabled = (flag: string): boolean => flag === "1";
+
 // The switch, plus the Shortcut names Start and the finish should run (empty
-// when the switch is off). A name saved before the switch existed turns it on once.
+// when the switch is off).
 export const useWatchShortcuts = () => {
   const start = useShortcutName();
   const end = useEndShortcutName();
   const flag = useNamed(ENABLED_KEY);
-  const enabled = flag.name === "" ? start.name.trim() !== "" : flag.name === "1";
+  const enabled = isWatchEnabled(flag.name);
   return {
     enabled,
     setEnabled: (on: boolean) => flag.setName(on ? "1" : "0"),

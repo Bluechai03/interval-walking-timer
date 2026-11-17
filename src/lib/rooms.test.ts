@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { isCompleteCode, membersHere, normalizeCode, roomLink, roomMessage, type Member } from "./rooms";
+import {
+  isCompleteCode,
+  membersHere,
+  normalizeCode,
+  ROOM_MIN_GET_READY_SECONDS,
+  roomCountdownSeconds,
+  roomLink,
+  roomMessage,
+  type Member,
+} from "./rooms";
 
 describe("normalizeCode", () => {
   it("accepts any case and ignores spaces and dashes", () => {
@@ -83,5 +92,18 @@ describe("roomMessage", () => {
   it("falls back for anything else", () => {
     expect(roomMessage({ message: "boom" })).toContain("didn't work");
     expect(roomMessage(null)).toContain("didn't work");
+  });
+});
+
+describe("roomCountdownSeconds", () => {
+  it("is never shorter than a Watch needs to start", () => {
+    expect(ROOM_MIN_GET_READY_SECONDS).toBe(10);
+    expect(roomCountdownSeconds(0)).toBe(10);
+    expect(roomCountdownSeconds(5)).toBe(10);
+  });
+
+  it("keeps a longer setting", () => {
+    expect(roomCountdownSeconds(15)).toBe(15);
+    expect(roomCountdownSeconds(10)).toBe(10);
   });
 });

@@ -1,6 +1,11 @@
 import { getSupabase } from "./supabase";
 
 export const ROOM_CODE_LENGTH = 4;
+// A Watch needs about 6 seconds to start its workout after the Shortcut opens, so
+// a room's countdown is never shorter than this.
+export const ROOM_MIN_GET_READY_SECONDS = 10;
+export const roomCountdownSeconds = (getReadySetting: number): number =>
+  Math.max(getReadySetting, ROOM_MIN_GET_READY_SECONDS);
 // A member who hasn't been heard from for this long drops off the list.
 export const HERE_WITHIN_MS = 30_000;
 export const HEARTBEAT_MS = 10_000;
