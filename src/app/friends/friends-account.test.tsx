@@ -8,8 +8,18 @@ const signInAsGuest = vi.hoisted(() => vi.fn());
 const fetchDisplayName = vi.hoisted(() => vi.fn());
 const saveDisplayName = vi.hoisted(() => vi.fn());
 
+const push = vi.hoisted(() => vi.fn());
+const createRoom = vi.hoisted(() => vi.fn());
+const joinRoom = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/use-auth", () => ({ useAuth: () => auth.state, signInAsGuest }));
 vi.mock("@/lib/profile", () => ({ fetchDisplayName, saveDisplayName }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("@/lib/rooms", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/rooms")>()),
+  createRoom,
+  joinRoom,
+}));
 
 const signedIn = (): AuthState => ({ status: "signed-in", user: { id: "u1" } }) as unknown as AuthState;
 
@@ -48,6 +58,26 @@ describe("FriendsAccount", () => {
     expect(saveDisplayName).toHaveBeenCalledWith("u9", "Anna");
   });
 
+  it("keeps the form through the moment the guest account is made", async () => {
+    // Making the account makes useAuth report a signed-in person halfway through
+    // saving. The form must not be rebuilt then, or the name seems to vanish.
+    auth.state = { status: "signed-out" };
+    signInAsGuest.mockResolvedValue({ ok: true, userId: "u9" });
+    fetchDisplayName.mockResolvedValue({ ok: true, value: null });
+    let rerender: (ui: React.ReactElement) => void = () => {};
+    saveDisplayName.mockImplementation(async () => {
+      auth.state = { status: "signed-in", user: { id: "u9" } } as unknown as AuthState;
+      rerender(<FriendsAccount />);
+      return { ok: true, value: "Anna" };
+    });
+    ({ rerender } = render(<FriendsAccount />));
+    await typeName("Anna");
+    fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
+    expect(await screen.findByText("Hi, Anna")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Save my name" })).toBeNull();
+    expect(fetchDisplayName).not.toHaveBeenCalled();
+  });
+
   it("explains a bad name without making an account", async () => {
     auth.state = { status: "signed-out" };
     render(<FriendsAccount />);
@@ -79,5 +109,61 @@ describe("FriendsAccount", () => {
     expect(await screen.findByText("Hi, Anna M")).toBeTruthy();
     expect(signInAsGuest).not.toHaveBeenCalled();
     expect(saveDisplayName).toHaveBeenCalledWith("u1", "Anna M");
+  });
+});
+
+describe("rooms", () => {
+  const named = async (joinCode?: string) => {
+    auth.state = signedIn();
+    fetchDisplayName.mockResolvedValue({ ok: true, value: "Anna" });
+    render(<FriendsAccount joinCode={joinCode} />);
+    await screen.findByText("Hi, Anna");
+  };
+
+  it("starts a room with the walker's name and plan, then opens it", async () => {
+    createRoom.mockResolvedValue({ ok: true, value: { id: "room-1", code: "BCDF" } });
+    await named();
+    fireEvent.click(screen.getByRole("button", { name: "Start a room" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-1"));
+    expect(createRoom).toHaveBeenCalledWith(
+      expect.objectContaining({ fast: 180, slow: 180, rounds: 5, getReady: 5 }),
+      "Anna",
+    );
+  });
+
+  it("only lets a complete code be joined, in any case", async () => {
+    joinRoom.mockResolvedValue({ ok: true, value: "room-2" });
+    await named();
+    const join = screen.getByRole("button", { name: "Join the room" }) as HTMLButtonElement;
+    expect(join.disabled).toBe(true);
+    fireEvent.change(screen.getByPlaceholderText("ABCD"), { target: { value: "bc-df" } });
+    expect(join.disabled).toBe(false);
+    fireEvent.click(join);
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-2"));
+    expect(joinRoom).toHaveBeenCalledWith("BCDF", "Anna");
+  });
+
+  it("shows why joining failed", async () => {
+    joinRoom.mockResolvedValue({ ok: false, message: "That room is full." });
+    await named();
+    fireEvent.change(screen.getByPlaceholderText("ABCD"), { target: { value: "BCDF" } });
+    fireEvent.click(screen.getByRole("button", { name: "Join the room" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("full");
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("joins from a friend's link with one tap", async () => {
+    joinRoom.mockResolvedValue({ ok: true, value: "room-3" });
+    await named("bcdf");
+    expect(screen.queryByRole("button", { name: "Start a room" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Join as Anna" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-3"));
+    expect(joinRoom).toHaveBeenCalledWith("BCDF", "Anna");
+  });
+
+  it("explains a link that doesn't make sense", async () => {
+    await named("12");
+    expect(screen.getByText(/doesn't look right/)).toBeTruthy();
+    expect(joinRoom).not.toHaveBeenCalled();
   });
 });
