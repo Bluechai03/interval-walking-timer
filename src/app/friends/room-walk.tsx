@@ -12,18 +12,19 @@ import { useRoomTimer } from "@/lib/use-room-timer";
 import { useOffsetOrFallback } from "@/lib/use-server-offset";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { PhaseNotifications } from "../phase-notifications";
+import { ConfirmDialog } from "./confirm-dialog";
 import { WalkDisplay } from "../walk-display";
 import { LINK, SECONDARY } from "./styles";
 
 // A walk everyone in the room is taking together. It follows the host's start
 // moment on the server's clock, so it needs no Start, Pause or Reset of its own.
-export function RoomWalk({ room, roomId }: { room: Room; roomId: string }) {
+export function RoomWalk({ room, roomId, isHost = false }: { room: Room; roomId: string; isHost?: boolean }) {
   const { offset, approximate } = useOffsetOrFallback();
   if (offset === null || room.start_at === null) {
     return <p className="text-page-quiet">One moment…</p>;
   }
   return (
-    <Walking room={room} roomId={roomId} startAt={room.start_at} offset={offset} approximate={approximate} />
+    <Walking room={room} roomId={roomId} startAt={room.start_at} offset={offset} approximate={approximate} isHost={isHost} />
   );
 }
 
@@ -33,10 +34,12 @@ function Walking({
   startAt,
   offset,
   approximate,
+  isHost,
 }: {
   room: Room;
   roomId: string;
   startAt: string;
+  isHost: boolean;
   offset: number;
   // We couldn't read the server's clock, so this phone's own is standing in.
   approximate: boolean;
@@ -52,6 +55,7 @@ function Walking({
   const counting = getReadyLeft > 0;
   const { muted, setMuted } = useMuted();
   const [leaving, setLeaving] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   const { unlock } = useCues({
     plan,
@@ -103,6 +107,9 @@ function Walking({
     router.push("/friends");
   };
 
+  // Once the walk is done, leaving changes nothing for anyone, so no need to ask.
+  const askFirst = isHost && !done;
+
   return (
     <div className="flex flex-col gap-3">
       <WalkDisplay
@@ -152,9 +159,24 @@ function Walking({
           </Link>
         </div>
       ) : (
-        <button className={`${LINK} self-center`} disabled={leaving} onClick={() => void leave()}>
+        <button
+          className={`${LINK} self-center`}
+          disabled={leaving}
+          onClick={() => (askFirst ? setConfirming(true) : void leave())}
+        >
           Leave this walk
         </button>
+      )}
+      {confirming && (
+        <ConfirmDialog
+          title="Leave the walk?"
+          body="The walk carries on for everyone else. You can rejoin with the room code."
+          cancelLabel="Stay in the walk"
+          confirmLabel="Leave the walk"
+          busy={leaving}
+          onCancel={() => setConfirming(false)}
+          onConfirm={() => void leave()}
+        />
       )}
     </div>
   );
