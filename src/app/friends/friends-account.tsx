@@ -3,12 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { checkName, NAME_LIMITS, suggestNickname } from "@/lib/name-rules";
-import { fetchDisplayName, saveDisplayName } from "@/lib/profile";
+import { deleteMyData, fetchDisplayName, saveDisplayName } from "@/lib/profile";
 import { usePlanConfig } from "@/lib/use-plan-config";
 import { useGetReady } from "@/lib/use-get-ready";
 import { createRoom, isCompleteCode, joinRoom, normalizeCode, roomCountdownSeconds } from "@/lib/rooms";
 import { signInAsGuest, useAuth } from "@/lib/use-auth";
 import { primeAudio } from "@/lib/use-cues";
+import { ConfirmDialog } from "./confirm-dialog";
 import { PRIMARY, SECONDARY } from "./styles";
 
 export function FriendsAccount({ joinCode }: { joinCode?: string }) {
@@ -39,11 +40,14 @@ export function FriendsAccount({ joinCode }: { joinCode?: string }) {
 
 function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; joinCode?: string }) {
   // Who was signed in when this form appeared. Fixed on purpose: the guest
-  // account made by saving a name must not look like a new arrival.
+  // account made by saving a name must not look like a new arrival. Only used
+  // for the first look-up of a saved name.
   const [arrivedAs] = useState(initialUserId);
-  // Set once a guest account is made here, so the next save reuses it.
-  const [createdId, setCreatedId] = useState<string | null>(null);
-  const userId = createdId ?? arrivedAs;
+  // Whose account a save goes to. Set when a guest account is made here, so the
+  // next save reuses it, and cleared when the data is deleted.
+  const [ownerId, setOwnerId] = useState<string | null>(initialUserId);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   // undefined while loading, null when there is no name yet.
   const [saved, setSaved] = useState<string | null | undefined>(arrivedAs ? undefined : null);
   const [editing, setEditing] = useState(false);
@@ -74,7 +78,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
     if (!check.ok) return setMessage(check.message);
     setBusy(true);
     setMessage(null);
-    let id = userId;
+    let id = ownerId;
     if (!id) {
       const guest = await signInAsGuest();
       if (!guest.ok) {
@@ -82,13 +86,29 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
         return setMessage(guest.message);
       }
       id = guest.userId;
-      setCreatedId(id);
+      setOwnerId(id);
     }
     const result = await saveDisplayName(id, check.name);
     setBusy(false);
     if (!result.ok) return setMessage(result.message);
     setSaved(result.value);
     setEditing(false);
+    setDeleted(false);
+  };
+
+  const deleteData = async () => {
+    setBusy(true);
+    const result = await deleteMyData();
+    setBusy(false);
+    setConfirmingDelete(false);
+    if (!result.ok) return setMessage(result.message);
+    // Back to the start, as if this phone had never been here.
+    setOwnerId(null);
+    setSaved(null);
+    setEditing(false);
+    setMessage(null);
+    setDraft(suggestNickname());
+    setDeleted(true);
   };
 
   if (saved === undefined) return <p className="text-page-quiet">One moment…</p>;
@@ -96,6 +116,11 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
   if (saved === null || editing) {
     return (
       <section className="flex flex-col gap-4">
+        {deleted && saved === null && (
+          <p role="status" className="text-lg">
+            All done. Your name and your rooms are deleted.
+          </p>
+        )}
         <form onSubmit={save} className="flex flex-col gap-4">
           <p className="text-lg">
             {saved === null
@@ -142,6 +167,24 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
       >
         Change my name
       </button>
+      <button
+        className="self-start text-sm font-medium text-page-quiet underline underline-offset-4"
+        onClick={() => setConfirmingDelete(true)}
+      >
+        Delete my data
+      </button>
+      {message && <Notice>{message}</Notice>}
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete your data?"
+          body="This removes your name and takes you out of every room. Any room you started is removed for everyone in it. You can pick a new name whenever you like."
+          cancelLabel="Keep my data"
+          confirmLabel="Delete my data"
+          busy={busy}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={() => void deleteData()}
+        />
+      )}
     </section>
   );
 }
