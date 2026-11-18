@@ -13,7 +13,7 @@ export const useRoomTimer = (plan: Phase[], startAt: string, offsetMs: number) =
   const startMs = Date.parse(startAt);
   const [now, setNow] = useState(() => Date.now());
 
-  const elapsedMs = now + offsetMs - startMs;
+  const elapsedMs = now - startMs; // MUTATION: ignores the server clock
   const position = getPosition(plan, elapsedMs);
 
   useEffect(() => {
