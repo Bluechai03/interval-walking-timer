@@ -90,15 +90,7 @@ _Avoid_: Room ID, PIN, invite code
 The name a guest picks, 2 to 16 characters and unique within the room.
 _Avoid_: Username, handle
 
-## Steps
-
-**Steps**:
-The number of steps taken during a walk, read from the walker's Apple Watch through Health when the walk ends. Not counted live.
-_Avoid_: Step count (for the setting), distance
-
-**Step goal**:
-An optional number of steps the walker aims for in one walk, set in the plan. Shown at the end as met or not met. Not a daily goal.
-_Avoid_: Target steps, daily goal
+## Starting a walk
 
 **Get ready**:
 The countdown, 5 seconds by default, between tapping Start and the first phase. Can be set to 0 for none.
