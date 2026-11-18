@@ -23,3 +23,15 @@ export const saveDisplayName = async (userId: string, name: string): Promise<Pro
   if (error) return { ok: false, message: FAILED };
   return { ok: true, value: name };
 };
+
+// Removes this person's account and everything that goes with it: their name,
+// their place in every room, and any rooms they started.
+export const deleteMyData = async (): Promise<ProfileResult<null>> => {
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, message: FAILED };
+  const { error } = await supabase.rpc("delete_my_data");
+  if (error) return { ok: false, message: FAILED };
+  // The account is gone, so this phone's login has to go too.
+  await supabase.auth.signOut();
+  return { ok: true, value: null };
+};

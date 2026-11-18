@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AuthState } from "@/lib/use-auth";
 import { FriendsAccount } from "./friends-account";
@@ -7,13 +7,14 @@ const auth = vi.hoisted(() => ({ state: { status: "signed-out" } as AuthState })
 const signInAsGuest = vi.hoisted(() => vi.fn());
 const fetchDisplayName = vi.hoisted(() => vi.fn());
 const saveDisplayName = vi.hoisted(() => vi.fn());
+const deleteMyData = vi.hoisted(() => vi.fn());
 
 const push = vi.hoisted(() => vi.fn());
 const createRoom = vi.hoisted(() => vi.fn());
 const joinRoom = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/use-auth", () => ({ useAuth: () => auth.state, signInAsGuest }));
-vi.mock("@/lib/profile", () => ({ fetchDisplayName, saveDisplayName }));
+vi.mock("@/lib/profile", () => ({ fetchDisplayName, saveDisplayName, deleteMyData }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/lib/rooms", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/rooms")>()),
@@ -166,5 +167,68 @@ describe("rooms", () => {
     await named("12");
     expect(screen.getByText(/doesn't look right/)).toBeTruthy();
     expect(joinRoom).not.toHaveBeenCalled();
+  });
+});
+
+describe("Delete my data", () => {
+  const named = async () => {
+    auth.state = signedIn();
+    fetchDisplayName.mockResolvedValue({ ok: true, value: "Anna" });
+    render(<FriendsAccount />);
+    await screen.findByText("Hi, Anna");
+  };
+
+  it("asks first, and says what will go", async () => {
+    await named();
+    fireEvent.click(screen.getByRole("button", { name: "Delete my data" }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent).toContain("removes your name and takes you out of every room");
+    expect(dialog.textContent).toContain("removed for everyone in it");
+    expect(deleteMyData).not.toHaveBeenCalled();
+  });
+
+  it("keeps everything when the answer is no", async () => {
+    await named();
+    fireEvent.click(screen.getByRole("button", { name: "Delete my data" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Keep my data" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(deleteMyData).not.toHaveBeenCalled();
+    expect(screen.getByText("Hi, Anna")).toBeTruthy();
+  });
+
+  it("deletes, then starts again with a fresh name and a thank-you", async () => {
+    await named();
+    deleteMyData.mockResolvedValue({ ok: true, value: null });
+    fireEvent.click(screen.getByRole("button", { name: "Delete my data" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete my data" }));
+    expect(await screen.findByText(/All done. Your name and your rooms are deleted/)).toBeTruthy();
+    expect(screen.queryByText("Hi, Anna")).toBeNull();
+    const input = screen.getByRole("textbox") as HTMLInputElement;
+    expect(input.value).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
+  });
+
+  it("makes a brand new guest account for the next name", async () => {
+    await named();
+    deleteMyData.mockResolvedValue({ ok: true, value: null });
+    signInAsGuest.mockResolvedValue({ ok: true, userId: "u-new" });
+    saveDisplayName.mockResolvedValue({ ok: true, value: "Dana" });
+    fireEvent.click(screen.getByRole("button", { name: "Delete my data" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete my data" }));
+    await screen.findByText(/All done/);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Dana" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
+    expect(await screen.findByText("Hi, Dana")).toBeTruthy();
+    // Not the deleted account: the name goes to the new one.
+    expect(saveDisplayName).toHaveBeenCalledWith("u-new", "Dana");
+    expect(screen.queryByText(/All done/)).toBeNull();
+  });
+
+  it("says so and keeps the name if the delete fails", async () => {
+    await named();
+    deleteMyData.mockResolvedValue({ ok: false, message: "That didn't work just now." });
+    fireEvent.click(screen.getByRole("button", { name: "Delete my data" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete my data" }));
+    expect((await screen.findByRole("alert")).textContent).toContain("didn't work");
+    expect(screen.getByText("Hi, Anna")).toBeTruthy();
   });
 });
