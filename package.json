@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:e2e": "bash scripts/e2e.sh",
     "test:db": "bash scripts/test-db.sh"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "workflow": "^5.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^20",

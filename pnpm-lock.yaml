@@ -19,7 +19,7 @@ importers:
         version: 2.119.0
       next:
         specifier: 16.2.11
-        version: 16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.65.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -34,8 +34,11 @@ importers:
         version: 3.6.7(supports-color@8.1.1)
       workflow:
         specifier: ^5.4.0
-        version: 5.4.0(@aws-sdk/credential-provider-web-identity@3.972.49)(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(@swc/cli@0.8.2(@swc/core@1.15.3)(supports-color@8.1.1))(@swc/core@1.15.3)(dotenv@17.4.2)(jiti@2.7.0)(magic-string@1.4.2)(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(rolldown@1.2.11)(supports-color@8.1.1)(typescript@5.9.3)(ws@8.22.1)
+        version: 5.4.0(@aws-sdk/credential-provider-web-identity@3.972.49)(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(@swc/cli@0.8.2(@swc/core@1.15.3)(supports-color@8.1.1))(@swc/core@1.15.3)(dotenv@17.4.2)(jiti@2.7.0)(magic-string@1.4.2)(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.65.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(rolldown@1.2.11)(supports-color@8.1.1)(typescript@5.9.3)(ws@8.22.1)
     devDependencies:
+      '@playwright/test':
+        specifier: ^1.65.1
+        version: 1.65.1
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.3.3
@@ -954,6 +957,11 @@ packages:
     peerDependencies:
       react: '>= 16.8'
       react-dom: '>= 16.8'
+
+  '@playwright/test@1.65.1':
+    resolution: {integrity: sha512-y+NCIRm2LvY4slUVWvGh1nujJ8RF/hEisIsq2mtUPgdQC4L701bq5hZGMhrpeXjACvwvO9tj5dJqhvM6TP9lbw==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@rolldown/binding-android-arm-eabi@1.2.11':
     resolution: {integrity: sha512-A5kXfGKvKWWZE0TtPrfsvT+q4Y5d1QG8gGUzpYjGydM+fARM9MuX90PrXYXe0XbsDVgyxxNzHo6giCj90bsFNw==}
@@ -3566,6 +3574,16 @@ packages:
   piscina@4.9.4:
     resolution: {integrity: sha512-RyBDr2VheQ8ZfH3N8SzQZHztqVyOtadTwLnUYof6gdj5161/eu2wNhCbGl5GHnNKDpnkicJYpKtL2J+y/gk6XA==}
 
+  playwright-core@1.65.1:
+    resolution: {integrity: sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.65.1:
+    resolution: {integrity: sha512-vJ1FuoOrNwOKHUIVEvSt3jT1L+wjjDpwhwIstKtfvTh8XIG4FG4bIFuvNdMxi81LGfAhUgUZleVFaOLY4RIUUw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   pngjs@5.0.0:
     resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
     engines: {node: '>=10.13.0'}
@@ -5139,6 +5157,10 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
+  '@playwright/test@1.65.1':
+    dependencies:
+      playwright: 1.65.1
+
   '@rolldown/binding-android-arm-eabi@1.2.11':
     optional: true
 
@@ -5838,7 +5860,7 @@ snapshots:
       - utf-8-validate
       - ws
 
-  '@workflow/next@5.0.8(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(supports-color@8.1.1)(ws@8.22.1)':
+  '@workflow/next@5.0.8(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.65.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(supports-color@8.1.1)(ws@8.22.1)':
     dependencies:
       '@swc/core': 1.15.3
       '@workflow/builders': 5.0.8(supports-color@8.1.1)(ws@8.22.1)
@@ -5848,7 +5870,7 @@ snapshots:
       semver: 7.7.4
       watchpack: 2.5.1
     optionalDependencies:
-      next: 16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      next: 16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.65.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
     transitivePeerDependencies:
       - '@opentelemetry/api'
       - '@swc/helpers'
@@ -7765,7 +7787,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.65.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.2.11
       '@swc/helpers': 0.5.15
@@ -7784,6 +7806,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 16.2.11
       '@next/swc-win32-arm64-msvc': 16.2.11
       '@next/swc-win32-x64-msvc': 16.2.11
+      '@playwright/test': 1.65.1
       sharp: 0.34.5
     transitivePeerDependencies:
       - '@babel/core'
@@ -7985,6 +8008,12 @@ snapshots:
   piscina@4.9.4:
     optionalDependencies:
       '@napi-rs/nice': 1.1.1
+
+  playwright-core@1.65.1: {}
+
+  playwright@1.65.1:
+    dependencies:
+      playwright-core: 1.65.1
 
   pngjs@5.0.0: {}
 
@@ -8804,14 +8833,14 @@ snapshots:
 
   wordwrap@1.0.0: {}
 
-  workflow@5.4.0(@aws-sdk/credential-provider-web-identity@3.972.49)(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(@swc/cli@0.8.2(@swc/core@1.15.3)(supports-color@8.1.1))(@swc/core@1.15.3)(dotenv@17.4.2)(jiti@2.7.0)(magic-string@1.4.2)(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(rolldown@1.2.11)(supports-color@8.1.1)(typescript@5.9.3)(ws@8.22.1):
+  workflow@5.4.0(@aws-sdk/credential-provider-web-identity@3.972.49)(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(@swc/cli@0.8.2(@swc/core@1.15.3)(supports-color@8.1.1))(@swc/core@1.15.3)(dotenv@17.4.2)(jiti@2.7.0)(magic-string@1.4.2)(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.65.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(rolldown@1.2.11)(supports-color@8.1.1)(typescript@5.9.3)(ws@8.22.1):
     dependencies:
       '@workflow/astro': 5.0.8(supports-color@8.1.1)(ws@8.22.1)
       '@workflow/cli': 5.0.8(@aws-sdk/credential-provider-web-identity@3.972.49)(react@19.2.4)(supports-color@8.1.1)(ws@8.22.1)
       '@workflow/core': 5.4.0(supports-color@8.1.1)(ws@8.22.1)
       '@workflow/errors': 5.1.0
       '@workflow/nest': 5.1.6(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(@nestjs/core@12.3.3(@nestjs/common@12.3.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1))(reflect-metadata@0.2.2)(rxjs@7.8.2))(@swc/cli@0.8.2(@swc/core@1.15.3)(supports-color@8.1.1))(@swc/core@1.15.3)(supports-color@8.1.1)(ws@8.22.1)
-      '@workflow/next': 5.0.8(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(supports-color@8.1.1)(ws@8.22.1)
+      '@workflow/next': 5.0.8(next@16.2.11(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.65.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(supports-color@8.1.1)(ws@8.22.1)
       '@workflow/nitro': 5.0.8(react@19.2.4)(supports-color@8.1.1)(ws@8.22.1)
       '@workflow/nuxt': 5.0.8(dotenv@17.4.2)(jiti@2.7.0)(magic-string@1.4.2)(react@19.2.4)(rolldown@1.2.11)(supports-color@8.1.1)(ws@8.22.1)
       '@workflow/rollup': 5.0.8(supports-color@8.1.1)(ws@8.22.1)
