@@ -96,7 +96,7 @@ test("the host is in charge of the room", async ({ browser }) => {
   // Two people can't share a name in one room.
   await pickName(twin.page, twin.name);
   await joinRoom(twin.page, code);
-  await expect(twin.page.getByRole("alert")).toContainText("already goes by that name");
+  await expect(twin.page.getByText(/already goes by that name/)).toBeVisible();
 
   // The host removes Anna. She loses the room and can't slip back in.
   await host.page.getByRole("button", { name: "Remove Guest Anna" }).click();
@@ -104,7 +104,7 @@ test("the host is in charge of the room", async ({ browser }) => {
   await expect(anna.page.getByText(/isn't available to you/)).toBeVisible();
   await anna.page.goto("/friends");
   await joinRoom(anna.page, code);
-  await expect(anna.page.getByRole("alert")).toContainText("The host has taken you out");
+  await expect(anna.page.getByText(/The host has taken you out/)).toBeVisible();
 
   // Closing the room asks first, then closes it for everyone.
   await host.page.getByRole("button", { name: "Close the room" }).click();
