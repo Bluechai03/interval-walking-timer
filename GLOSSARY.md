@@ -25,7 +25,7 @@ One run through a plan, from Start until the last phase ends.
 _Avoid_: Session, workout, exercise
 
 **Activity**:
-What the walker is doing: walking, the elliptical, a bike or a run. It only changes the words they read and hear, such as "Walk fast" or "Push harder". The plan, the timer and the rooms work the same. Walking unless the walker picks something else, and in a room the host picks it for everyone.
+What the walker is doing: walking, the elliptical or a bike. It only changes the words they read and hear, such as "Walk fast" or "Push harder". The plan, the timer and the rooms work the same. Walking unless the walker picks something else, and in a room the host picks it for everyone.
 _Avoid_: Exercise type, mode, workout type
 
 ## Announcements

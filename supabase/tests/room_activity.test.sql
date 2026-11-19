@@ -54,14 +54,14 @@ begin
 
   -- every activity the app offers is accepted
   select c.room_id into room_c from public.create_room(60, 60, 1, 10, 'Bikey', 'bike') c;
-  select c.room_id into room_c from public.create_room(60, 60, 1, 10, 'Runny', 'run') c;
 
   -- anything else is refused
   perform pg_temp.fails($f$select * from public.create_room(60, 60, 1, 10, 'Swim', 'swimming')$f$, 'check');
+  perform pg_temp.fails($f$select * from public.create_room(60, 60, 1, 10, 'Runny', 'run')$f$, 'check');
   perform pg_temp.fails($f$select * from public.create_room(60, 60, 1, 10, 'Blank', '')$f$, 'check');
 
   -- nobody can change it afterwards
-  perform pg_temp.fails(format('update public.rooms set activity = %L where id = %L', 'run', room_a), 'permission denied');
+  perform pg_temp.fails(format('update public.rooms set activity = %L where id = %L', 'bike', room_a), 'permission denied');
 
   -- and a signed-out person still can't make a room
   perform pg_temp.become_stranger();

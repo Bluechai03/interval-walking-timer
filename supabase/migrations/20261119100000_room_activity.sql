@@ -2,7 +2,7 @@
 -- words (Walk fast, or Push harder on the elliptical). It only changes wording.
 alter table public.rooms
   add column activity text not null default 'walk'
-  check (activity in ('walk', 'elliptical', 'bike', 'run'));
+  check (activity in ('walk', 'elliptical', 'bike'));
 
 -- Replaces create_room with one that takes the activity. The old five-argument
 -- version is dropped so there is only one to choose from.
