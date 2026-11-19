@@ -15,6 +15,7 @@ import { useWatchSetup, useWatchWorkout } from "@/lib/use-watch-workout";
 import { AboutDialog } from "./about-dialog";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
+import { SchemePicker } from "./scheme-picker";
 import { WalkDisplay } from "./walk-display";
 import { WatchWorkoutSetting } from "./watch-workout-setting";
 
@@ -206,6 +207,8 @@ export function Timer() {
         onGetReadyChange={getReady.setSeconds}
         onChange={setConfig}
       />
+
+      <SchemePicker />
 
       <WatchWorkoutSetting />
     </div>

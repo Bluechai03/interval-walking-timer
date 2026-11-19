@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Archivo } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "./service-worker-register";
+import { SCHEME_BOOT_SCRIPT } from "@/lib/scheme";
 import { DESCRIPTION, THEME_COLOR, THEME_COLOR_LIGHT } from "./theme";
 
 // One variable family. Its width axis gives both the narrow numerals and the wide
@@ -36,10 +37,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${archivo.variable} h-full antialiased`}
-    >
+    // The boot script sets data-scheme before paint, so React is told to expect it.
+    <html lang="en" className={`${archivo.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCHEME_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-svh flex flex-col font-sans">
         {children}
         <ServiceWorkerRegister />

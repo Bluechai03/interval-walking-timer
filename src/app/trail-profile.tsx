@@ -12,7 +12,7 @@ type Props = {
 
 // The effort strip: the workout drawn like an elevation profile. Hard phases are
 // tall, easy ones low, and each segment's width follows its duration. Finished
-// segments are solid, the current one fills as it runs, and a brass line marks
+// segments are solid, the current one fills as it runs, and a bright line marks
 // where you are right now.
 export function TrailProfile({ plan, phaseIndex, fractionLeft, done, activity = DEFAULT_ACTIVITY }: Props) {
   const words = activityWords(activity);
@@ -40,7 +40,7 @@ export function TrailProfile({ plan, phaseIndex, fractionLeft, done, activity = 
             {isCurrent && (
               <span
                 aria-hidden="true"
-                className="absolute inset-y-0 w-[3px] bg-brass"
+                className="absolute inset-y-0 w-[3px] bg-marker"
                 style={{ left: `calc(${fill * 100}% - 1.5px)` }}
               />
             )}

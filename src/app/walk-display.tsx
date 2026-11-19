@@ -11,9 +11,9 @@ import { TrailProfile } from "./trail-profile";
 const BLINK_THRESHOLD_SECONDS = 3;
 
 const PHASE_FIELD = {
-  fast: "bg-pulse text-chalk",
-  slow: "bg-lake text-chalk",
-  done: "bg-deep text-chalk",
+  fast: "bg-field-hard text-field-hard-ink",
+  slow: "bg-field-easy text-field-easy-ink",
+  done: "bg-field-done text-field-done-ink",
 };
 
 type Props = {
