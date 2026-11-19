@@ -43,7 +43,6 @@ describe("WalkDisplay words", () => {
   it.each<[ActivityId, string, string]>([
     ["elliptical", "Push harder", "Ease off"],
     ["bike", "Pedal hard", "Pedal easy"],
-    ["run", "Run fast", "Jog easy"],
   ])("uses the %s's own words", (activity, fast, slow) => {
     show({ activity });
     expect(screen.getByText(fast)).toBeTruthy();

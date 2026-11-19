@@ -22,11 +22,11 @@ const show = (over: Partial<React.ComponentProps<typeof PlanSettings>> = {}) => 
 };
 
 describe("PlanSettings activity", () => {
-  it("offers Walk, Elliptical, Bike and Run, with Walk chosen to begin with", () => {
+  it("offers Walk, Elliptical and Bike, with Walk chosen to begin with", () => {
     show();
     const select = screen.getByLabelText("Activity") as HTMLSelectElement;
     expect(select.value).toBe("walk");
-    expect(Array.from(select.options).map((o) => o.text)).toEqual(["Walk", "Elliptical", "Bike", "Run"]);
+    expect(Array.from(select.options).map((o) => o.text)).toEqual(["Walk", "Elliptical", "Bike"]);
   });
 
   it("reports what the walker picks", () => {

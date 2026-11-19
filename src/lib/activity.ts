@@ -1,7 +1,7 @@
 // What the walker is doing. It only changes the words people read and hear:
 // the plan, the timer and the rooms work the same for every activity.
 
-export const ACTIVITY_IDS = ["walk", "elliptical", "bike", "run"] as const;
+export const ACTIVITY_IDS = ["walk", "elliptical", "bike"] as const;
 export type ActivityId = (typeof ACTIVITY_IDS)[number];
 export const DEFAULT_ACTIVITY: ActivityId = "walk";
 
@@ -55,17 +55,6 @@ const WORDS: Record<ActivityId, Words> = {
     phaseDone: "ridden",
     doneTitle: "Ride done",
     doneBody: (minutes) => `Well done, ${minutes} ridden`,
-  },
-  run: {
-    label: "Run",
-    fast: "Run fast",
-    slow: "Jog easy",
-    done: "Run complete",
-    timeDone: "Time run",
-    total: (time) => `${time} run`,
-    phaseDone: "run",
-    doneTitle: "Run done",
-    doneBody: (minutes) => `Well done, ${minutes} run`,
   },
 };
 
