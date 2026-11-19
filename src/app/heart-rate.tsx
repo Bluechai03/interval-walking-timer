@@ -6,11 +6,12 @@ type Props = {
   type: Phase["type"];
   // Pulse only while the timer is running.
   pulsing: boolean;
+  age?: number;
 };
 
 // Inherits the phase field's text color so it reads on both backgrounds.
-export function HeartRate({ type, pulsing }: Props) {
-  const { min, max, average } = heartRateTarget(type);
+export function HeartRate({ type, pulsing, age = ASSUMED_AGE }: Props) {
+  const { min, max, average } = heartRateTarget(type, age);
 
   return (
     <div className="flex items-center gap-3">
@@ -27,8 +28,8 @@ export function HeartRate({ type, pulsing }: Props) {
       />
       <p className="text-lg leading-tight">
         <span className="font-semibold">{effortWords(type)}</span>
-        <span className="block text-base opacity-90">
-          Target {min}–{max} bpm, for age {ASSUMED_AGE}
+        <span className="block text-base">
+          Target {min}–{max} bpm, for age {age}
         </span>
       </p>
     </div>

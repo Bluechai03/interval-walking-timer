@@ -68,3 +68,20 @@ describe("WalkDisplay words", () => {
     expect(screen.getByRole("timer").getAttribute("aria-label")).toBe("6:00 walked");
   });
 });
+
+describe("WalkDisplay for screen readers", () => {
+  it("announces the phase when it changes, and keeps the countdown out of the announcement", () => {
+    show();
+    const status = screen.getByRole("status");
+    expect(status.textContent).toBe("Walk fast");
+    expect(status.textContent).not.toMatch(/\d:\d\d/);
+  });
+
+  it("announces the get ready countdown and the finish", () => {
+    show({ counting: true, getReadyLeft: 3 });
+    expect(screen.getByRole("status").textContent).toBe("Get ready");
+    cleanup();
+    show({ done: true });
+    expect(screen.getByRole("status").textContent).toBe("Walk complete");
+  });
+});

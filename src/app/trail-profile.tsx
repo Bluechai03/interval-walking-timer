@@ -32,7 +32,7 @@ export function TrailProfile({ plan, phaseIndex, fractionLeft, done, activity = 
             }`}
             style={{ flexGrow: phase.durationInSeconds, flexBasis: 0 }}
           >
-            <span className="absolute inset-0 bg-current opacity-15" />
+            <span className="absolute inset-0 rounded-sm border-2 border-current bg-current/15" />
             <span
               className="absolute inset-0 origin-left bg-current transition-transform duration-300 ease-linear"
               style={{ transform: `scaleX(${fill})` }}

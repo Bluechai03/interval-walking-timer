@@ -1,5 +1,5 @@
 import { type ActivityId, activityWords, DEFAULT_ACTIVITY } from "./activity";
-import { heartRateTarget } from "./heart-rate";
+import { ASSUMED_AGE, heartRateTarget } from "./heart-rate";
 import { pickVoice } from "./pick-voice";
 import type { Phase } from "./plan";
 
@@ -15,10 +15,10 @@ const PACE_TEXT = { fast: "Fast", slow: "Slow" } as const;
 
 // What is spoken: the pace and the phase's target heart rate, or that the walk
 // is complete.
-export const spokenCue = (cue: Cue, activity: ActivityId = DEFAULT_ACTIVITY): string =>
+export const spokenCue = (cue: Cue, activity: ActivityId = DEFAULT_ACTIVITY, age: number = ASSUMED_AGE): string =>
   cue === "done"
     ? activityWords(activity).done
-    : `${PACE_TEXT[cue]}. Target heart rate ${heartRateTarget(cue).average}.`;
+    : `${PACE_TEXT[cue]}. Target heart rate ${heartRateTarget(cue, age).average}.`;
 
 const BEEP_SECONDS = 0.25;
 
@@ -51,7 +51,7 @@ const speak = (text: string) => {
 };
 
 // Muting drops the beep and the spoken words; vibration still plays.
-export const playCue = (cue: Cue, ctx: AudioContext | null, muted = false, activity: ActivityId = DEFAULT_ACTIVITY) => {
+export const playCue = (cue: Cue, ctx: AudioContext | null, muted = false, activity: ActivityId = DEFAULT_ACTIVITY, age: number = ASSUMED_AGE) => {
   if (ctx && !muted) {
     void ctx.resume();
     const frequency = CUE_TONE_HZ[cue];
@@ -63,7 +63,7 @@ export const playCue = (cue: Cue, ctx: AudioContext | null, muted = false, activ
     navigator.vibrate(cue === "done" ? [200, 100, 200] : 300);
   }
 
-  if (!muted) speak(spokenCue(cue, activity));
+  if (!muted) speak(spokenCue(cue, activity, age));
 };
 
 // A short spoken and felt warning so the walker can get ready for the change.

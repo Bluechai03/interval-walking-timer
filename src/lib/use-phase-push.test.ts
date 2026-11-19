@@ -5,11 +5,12 @@ describe("pushStartBody", () => {
   const config = { fastSeconds: 180, slowSeconds: 180, rounds: 5 };
 
   it("sends the plan, how far in the walk is, and the activity", () => {
-    expect(pushStartBody({ endpoint: "x" }, { config, elapsedSeconds: 30, activity: "elliptical" })).toEqual({
+    expect(pushStartBody({ endpoint: "x" }, { config, elapsedSeconds: 30, activity: "elliptical", age: 58 })).toEqual({
       subscription: { endpoint: "x" },
       config,
       elapsedSeconds: 30,
       activity: "elliptical",
+      age: 58,
     });
   });
 

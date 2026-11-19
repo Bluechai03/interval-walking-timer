@@ -2,9 +2,17 @@ import type { Phase } from "./plan";
 
 // Interval walking guidance: fast phases at roughly 70-80% of max heart rate,
 // slow phases at roughly 40-50%. Max heart rate is estimated as 220 - age,
-// using the owner's age since the app doesn't ask for one.
+// using the walker's age, or 23 until they set it.
 export const ASSUMED_AGE = 23;
-const MAX_HEART_RATE = 220 - ASSUMED_AGE;
+export const AGE_LIMITS = { min: 10, max: 90 } as const;
+
+// Anything that isn't a whole age in range falls back to the default.
+export const parseAge = (raw: string): number => {
+  const value = Number(raw);
+  return raw.trim() !== "" && Number.isInteger(value) && value >= AGE_LIMITS.min && value <= AGE_LIMITS.max
+    ? value
+    : ASSUMED_AGE;
+};
 
 const INTENSITY: Record<Phase["type"], { min: number; max: number }> = {
   fast: { min: 0.7, max: 0.8 },
@@ -13,10 +21,11 @@ const INTENSITY: Record<Phase["type"], { min: number; max: number }> = {
 
 export type HeartRateTarget = { min: number; max: number; average: number };
 
-export const heartRateTarget = (type: Phase["type"]): HeartRateTarget => {
+export const heartRateTarget = (type: Phase["type"], age: number = ASSUMED_AGE): HeartRateTarget => {
   const { min, max } = INTENSITY[type];
-  const low = Math.round(MAX_HEART_RATE * min);
-  const high = Math.round(MAX_HEART_RATE * max);
+  const maxHeartRate = 220 - age;
+  const low = Math.round(maxHeartRate * min);
+  const high = Math.round(maxHeartRate * max);
   return { min: low, max: high, average: Math.round((low + high) / 2) };
 };
 

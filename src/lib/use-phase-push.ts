@@ -41,12 +41,13 @@ const isIphoneBrowserTab = () => {
 // reminders from it, in the words of the walker's activity.
 export const pushStartBody = (
   subscription: unknown,
-  latest: { config: PlanConfig; elapsedSeconds: number; activity?: ActivityId },
+  latest: { config: PlanConfig; elapsedSeconds: number; activity?: ActivityId; age?: number },
 ) => ({
   subscription,
   config: latest.config,
   elapsedSeconds: latest.elapsedSeconds,
   activity: latest.activity,
+  age: latest.age,
 });
 
 const keyToBytes = (base64: string) => {
@@ -65,6 +66,8 @@ type Options = {
   config: PlanConfig;
   // Changes the words in the notifications. Walking if left out.
   activity?: ActivityId;
+  // For the heart rate in the notifications.
+  age?: number;
   elapsedSeconds: number;
   // False until the timer has picked up a walk saved before a reload.
   ready: boolean;
@@ -74,16 +77,16 @@ type Options = {
 
 // Optional phase notifications for a locked phone. The server schedules them
 // when the walk starts or resumes, and they are cancelled on pause or reset.
-export const usePhasePush = ({ config, activity, elapsedSeconds, ready, running, done }: Options) => {
+export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, running, done }: Options) => {
   const [state, setState] = useState<PushSupport>("unsupported");
   // Whether the opening dialog has been answered (either way) on this phone.
   const [asked, setAsked] = useState(true);
   // True when the server could not schedule this walk's reminders.
   const [failed, setFailed] = useState(false);
   const runId = useRef<string | null>(null);
-  const latest = useRef({ config, elapsedSeconds, activity });
+  const latest = useRef({ config, elapsedSeconds, activity, age });
   useEffect(() => {
-    latest.current = { config, elapsedSeconds, activity };
+    latest.current = { config, elapsedSeconds, activity, age };
   });
 
   useEffect(() => {

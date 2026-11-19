@@ -1,5 +1,5 @@
 import { type ActivityId, activityWords, DEFAULT_ACTIVITY } from "./activity";
-import { heartRateTarget } from "./heart-rate";
+import { ASSUMED_AGE, heartRateTarget } from "./heart-rate";
 import { totalSeconds, type Phase } from "./plan";
 
 export type PushCue = { delaySeconds: number; title: string; body: string };
@@ -12,7 +12,7 @@ const minutes = (seconds: number) => `${Math.round(seconds / 60)} min`;
 // rate, then the round. The notifications for the rest of a walk: one at each phase change and one
 // at the end. delaySeconds counts from now, so a resumed walk only gets what
 // is left. The page plays its own cue at Start, so none is made for that.
-export const pushCues = (plan: Phase[], elapsedSeconds: number, activity: ActivityId = DEFAULT_ACTIVITY): PushCue[] => {
+export const pushCues = (plan: Phase[], elapsedSeconds: number, activity: ActivityId = DEFAULT_ACTIVITY, age: number = ASSUMED_AGE): PushCue[] => {
   const words = activityWords(activity);
   const cues: PushCue[] = [];
   const rounds = Math.ceil(plan.length / 2);
@@ -34,7 +34,7 @@ export const pushCues = (plan: Phase[], elapsedSeconds: number, activity: Activi
     }
 
     const round = Math.floor((i + 1) / 2) + 1;
-    const { min, max } = heartRateTarget(next.type);
+    const { min, max } = heartRateTarget(next.type, age);
     cues.push({
       delaySeconds,
       title: `${PACE[next.type]} · ${minutes(next.durationInSeconds)}`,
