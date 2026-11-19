@@ -103,3 +103,11 @@ describe("sanitizePlanConfig", () => {
     });
   });
 });
+
+describe("plan presets", () => {
+  it("starts with the default plan, and every preset is a valid plan", async () => {
+    const { PLAN_PRESETS, DEFAULT_PLAN_CONFIG, sanitizePlanConfig } = await import("./plan");
+    expect(PLAN_PRESETS[0].config).toEqual(DEFAULT_PLAN_CONFIG);
+    for (const preset of PLAN_PRESETS) expect(sanitizePlanConfig(preset.config)).toEqual(preset.config);
+  });
+});

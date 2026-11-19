@@ -1,14 +1,11 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_PLAN_CONFIG } from "@/lib/plan";
 import { PlanSettings } from "./plan-settings";
 
 afterEach(cleanup);
 
 const show = (over: Partial<React.ComponentProps<typeof PlanSettings>> = {}) => {
   const props = {
-    config: DEFAULT_PLAN_CONFIG,
-    totalSeconds: 1800,
     disabled: false,
     activity: "walk" as const,
     onActivityChange: vi.fn(),
@@ -16,7 +13,6 @@ const show = (over: Partial<React.ComponentProps<typeof PlanSettings>> = {}) => 
     onAgeChange: vi.fn(),
     getReadySeconds: 5,
     onGetReadyChange: () => {},
-    onChange: () => {},
     ...over,
   };
   render(<PlanSettings {...props} />);
@@ -44,18 +40,19 @@ describe("PlanSettings activity", () => {
 });
 
 describe("PlanSettings out-of-range values", () => {
-  it("says what is allowed when a value is out of range, and not the plan changed", () => {
-    const props = show({ onChange: vi.fn() });
-    fireEvent.change(screen.getByLabelText("Rounds"), { target: { value: "99" } });
-    expect(screen.getByRole("alert").textContent).toBe("Rounds can be 1 to 20.");
-    expect(props.onChange).not.toHaveBeenCalled();
+  it("says what is allowed when a value is out of range, and does not change it", () => {
+    const onGetReadyChange = vi.fn();
+    show({ onGetReadyChange });
+    fireEvent.change(screen.getByLabelText(/Get ready/), { target: { value: "99" } });
+    expect(screen.getByRole("alert").textContent).toBe("Get ready can be 0 to 30 sec.");
+    expect(onGetReadyChange).not.toHaveBeenCalled();
   });
 
   it("clears the message once the value is fine again", () => {
     show();
-    const rounds = screen.getByLabelText("Rounds");
-    fireEvent.change(rounds, { target: { value: "99" } });
-    fireEvent.change(rounds, { target: { value: "6" } });
+    const getReady = screen.getByLabelText(/Get ready/);
+    fireEvent.change(getReady, { target: { value: "99" } });
+    fireEvent.change(getReady, { target: { value: "6" } });
     expect(screen.queryByRole("alert")).toBeNull();
   });
 

@@ -20,6 +20,16 @@ export const DEFAULT_PLAN_CONFIG: PlanConfig = {
   rounds: 5,
 };
 
+// Ready-made plans, so a walker can start in one tap. The first is the default.
+export const PLAN_PRESETS: { id: string; label: string; config: PlanConfig }[] = [
+  { id: "classic", label: "Classic", config: { fastSeconds: 180, slowSeconds: 180, rounds: 5 } },
+  { id: "gentle", label: "Gentle", config: { fastSeconds: 60, slowSeconds: 120, rounds: 8 } },
+  { id: "short", label: "Short", config: { fastSeconds: 120, slowSeconds: 120, rounds: 5 } },
+];
+
+export const isSamePlan = (a: PlanConfig, b: PlanConfig): boolean =>
+  a.fastSeconds === b.fastSeconds && a.slowSeconds === b.slowSeconds && a.rounds === b.rounds;
+
 export const isValidPlanValue = (
   field: keyof PlanConfig,
   value: unknown,
