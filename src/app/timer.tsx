@@ -1,6 +1,7 @@
 "use client";
 
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useActivity } from "@/lib/use-activity";
@@ -27,8 +28,8 @@ export function Timer() {
   const getReady = useGetReady();
   const { activity, setActivity } = useActivity();
   const { age, setAge } = useAge();
-  // Reset throws a half-done walk away, so the first tap only asks.
-  const [confirmReset, setConfirmReset] = useState(false);
+  // Done ends a walk in progress, so the first tap only asks.
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const watchSetup = useWatchSetup();
   // With the Watch workout on, the countdown lasts as long as the Watch takes to
   // start, so the workout and the walk begin on the same beat.
@@ -132,7 +133,7 @@ export function Timer() {
             <button
               className={`${BUTTON} bg-action text-action-ink`}
               onClick={() => {
-                setConfirmReset(false);
+                setConfirmEnd(false);
                 pause();
               }}
             >
@@ -157,23 +158,36 @@ export function Timer() {
               </button>
             )
           )}
-          {/* Only while paused or finished, so a tap mid-walk can't throw the walk away. */}
-          {started && !running && (
+          {/* Ends the whole session: the timer, the Watch workout and the reminders. The first tap asks, so a stray tap mid-walk can't throw the walk away. */}
+          {started && !done && !counting && (
             <button
-              className={`${BUTTON} border-2 border-page-ink`}
+              className={`${BUTTON} whitespace-nowrap border-2 border-page-ink`}
               onClick={() => {
-                if (!done && !confirmReset) {
-                  setConfirmReset(true);
+                if (!confirmEnd) {
+                  setConfirmEnd(true);
                   return;
                 }
-                setConfirmReset(false);
+                setConfirmEnd(false);
                 reset();
                 watch.end();
               }}
-              onBlur={() => setConfirmReset(false)}
+              onBlur={() => setConfirmEnd(false)}
+            >
+              <CheckIcon aria-hidden="true" weight="bold" size={24} />
+              {confirmEnd ? "Yes, end" : "Done"}
+            </button>
+          )}
+          {/* After the finish, back to the start. */}
+          {done && (
+            <button
+              className={`${BUTTON} border-2 border-page-ink`}
+              onClick={() => {
+                reset();
+                watch.end();
+              }}
             >
               <RotateCcwIcon aria-hidden="true" />
-              {confirmReset ? "Tap again to reset" : "Reset"}
+              Reset
             </button>
           )}
           {/* The automatic end can be blocked by iOS, so the walker can always tap it. */}
