@@ -77,10 +77,19 @@ export const useTimer = (plan: Phase[], getReadySeconds = 0) => {
   }, [ready, accumulatedMs, startedAt]);
 
   useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => setNow(Date.now()), TICK_MS);
+    if (!running || startedAt === null) return;
+    // Checked four times a second so a second is never shown late, but the page
+    // is only redrawn when the second on screen changes, which spares the battery.
+    const secondOf = (time: number) => Math.floor((accumulatedMs + time - startedAt) / 1000);
+    const id = setInterval(
+      () => setNow((previous) => {
+        const next = Date.now();
+        return secondOf(next) === secondOf(previous) ? previous : next;
+      }),
+      TICK_MS,
+    );
     return () => clearInterval(id);
-  }, [running]);
+  }, [running, startedAt, accumulatedMs]);
 
   const start = useCallback(() => {
     const t = Date.now();

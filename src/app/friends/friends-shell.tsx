@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { OfflineNote } from "./offline-note";
 import { LINK } from "./styles";
 
 export function FriendsShell({ children }: { children: ReactNode }) {
@@ -11,6 +12,7 @@ export function FriendsShell({ children }: { children: ReactNode }) {
           Back to the timer
         </Link>
       </header>
+      <OfflineNote />
       {children}
     </main>
   );

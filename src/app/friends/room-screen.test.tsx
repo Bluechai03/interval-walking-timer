@@ -47,7 +47,7 @@ const person = (id: string, nickname: string): Member => ({
 });
 
 const as = (id: string): AuthState => ({ status: "signed-in", user: { id } }) as unknown as AuthState;
-const inRoom = (...members: Member[]): RoomState => ({ status: "ready", room: theRoom, here: members, reload });
+const inRoom = (...members: Member[]): RoomState => ({ status: "ready", room: theRoom, here: members, reload, connected: true });
 
 afterEach(() => {
   cleanup();
@@ -128,6 +128,7 @@ describe("RoomScreen, closing and leaving", () => {
       room: { ...theRoom, status: "closed" },
       here: [person("g1", "Ben")],
       reload,
+      connected: true,
     };
     render(<RoomScreen roomId="r1" />);
     expect(screen.getByText(/This walk is over/)).toBeTruthy();
@@ -178,6 +179,7 @@ describe("RoomScreen, starting the walk", () => {
       room: { ...theRoom, status: "walking", start_at: new Date().toISOString() },
       here: [person("host", "Anna"), person("g1", "Ben")],
       reload,
+      connected: true,
     };
     render(<RoomScreen roomId="r1" />);
     expect(screen.getByText("THE WALK")).toBeTruthy();
@@ -243,6 +245,7 @@ describe("RoomScreen, the activity", () => {
       room: { ...theRoom, activity: "elliptical" },
       here: [person("host", "Anna"), person("g1", "Ben")],
       reload,
+      connected: true,
     };
     render(<RoomScreen roomId="r1" />);
     expect(screen.getByText(/Elliptical: 4 rounds of 3:00 fast and 2:00 slow\./)).toBeTruthy();

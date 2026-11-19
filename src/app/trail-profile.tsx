@@ -34,7 +34,7 @@ export function TrailProfile({ plan, phaseIndex, fractionLeft, done, activity = 
           >
             <span className="absolute inset-0 rounded-sm border-2 border-current bg-current/15" />
             <span
-              className="absolute inset-0 origin-left bg-current transition-transform duration-300 ease-linear"
+              className="absolute inset-0 origin-left bg-current transition-transform duration-1000 ease-linear"
               style={{ transform: `scaleX(${fill})` }}
             />
             {isCurrent && (
