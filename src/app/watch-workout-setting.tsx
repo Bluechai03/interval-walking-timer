@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useIos } from "@/lib/use-ios";
 import { useWatchDelay, WATCH_DELAY_LIMITS } from "@/lib/use-watch-delay";
 import {
@@ -16,14 +15,6 @@ export function WatchWorkoutSetting() {
   const { enabled, setEnabled, start, end } = useWatchShortcuts();
   const { name, setName } = start;
   const { name: endName, setName: setEndName } = end;
-  const details = useRef<HTMLDetailsElement>(null);
-  // Open on load when something is saved, then leave it to the walker's taps.
-  const decided = useRef(false);
-  useEffect(() => {
-    if (decided.current || !details.current) return;
-    decided.current = true;
-    if (name || endName) details.current.open = true;
-  }, [ios, name, endName]);
   if (!ios) return null;
 
   return (
@@ -53,12 +44,8 @@ export function WatchWorkoutSetting() {
           </span>
         </button>
       </div>
-      {/* Open from the start when a name is already saved. */}
-      <details open={name !== ""} ref={details} className="group flex flex-col gap-3">
-        <summary className="min-h-11 cursor-pointer list-none py-2 text-base font-medium [&::-webkit-details-marker]:hidden">
-          Watch settings
-        </summary>
-      <div className="flex flex-col gap-3 pt-3">
+      {enabled ? (
+      <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-page-quiet">
             Shortcut name
@@ -112,7 +99,11 @@ export function WatchWorkoutSetting() {
           until the workout ends. Leave a name blank to use the one shown.
         </p>
       </div>
-      </details>
+      ) : (
+        <p className="text-sm text-page-quiet">
+          Runs your Shortcut when you tap Start, so your Apple Watch workout begins with the timer.
+        </p>
+      )}
     </div>
   );
 }
