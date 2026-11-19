@@ -104,7 +104,8 @@ function Tile({
   );
 }
 
-// Presets above, tiles below. Inherits the colour it sits on.
+// Presets above, tiles below. Inherits the colour it sits on, and a chosen preset
+// is filled with the text colour and written in the page colour.
 export function PlanTiles({ config, onChange }: { config: PlanConfig; onChange: (config: PlanConfig) => void }) {
   const [problems, setProblems] = useState<Partial<Record<Field, string>>>({});
   const onProblem = (field: Field, message: string | null) =>
@@ -137,7 +138,7 @@ export function PlanTiles({ config, onChange }: { config: PlanConfig; onChange: 
               }`}
             >
               {/* The chosen chip is filled with the text colour, so its words switch to the field's. */}
-              <span className={chosen ? "text-[var(--field-done)]" : ""}>{preset.label}</span>
+              <span className={chosen ? "text-page" : ""}>{preset.label}</span>
             </button>
           );
         })}
