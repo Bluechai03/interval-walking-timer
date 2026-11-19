@@ -11,11 +11,13 @@ const deleteMyData = vi.hoisted(() => vi.fn());
 
 const push = vi.hoisted(() => vi.fn());
 const createRoom = vi.hoisted(() => vi.fn());
+const activityChoice = vi.hoisted(() => ({ value: "walk" }));
 const joinRoom = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/use-auth", () => ({ useAuth: () => auth.state, signInAsGuest }));
 vi.mock("@/lib/profile", () => ({ fetchDisplayName, saveDisplayName, deleteMyData }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("@/lib/use-activity", () => ({ useActivity: () => ({ activity: activityChoice.value, setActivity: () => {} }) }));
 vi.mock("@/lib/rooms", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/rooms")>()),
   createRoom,
@@ -131,6 +133,16 @@ describe("rooms", () => {
       expect.objectContaining({ fast: 180, slow: 180, rounds: 5, getReady: 10 }),
       "Anna",
     );
+  });
+
+  it("starts the room with the activity chosen on the timer", async () => {
+    activityChoice.value = "elliptical";
+    createRoom.mockResolvedValue({ ok: true, value: { id: "room-9", code: "BCDF" } });
+    await named();
+    fireEvent.click(screen.getByRole("button", { name: "Start a room" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-9"));
+    expect(createRoom).toHaveBeenCalledWith(expect.objectContaining({ activity: "elliptical" }), "Anna");
+    activityChoice.value = "walk";
   });
 
   it("only lets a complete code be joined, in any case", async () => {

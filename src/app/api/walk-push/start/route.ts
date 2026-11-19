@@ -1,6 +1,7 @@
 import { start } from "workflow/api";
 import { walkPushes } from "../../../../../workflows/walk-pushes";
 import { sanitizePlanConfig, buildPlan, totalSeconds } from "@/lib/plan";
+import { parseActivity } from "@/lib/activity";
 import { pushCues } from "@/lib/push-cues";
 
 export const runtime = "nodejs";
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
     subscription?: { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
     config?: Record<string, unknown>;
     elapsedSeconds?: number;
+    activity?: string;
   } | null;
 
   const sub = body?.subscription;
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Walk too long" }, { status: 400 });
   }
   const elapsed = Math.max(0, Math.trunc(Number(body?.elapsedSeconds) || 0));
-  const cues = pushCues(plan, elapsed);
+  const cues = pushCues(plan, elapsed, parseActivity(body?.activity));
   if (cues.length === 0) return Response.json({ runId: null });
 
   const run = await start(walkPushes, [

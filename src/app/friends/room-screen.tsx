@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
+import { activityWords, parseActivity } from "@/lib/activity";
 import { formatTime } from "@/lib/format-time";
 import { leaveRoom, removeMember, roomLink, startRoom, type Room } from "@/lib/rooms";
 import { primeAudio } from "@/lib/use-cues";
@@ -73,6 +74,7 @@ export function RoomScreen({ roomId }: { roomId: string }) {
       <RoomCode room={state.room} />
 
       <p className="text-page-quiet">
+        {parseActivity(state.room.activity) !== "walk" && `${activityWords(parseActivity(state.room.activity)).label}: `}
         {state.room.rounds} rounds of {formatTime(state.room.fast_seconds)} fast and{" "}
         {formatTime(state.room.slow_seconds)} slow.
       </p>

@@ -1,3 +1,4 @@
+import type { ActivityId } from "./activity";
 import { getSupabase } from "./supabase";
 
 export const ROOM_CODE_LENGTH = 4;
@@ -19,6 +20,8 @@ export type Room = {
   slow_seconds: number;
   rounds: number;
   get_ready_seconds: number;
+  // What the room is doing, which only changes the words. See lib/activity.
+  activity: string;
   start_at: string | null;
 };
 
@@ -69,7 +72,7 @@ export const roomMessage = (error: { message?: string } | null | undefined): str
 
 export type Result<T> = { ok: true; value: T } | { ok: false; message: string };
 
-export type NewRoomPlan = { fast: number; slow: number; rounds: number; getReady: number };
+export type NewRoomPlan = { fast: number; slow: number; rounds: number; getReady: number; activity: ActivityId };
 
 export const createRoom = async (
   plan: NewRoomPlan,
@@ -83,6 +86,7 @@ export const createRoom = async (
     total_rounds: plan.rounds,
     get_ready: plan.getReady,
     nickname,
+    room_activity: plan.activity,
   });
   const row = Array.isArray(data) ? data[0] : data;
   if (error || !row) return { ok: false, message: roomMessage(error) };

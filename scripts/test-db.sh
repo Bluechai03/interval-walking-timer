@@ -11,10 +11,14 @@ cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 docker run -d --name "$NAME" -e POSTGRES_PASSWORD=postgres "$IMAGE" >/dev/null
-# The image restarts once while it sets itself up, so wait for it to settle.
-until docker exec "$NAME" psql -U supabase_admin -d postgres -Atc "select 1" >/dev/null 2>&1; do sleep 2; done
-sleep 4
-until docker exec "$NAME" psql -U supabase_admin -d postgres -Atc "select 1" >/dev/null 2>&1; do sleep 2; done
+# The image restarts itself while it sets up, and creates its roles at the end.
+# Wait until the roles exist, so migrations never run against a half-built one.
+ready() {
+  [[ "$(docker exec "$NAME" psql -U supabase_admin -d postgres -Atc "select count(*) from pg_roles where rolname in ('anon', 'authenticated', 'service_role')" 2>/dev/null)" == "3" ]]
+}
+until ready; do sleep 2; done
+sleep 2
+until ready; do sleep 2; done
 
 psql_in() { docker exec -i "$NAME" psql -v ON_ERROR_STOP=1 -q -U supabase_admin -d postgres; }
 

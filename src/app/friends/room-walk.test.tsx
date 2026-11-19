@@ -45,6 +45,7 @@ const room = (startOffsetSeconds: number): Room => ({
   slow_seconds: 60,
   rounds: 2,
   get_ready_seconds: 5,
+  activity: "walk",
   start_at: new Date(NOW + startOffsetSeconds * 1000).toISOString(),
 });
 
@@ -322,5 +323,26 @@ describe("RoomWalk, the Apple Watch", () => {
       fireEvent.click(screen.getByRole("button", { name: "Leave this walk" }));
     });
     expect(openShortcut).not.toHaveBeenCalled();
+  });
+});
+
+describe("RoomWalk, the activity the host chose", () => {
+  it("uses the elliptical's words on the screen and in the reminders", () => {
+    const base = room(-30);
+    render(<RoomWalk room={{ ...base, activity: "elliptical" }} roomId="r1" />);
+    expect(screen.getByText("Push harder")).toBeTruthy();
+    expect(screen.queryByText("Walk fast")).toBeNull();
+    expect(useCues).toHaveBeenCalledWith(expect.objectContaining({ activity: "elliptical" }));
+    expect(usePhasePush).toHaveBeenCalledWith(expect.objectContaining({ activity: "elliptical" }));
+  });
+
+  it("says the workout is complete at the end", () => {
+    render(<RoomWalk room={{ ...room(-500), activity: "elliptical" }} roomId="r1" />);
+    expect(screen.getByText("Workout complete")).toBeTruthy();
+  });
+
+  it("keeps the walking words for a walk, and for anything it doesn't know", () => {
+    render(<RoomWalk room={{ ...room(-30), activity: "swimming" }} roomId="r1" />);
+    expect(screen.getByText("Walk fast")).toBeTruthy();
   });
 });

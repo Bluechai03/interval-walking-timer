@@ -36,6 +36,7 @@ const theRoom: Room = {
   slow_seconds: 120,
   rounds: 4,
   get_ready_seconds: 5,
+  activity: "walk",
   start_at: null,
 };
 const person = (id: string, nickname: string): Member => ({
@@ -224,5 +225,26 @@ describe("RoomScreen, the host leaving", () => {
     fireEvent.click(screen.getByRole("button", { name: "Leave the room" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     await waitFor(() => expect(leaveRoom).toHaveBeenCalledWith("r1"));
+  });
+});
+
+describe("RoomScreen, the activity", () => {
+  it("says nothing extra for a walk", () => {
+    auth.state = as("g1");
+    room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
+    render(<RoomScreen roomId="r1" />);
+    expect(screen.getByText(/^4 rounds of 3:00 fast and 2:00 slow\.$/)).toBeTruthy();
+  });
+
+  it("tells everyone what the host chose", () => {
+    auth.state = as("g1");
+    room.state = {
+      status: "ready",
+      room: { ...theRoom, activity: "elliptical" },
+      here: [person("host", "Anna"), person("g1", "Ben")],
+      reload,
+    };
+    render(<RoomScreen roomId="r1" />);
+    expect(screen.getByText(/Elliptical: 4 rounds of 3:00 fast and 2:00 slow\./)).toBeTruthy();
   });
 });

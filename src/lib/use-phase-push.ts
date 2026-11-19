@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ActivityId } from "./activity";
 import type { PlanConfig } from "./plan";
 
 const ENABLED_KEY = "phase-push-enabled";
@@ -36,6 +37,18 @@ const isIphoneBrowserTab = () => {
   return iphone && !installed;
 };
 
+// What the phone tells the server when a walk starts. The server schedules the
+// reminders from it, in the words of the walker's activity.
+export const pushStartBody = (
+  subscription: unknown,
+  latest: { config: PlanConfig; elapsedSeconds: number; activity?: ActivityId },
+) => ({
+  subscription,
+  config: latest.config,
+  elapsedSeconds: latest.elapsedSeconds,
+  activity: latest.activity,
+});
+
 const keyToBytes = (base64: string) => {
   const padded = base64.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - (base64.length % 4)) % 4);
   return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
@@ -50,6 +63,8 @@ const canPush = () =>
 
 type Options = {
   config: PlanConfig;
+  // Changes the words in the notifications. Walking if left out.
+  activity?: ActivityId;
   elapsedSeconds: number;
   // False until the timer has picked up a walk saved before a reload.
   ready: boolean;
@@ -59,16 +74,16 @@ type Options = {
 
 // Optional phase notifications for a locked phone. The server schedules them
 // when the walk starts or resumes, and they are cancelled on pause or reset.
-export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: Options) => {
+export const usePhasePush = ({ config, activity, elapsedSeconds, ready, running, done }: Options) => {
   const [state, setState] = useState<PushSupport>("unsupported");
   // Whether the opening dialog has been answered (either way) on this phone.
   const [asked, setAsked] = useState(true);
   // True when the server could not schedule this walk's reminders.
   const [failed, setFailed] = useState(false);
   const runId = useRef<string | null>(null);
-  const latest = useRef({ config, elapsedSeconds });
+  const latest = useRef({ config, elapsedSeconds, activity });
   useEffect(() => {
-    latest.current = { config, elapsedSeconds };
+    latest.current = { config, elapsedSeconds, activity };
   });
 
   useEffect(() => {
@@ -172,11 +187,7 @@ export const usePhasePush = ({ config, elapsedSeconds, ready, running, done }: O
       const response = await fetch("/api/walk-push/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subscription: subscription.toJSON(),
-          config: latest.current.config,
-          elapsedSeconds: latest.current.elapsedSeconds,
-        }),
+        body: JSON.stringify(pushStartBody(subscription.toJSON(), latest.current)),
       }).catch(() => null);
       if (!stale) setFailed(!response?.ok);
       const body = (await response?.json().catch(() => null)) as { runId?: string | null } | null;

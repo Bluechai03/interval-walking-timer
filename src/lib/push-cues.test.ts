@@ -37,4 +37,13 @@ describe("pushCues", () => {
   it("schedules nothing once the walk is over", () => {
     expect(pushCues(plan, 600)).toEqual([]);
   });
+
+  it("ends with workout words on the elliptical, and walking words by default", () => {
+    const plan = buildPlan({ fastSeconds: 60, slowSeconds: 60, rounds: 1 });
+    const last = (activity?: "elliptical") => pushCues(plan, 0, activity).at(-1)!;
+    expect(last().title).toBe("Walk done");
+    expect(last().body).toBe("Well done, 2 min walked");
+    expect(last("elliptical").title).toBe("Workout done");
+    expect(last("elliptical").body).toBe("Well done, 2 min in total");
+  });
 });

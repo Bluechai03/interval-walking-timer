@@ -3,6 +3,7 @@
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
 import { useMemo } from "react";
 import { buildPlan, totalSeconds } from "@/lib/plan";
+import { useActivity } from "@/lib/use-activity";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
@@ -23,6 +24,7 @@ const BUTTON =
 export function Timer() {
   const { config, setConfig, hydrated } = usePlanConfig();
   const getReady = useGetReady();
+  const { activity, setActivity } = useActivity();
   const watchSetup = useWatchSetup();
   // With the Watch workout on, the countdown lasts as long as the Watch takes to
   // start, so the workout and the walk begin on the same beat.
@@ -54,12 +56,14 @@ export function Timer() {
     secondsLeft,
     muted,
     getReadyLeft,
+    activity,
   });
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
     (done ? 0 : plan[phaseIndex].durationInSeconds - secondsLeft);
   const phasePush = usePhasePush({
     config,
+    activity,
     elapsedSeconds,
     ready,
     running: running && !counting,
@@ -101,6 +105,7 @@ export function Timer() {
           running={running}
           muted={muted}
           onToggleMute={() => setMuted(!muted)}
+          activity={activity}
         />
 
         <div className="flex gap-3 px-4 sm:px-0">
@@ -194,6 +199,8 @@ export function Timer() {
         config={config}
         totalSeconds={totalSeconds(plan)}
         disabled={started}
+        activity={activity}
+        onActivityChange={setActivity}
         getReadySeconds={getReady.seconds}
         getReadyFromWatch={watchOn}
         onGetReadyChange={getReady.setSeconds}

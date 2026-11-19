@@ -1,5 +1,6 @@
 "use client";
 
+import { type ActivityId, activityWords, DEFAULT_ACTIVITY } from "@/lib/activity";
 import { formatTime } from "@/lib/format-time";
 import { totalSeconds, type Phase } from "@/lib/plan";
 import { HeartRate } from "./heart-rate";
@@ -30,6 +31,8 @@ type Props = {
   running: boolean;
   muted: boolean;
   onToggleMute: () => void;
+  // Changes the words on the screen. Walking if left out.
+  activity?: ActivityId;
 };
 
 // The big coloured screen: what to do now, the countdown, and where you are in
@@ -48,7 +51,9 @@ export function WalkDisplay({
   running,
   muted,
   onToggleMute,
+  activity = DEFAULT_ACTIVITY,
 }: Props) {
+  const words = activityWords(activity);
   const current = plan[phaseIndex];
   const blinking = running && !counting && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
@@ -65,12 +70,12 @@ export function WalkDisplay({
       <div className="flex items-center justify-between gap-4">
         <p className="text-3xl font-semibold">
           {done
-            ? "Walk complete"
+            ? words.done
             : counting
               ? "Get ready"
               : current.type === "fast"
-              ? "Walk fast"
-              : "Walk slow"}
+              ? words.fast
+              : words.slow}
         </p>
         {/* The negative margin keeps the taller button from stretching the row. */}
         {!done && (
@@ -84,7 +89,7 @@ export function WalkDisplay({
         role="timer"
         aria-label={
           done
-            ? `${formatTime(totalSeconds(plan))} walked`
+            ? words.total(formatTime(totalSeconds(plan)))
             : counting
               ? `${getReadyLeft} seconds until the walk starts`
               : `${formatTime(secondsLeft)} left`
@@ -107,13 +112,14 @@ export function WalkDisplay({
       ) : (
         <div className="flex flex-col gap-2">
           <p className="text-base font-medium opacity-80">
-            {done ? "Time walked" : `Round ${round} of ${rounds}`}
+            {done ? words.timeDone : `Round ${round} of ${rounds}`}
           </p>
           <TrailProfile
             plan={plan}
             phaseIndex={phaseIndex}
             fractionLeft={fractionLeft}
             done={done}
+            activity={activity}
           />
         </div>
       )}
