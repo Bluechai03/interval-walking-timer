@@ -133,7 +133,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
             <input
               type="text"
               // text-2xl keeps it above 16px, so iOS Safari doesn't zoom in.
-              className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold outline-none focus:border-page-ink"
+              className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold min-h-11 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink focus:border-page-ink"
               value={draft}
               maxLength={NAME_LIMITS.max * 2}
               autoComplete="nickname"
@@ -256,7 +256,7 @@ function RoomActions({ name }: { name: string }) {
             autoCorrect="off"
             spellCheck={false}
             placeholder="ABCD"
-            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold tracking-[0.3em] uppercase outline-none focus:border-page-ink"
+            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold tracking-[0.3em] uppercase min-h-11 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink focus:border-page-ink"
             value={code}
             onChange={(event) => setCode(normalizeCode(event.target.value))}
           />

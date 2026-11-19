@@ -70,7 +70,7 @@ export function WalkDisplay({
         PHASE_FIELD[done ? "done" : current.type]
       }`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
           <p className="text-base font-medium">{words.label}</p>
           {/* A status, so screen readers say it when the phase changes. The countdown is not in it, so it is not read every second. */}
@@ -101,7 +101,7 @@ export function WalkDisplay({
               ? `${getReadyLeft} seconds until the walk starts`
               : `${formatTime(secondsLeft)} left`
         }
-        className={`type-numerals -my-3 text-[clamp(9rem,54vw,14rem)] leading-[0.85] tabular-nums ${
+        className={`type-numerals -my-3 text-[clamp(144px,54vw,224px)] leading-[0.85] tabular-nums ${
           blinking ? "animate-blink" : ""
         }`}
       >

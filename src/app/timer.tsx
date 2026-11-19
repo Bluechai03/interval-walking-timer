@@ -86,15 +86,16 @@ export function Timer() {
 
   return (
     <div className="flex w-full flex-col gap-8">
-      {/* Mid-walk the header fades out so the countdown is the only thing on screen. It keeps its space, so nothing moves when a walk starts, and inert keeps the help button out of tab order. */}
+      {/* Mid-walk the header fades out so the countdown is the only thing on screen. It keeps its space, so nothing moves when a walk starts, and inert keeps the help button out of tab order. The heading stays in the page for screen readers. */}
       <div
-        inert={walking}
         className={`flex items-center justify-between px-4 motion-safe:transition-opacity motion-safe:duration-300 sm:px-0 ${
           walking ? "opacity-0" : ""
         }`}
       >
         <h1 className="font-condensed text-[2rem] leading-none">Strut</h1>
-        <AboutDialog />
+        <div inert={walking}>
+          <AboutDialog />
+        </div>
       </div>
       <div className="flex flex-col gap-3">
         <WalkDisplay

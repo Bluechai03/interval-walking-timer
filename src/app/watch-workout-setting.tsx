@@ -27,31 +27,37 @@ export function WatchWorkoutSetting() {
   if (!ios) return null;
 
   return (
-    // Open from the start when a name is already saved.
-    <details
-      open={name !== ""}
-      className="group flex flex-col gap-3 px-4 sm:px-0"
-    >
-      <summary className="flex cursor-pointer list-none items-baseline justify-between border-b-2 border-page-ink pb-2 [&::-webkit-details-marker]:hidden">
+    <div className="flex flex-col gap-3 px-4 sm:px-0">
+      <div className="flex items-center justify-between border-b-2 border-page-ink pb-2">
         <h2 className="text-xl font-semibold">Start my Watch too</h2>
+        {/* The switch is not inside the summary, so each is one control. The button is 44px tall, the track inside it 28px. */}
         <button
           type="button"
           role="switch"
           aria-checked={enabled}
           aria-label="Start my Watch too"
           onClick={() => setEnabled(!enabled)}
-          className={`relative h-7 w-12 shrink-0 self-center rounded-full border-2 border-page-ink transition-colors ${
-            enabled ? "bg-page-ink" : "bg-transparent"
-          }`}
+          className="flex h-11 w-14 shrink-0 items-center justify-center focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink"
         >
           <span
             aria-hidden="true"
-            className={`absolute top-0.5 left-0.5 size-5 rounded-full transition-transform ${
-              enabled ? "translate-x-5 bg-page" : "bg-page-ink"
+            className={`relative block h-7 w-12 rounded-full border-2 border-page-ink transition-colors ${
+              enabled ? "bg-page-ink" : "bg-transparent"
             }`}
-          />
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 size-5 rounded-full transition-transform ${
+                enabled ? "translate-x-5 bg-page" : "bg-page-ink"
+              }`}
+            />
+          </span>
         </button>
-      </summary>
+      </div>
+      {/* Open from the start when a name is already saved. */}
+      <details open={name !== ""} ref={details} className="group flex flex-col gap-3">
+        <summary className="min-h-11 cursor-pointer list-none py-2 text-base font-medium [&::-webkit-details-marker]:hidden">
+          Watch settings
+        </summary>
       <div className="flex flex-col gap-3 pt-3">
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-page-quiet">
@@ -59,7 +65,7 @@ export function WatchWorkoutSetting() {
           </span>
           <input
             type="text"
-            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold outline-none focus:border-page-ink"
+            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold min-h-11 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink focus:border-page-ink"
             placeholder={DEFAULT_START_SHORTCUT}
             autoCapitalize="none"
             autoCorrect="off"
@@ -73,7 +79,7 @@ export function WatchWorkoutSetting() {
           </span>
           <input
             type="text"
-            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold outline-none focus:border-page-ink"
+            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold min-h-11 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink focus:border-page-ink"
             placeholder={DEFAULT_END_SHORTCUT}
             autoCapitalize="none"
             autoCorrect="off"
@@ -86,7 +92,7 @@ export function WatchWorkoutSetting() {
           <input
             type="number"
             inputMode="numeric"
-            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none focus:border-page-ink"
+            className="w-full border-b border-page-line bg-transparent py-1 text-2xl font-semibold tabular-nums min-h-11 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink focus:border-page-ink"
             defaultValue={delay.seconds}
             min={WATCH_DELAY_LIMITS.min}
             max={WATCH_DELAY_LIMITS.max}
@@ -106,6 +112,7 @@ export function WatchWorkoutSetting() {
           until the workout ends. Leave a name blank to use the one shown.
         </p>
       </div>
-    </details>
+      </details>
+    </div>
   );
 }
