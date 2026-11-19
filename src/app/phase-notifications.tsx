@@ -36,7 +36,7 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
       className="m-auto w-[min(92vw,26rem)] rounded-xl border-2 border-page-line bg-page p-6 text-page-ink shadow-xl backdrop:bg-black/60"
     >
       <div className="flex flex-col gap-4">
-        <span className="flex size-12 items-center justify-center rounded-full bg-blaze text-ink">
+        <span className="flex size-12 items-center justify-center rounded-full bg-brass text-midnight">
           <BellRingIcon aria-hidden="true" size={26} />
         </span>
         <h2 id="push-ask-title" className="text-2xl font-semibold">
@@ -70,7 +70,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
   if (state === "install" && walking) {
     return (
       <div className="px-4 sm:px-0">
-        <div role="alert" className={`${ALERT} border-blaze bg-page text-page-ink`}>
+        <div role="alert" className={`${ALERT} border-brass bg-page text-page-ink`}>
           <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
           <div className="flex flex-col gap-1">
             <p className="font-semibold">This walk is in a browser tab</p>
@@ -87,7 +87,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
   if (state === "install") {
     return (
       <div className="px-4 sm:px-0">
-        <div role="status" className={`${ALERT} border-blaze bg-page text-page-ink`}>
+        <div role="status" className={`${ALERT} border-brass bg-page text-page-ink`}>
           <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
           <div className="flex flex-col gap-1">
             <p className="font-semibold">Want reminders on your lock screen?</p>
@@ -104,7 +104,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
 
       <div className="px-4 sm:px-0">
         {state === "on" && failed ? (
-          <div role="alert" className={`${ALERT} border-blaze bg-page text-page-ink`}>
+          <div role="alert" className={`${ALERT} border-brass bg-page text-page-ink`}>
             <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Reminders couldn&apos;t be set up</p>
@@ -112,7 +112,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
             </div>
           </div>
         ) : state === "on" ? (
-          <div role="status" className={`${ALERT} border-slate bg-slate text-mist`}>
+          <div role="status" className={`${ALERT} border-lake bg-transparent text-page-ink`}>
             <BellRingIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Reminders are on</p>
@@ -123,7 +123,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
             </div>
           </div>
         ) : state === "denied" ? (
-          <div role="status" className={`${ALERT} border-blaze bg-page text-page-ink`}>
+          <div role="status" className={`${ALERT} border-brass bg-page text-page-ink`}>
             <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Reminders are blocked</p>
@@ -131,7 +131,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
             </div>
           </div>
         ) : (
-          <div role="status" className={`${ALERT} border-blaze bg-blaze text-ink`}>
+          <div role="status" className={`${ALERT} border-page-line bg-transparent text-page-ink`}>
             <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Lock-screen reminders</p>

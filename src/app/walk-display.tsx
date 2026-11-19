@@ -11,9 +11,9 @@ import { TrailProfile } from "./trail-profile";
 const BLINK_THRESHOLD_SECONDS = 3;
 
 const PHASE_FIELD = {
-  fast: "bg-brick text-mist",
-  slow: "bg-slate text-mist",
-  done: "bg-charcoal text-mist",
+  fast: "bg-pulse text-chalk",
+  slow: "bg-lake text-chalk",
+  done: "bg-deep text-chalk",
 };
 
 type Props = {
@@ -67,16 +67,19 @@ export function WalkDisplay({
         PHASE_FIELD[done ? "done" : current.type]
       }`}
     >
-      <div className="flex items-center justify-between gap-4">
-        <p className="text-3xl font-semibold">
-          {done
-            ? words.done
-            : counting
-              ? "Get ready"
-              : current.type === "fast"
-              ? words.fast
-              : words.slow}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-2">
+          <p className="text-base font-medium opacity-90">{words.label}</p>
+          <p className="type-instruction text-[clamp(2rem,9.5vw,2.75rem)] leading-none">
+            {done
+              ? words.done
+              : counting
+                ? "Get ready"
+                : current.type === "fast"
+                  ? words.fast
+                  : words.slow}
+          </p>
+        </div>
         {/* The negative margin keeps the taller button from stretching the row. */}
         {!done && (
           <div className="-my-1">
@@ -94,7 +97,7 @@ export function WalkDisplay({
               ? `${getReadyLeft} seconds until the walk starts`
               : `${formatTime(secondsLeft)} left`
         }
-        className={`-my-4 font-condensed text-[clamp(7rem,42vw,11rem)] leading-none tabular-nums ${
+        className={`type-numerals -my-3 text-[clamp(9rem,54vw,14rem)] leading-[0.85] tabular-nums ${
           blinking ? "animate-blink" : ""
         }`}
       >
@@ -105,13 +108,13 @@ export function WalkDisplay({
 
       {/* Where you are in the walk, written above the trail it describes. */}
       {counting ? (
-        <p className="text-base font-medium opacity-80">
+        <p className="text-base font-medium opacity-90">
           {rounds} rounds of {formatTime(fastSeconds)} fast and{" "}
           {formatTime(slowSeconds)} slow
         </p>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-base font-medium opacity-80">
+          <p className="text-base font-medium opacity-90">
             {done ? words.timeDone : `Round ${round} of ${rounds}`}
           </p>
           <TrailProfile
