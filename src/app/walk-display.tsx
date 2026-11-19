@@ -61,6 +61,10 @@ export function WalkDisplay({
   const blinking = running && !counting && secondsLeft <= BLINK_THRESHOLD_SECONDS;
   // Each round is one fast phase followed by one slow phase.
   const round = Math.floor(phaseIndex / 2) + 1;
+  // A time of ten minutes or more has five characters, which need smaller numerals
+  // to fit. Chosen from the longest time this screen will show, so it never changes mid-walk.
+  const longest = done ? totalSeconds(plan) : Math.max(...plan.map((phase) => phase.durationInSeconds));
+  const longTime = formatTime(longest).length >= 5;
 
   return (
     <section
@@ -70,66 +74,75 @@ export function WalkDisplay({
         PHASE_FIELD[done ? "done" : current.type]
       }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        {/* The sound button has its own row, so a longer phase word can never push it down. The row keeps its height when the button goes at the end. */}
+        <div className="flex min-h-11 items-center justify-between gap-4">
           <p className="text-base font-medium">{words.label}</p>
-          {/* A status, so screen readers say it when the phase changes. The countdown is not in it, so it is not read every second. */}
-          <p role="status" className="type-instruction text-[clamp(2rem,9.5vw,2.75rem)] leading-none">
-            {done
-              ? words.done
-              : counting
-                ? "Get ready"
-                : current.type === "fast"
-                  ? words.fast
-                  : words.slow}
-          </p>
+          {!done && <MuteButton muted={muted} onToggle={onToggleMute} />}
         </div>
-        {/* The negative margin keeps the taller button from stretching the row. */}
-        {!done && (
-          <div className="-my-1">
-            <MuteButton muted={muted} onToggle={onToggleMute} />
-          </div>
-        )}
+        {/* A status, so screen readers say it when the phase changes. The countdown is not in it, so it is not read every second. The height always holds two lines, so a long word that wraps moves nothing below it. */}
+        <p
+          role="status"
+          className="type-instruction min-h-[2em] break-words text-[clamp(2rem,9.5vw,2.75rem)] leading-none"
+        >
+          {done
+            ? words.done
+            : counting
+              ? "Get ready"
+              : current.type === "fast"
+                ? words.fast
+                : words.slow}
+        </p>
       </div>
 
-      <p
-        role="timer"
-        aria-label={
-          done
-            ? words.total(formatTime(totalSeconds(plan)))
-            : counting
-              ? `${getReadyLeft} seconds until the walk starts`
-              : `${formatTime(secondsLeft)} left`
-        }
-        className={`type-numerals -my-3 text-[clamp(144px,54vw,224px)] leading-[0.85] tabular-nums ${
-          blinking ? "animate-blink" : ""
-        }`}
-      >
-        {counting ? getReadyLeft : formatTime(done ? totalSeconds(plan) : secondsLeft)}
-      </p>
-
-      {!done && !counting && <HeartRate type={current.type} pulsing={running} age={age} />}
-
-      {/* Where you are in the walk, written above the trail it describes. */}
-      {counting ? (
-        <p className="text-base font-medium">
-          {rounds} rounds of {formatTime(fastSeconds)} fast and{" "}
-          {formatTime(slowSeconds)} slow
+      {/* The box is as tall as the biggest numerals, so a longer time that needs smaller
+          numerals, such as 30:00 at the end, changes nothing around it. */}
+      <div className="flex h-[clamp(122px,46vw,190px)] items-start">
+        <p
+          role="timer"
+          aria-label={
+            done
+              ? words.total(formatTime(totalSeconds(plan)))
+              : counting
+                ? `${getReadyLeft} seconds until the walk starts`
+                : `${formatTime(secondsLeft)} left`
+          }
+          className={`type-numerals ${
+            longTime ? "text-[clamp(112px,42vw,176px)]" : "text-[clamp(144px,54vw,224px)]"
+          } leading-[0.85] tabular-nums ${blinking ? "animate-blink" : ""}`}
+        >
+          {counting ? getReadyLeft : formatTime(done ? totalSeconds(plan) : secondsLeft)}
         </p>
-      ) : (
-        <div className="flex flex-col gap-2">
+      </div>
+
+      {/* Holds its place when there is no heart rate to show. */}
+      <div className="min-h-14">
+        {!done && !counting && <HeartRate type={current.type} pulsing={running} age={age} />}
+      </div>
+
+      {/* Where you are in the walk, written above the trail it describes. The block
+          is as tall with the countdown's one line as with the trail, and its first line stays put. */}
+      <div className="flex min-h-24 flex-col justify-start gap-2">
+        {counting ? (
           <p className="text-base font-medium">
-            {done ? words.timeDone : `Round ${round} of ${rounds}`}
+            {rounds} rounds of {formatTime(fastSeconds)} fast and{" "}
+            {formatTime(slowSeconds)} slow
           </p>
-          <TrailProfile
-            plan={plan}
-            phaseIndex={phaseIndex}
-            fractionLeft={fractionLeft}
-            done={done}
-            activity={activity}
-          />
-        </div>
-      )}
+        ) : (
+          <>
+            <p className="text-base font-medium">
+              {done ? words.timeDone : `Round ${round} of ${rounds}`}
+            </p>
+            <TrailProfile
+              plan={plan}
+              phaseIndex={phaseIndex}
+              fractionLeft={fractionLeft}
+              done={done}
+              activity={activity}
+            />
+          </>
+        )}
+      </div>
     </section>
 
   );
