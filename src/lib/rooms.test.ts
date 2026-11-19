@@ -86,7 +86,7 @@ describe("roomMessage", () => {
 
   it("is kind about what only the host can do, and never gives a bare command", () => {
     expect(roomMessage({ message: "not_host" })).toContain("host");
-    expect(roomMessage({ message: "cannot_remove_self" })).toContain("leave the room");
+    expect(roomMessage({ message: "cannot_remove_self" })).toContain("leave the club");
   });
 
   it("falls back for anything else", () => {

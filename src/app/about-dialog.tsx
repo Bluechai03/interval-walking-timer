@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { QuestionIcon, XIcon } from "@phosphor-icons/react";
 import { useRef } from "react";
 import { ASSUMED_AGE } from "@/lib/heart-rate";
@@ -76,6 +77,18 @@ export function AboutDialog() {
               you can chat. The heart rate targets on screen are estimates, based
               on the age in Plan ({ASSUMED_AGE} until you set yours), so trust how
               it feels over the number.
+            </p>
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <h3 className={HEADING}>Walk with friends</h3>
+            <p className="text-base">
+              Start a club and friends join with a four-letter code or a link.
+              Everyone sees the same countdown at the same moment.{" "}
+              <Link href="/friends" className="font-semibold underline underline-offset-4">
+                Open Walk with friends
+              </Link>
+              .
             </p>
           </section>
 

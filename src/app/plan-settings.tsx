@@ -150,6 +150,7 @@ export function PlanSettings({
           <span className="text-sm font-medium text-page-quiet">Age</span>
           <span className="flex items-center gap-1 border-b border-page-line focus-within:border-page-ink focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-page-ink min-h-11">
             <input
+              id="age"
               type="number"
               inputMode="numeric"
               className="w-full min-w-0 bg-transparent min-h-11 py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"

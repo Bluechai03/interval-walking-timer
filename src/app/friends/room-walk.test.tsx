@@ -25,6 +25,7 @@ vi.mock("@/lib/use-ios", () => ({ useIos: () => watchState.ios }));
 vi.mock("@/lib/use-standalone", () => ({ useStandalone: () => watchState.standalone }));
 vi.mock("@/lib/use-shortcut-name", () => ({
   useWatchShortcuts: () => ({ startShortcut: watchState.start, endShortcut: watchState.end }),
+  useNamed: () => ({ name: "", setName: () => {} }),
 }));
 vi.mock("@/lib/use-watch-delay", () => ({ useWatchDelay: () => ({ seconds: watchState.delay }) }));
 vi.mock("@/lib/watch-workout", async (importOriginal) => ({
@@ -137,7 +138,7 @@ describe("RoomWalk", () => {
     leaveRoom.mockResolvedValue({ ok: true, value: null });
     // Fake timers are on, so let the leave finish by hand, not with waitFor.
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Leave the room" }));
+      fireEvent.click(screen.getByRole("button", { name: "Leave the club" }));
     });
     expect(push).toHaveBeenCalledWith("/friends");
     expect(leaveRoom).toHaveBeenCalledWith("r1");
@@ -187,7 +188,7 @@ describe("RoomWalk, the host leaving", () => {
     leaveRoom.mockResolvedValue({ ok: true, value: null });
     render(<RoomWalk room={room(-500)} roomId="r1" isHost />);
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Leave the room" }));
+      fireEvent.click(screen.getByRole("button", { name: "Leave the club" }));
     });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(leaveRoom).toHaveBeenCalledWith("r1");

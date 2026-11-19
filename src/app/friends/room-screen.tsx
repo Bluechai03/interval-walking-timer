@@ -36,7 +36,7 @@ export function RoomScreen({ roomId }: { roomId: string }) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-lg">
-          This room isn&apos;t available to you. It may have closed, or you may need to join it
+          This club isn&apos;t available to you. It may have closed, or you may need to join it
           with the code first.
         </p>
         <Link href="/friends" className={PRIMARY}>
@@ -53,7 +53,7 @@ export function RoomScreen({ roomId }: { roomId: string }) {
   if (state.room.status === "closed") {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-lg">This room has closed. The host may have left before the walk began.</p>
+        <p className="text-lg">This club has closed. The host may have left before the walk began.</p>
         <Link href="/friends" className={PRIMARY}>
           Back to Walk with friends
         </Link>
@@ -80,6 +80,7 @@ export function RoomScreen({ roomId }: { roomId: string }) {
       </p>
 
       <div className="flex flex-col gap-2">
+        <Arrivals here={state.here} me={me} />
         <h2 className="border-b-2 border-page-ink pb-2 text-xl font-semibold">
           Here now ({state.here.length})
         </h2>
@@ -135,7 +136,7 @@ function StartButton({ roomId, getReady, onStarted }: { roomId: string; getReady
           onStarted();
         }}
       >
-        Start the walk
+        {busy ? "Starting…" : "Start the walk"}
       </button>
       <p className="text-sm text-page-quiet">
         {getReady > 0
@@ -189,7 +190,7 @@ function RoomCode({ room }: { room: Room }) {
       </p>
       {qr && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={qr} alt="QR code that opens the room" width={160} height={160} className="rounded-md bg-white p-1" />
+        <img src={qr} alt="QR code that opens the club" width={160} height={160} className="rounded-md bg-white p-1" />
       )}
       {link && <p className="max-w-full break-all text-center text-sm opacity-80">{link}</p>}
       <div className="flex w-full gap-3">
@@ -249,19 +250,41 @@ function LeaveButton({ roomId, isHost }: { roomId: string; isHost: boolean }) {
         // Leaving as the host closes the room for everyone, so ask first.
         onClick={() => (isHost ? setConfirming(true) : void leave())}
       >
-        {isHost ? "Close the room" : "Leave the room"}
+        {isHost ? "Close the club" : "Leave the club"}
       </button>
       {confirming && (
         <ConfirmDialog
-          title="Close this room?"
-          body="You're the host, so leaving closes the room for everyone. Your friends will see that it has closed, and the code will stop working."
-          cancelLabel="Keep the room"
-          confirmLabel="Close the room"
+          title="Close this club?"
+          body="You're the host, so leaving closes the club for everyone. Your friends will see that it has closed, and the code will stop working."
+          cancelLabel="Keep the club"
+          confirmLabel="Close the club"
           busy={busy}
           onCancel={() => setConfirming(false)}
           onConfirm={() => void leave()}
         />
       )}
     </>
+  );
+}
+
+// Says out loud when someone joins or leaves, for people who can't see the list change.
+// The list is compared with the one before it while rendering, so the first
+// list, which is just who is already here, is never announced.
+function Arrivals({ here, me }: { here: { user_id: string; nickname: string }[]; me: string }) {
+  const [before, setBefore] = useState(here);
+  const [note, setNote] = useState("");
+  if (before !== here) {
+    setBefore(here);
+    const was = new Set(before.map((m) => m.user_id));
+    const is = new Set(here.map((m) => m.user_id));
+    const joined = here.filter((m) => !was.has(m.user_id) && m.user_id !== me).map((m) => `${m.nickname} joined`);
+    const left = before.filter((m) => !is.has(m.user_id) && m.user_id !== me).map((m) => `${m.nickname} left`);
+    const next = [...joined, ...left].join(". ");
+    if (next) setNote(next);
+  }
+  return (
+    <p role="status" className="sr-only">
+      {note}
+    </p>
   );
 }
