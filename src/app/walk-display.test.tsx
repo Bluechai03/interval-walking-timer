@@ -85,3 +85,27 @@ describe("WalkDisplay for screen readers", () => {
     expect(screen.getByRole("status").textContent).toBe("Walk complete");
   });
 });
+
+describe("WalkDisplay when the walk is done", () => {
+  it("says well done and what the walk was made of", () => {
+    show({ done: true });
+    expect(screen.getByText("Well done")).toBeTruthy();
+    expect(screen.getByText("3 min fast · 3 min slow · 1 round")).toBeTruthy();
+  });
+
+  it("adds the minutes up over every round", () => {
+    const longer: Phase[] = [
+      { type: "fast", durationInSeconds: 120 },
+      { type: "slow", durationInSeconds: 60 },
+      { type: "fast", durationInSeconds: 120 },
+      { type: "slow", durationInSeconds: 60 },
+    ];
+    show({ done: true, plan: longer, rounds: 2 });
+    expect(screen.getByText("4 min fast · 2 min slow · 2 rounds")).toBeTruthy();
+  });
+
+  it("says nothing of the sort before the end", () => {
+    show();
+    expect(screen.queryByText("Well done")).toBeNull();
+  });
+});

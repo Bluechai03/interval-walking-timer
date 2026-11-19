@@ -12,6 +12,9 @@
   --field-easy-ink: #f4f6f8;
   --field-done: #0b1424;
   --field-done-ink: #f4f6f8;
+  /* The finished walk: a calm green, the only place this colour is used. */
+  --field-success: #14632f;
+  --field-success-ink: #f4f6f8;
   --field-marker: #ffc83d;
 }
 
@@ -47,6 +50,8 @@
   --color-field-easy-ink: var(--field-easy-ink);
   --color-field-done: var(--field-done);
   --color-field-done-ink: var(--field-done-ink);
+  --color-field-success: var(--field-success);
+  --color-field-success-ink: var(--field-success-ink);
   --color-marker: var(--field-marker);
   --color-brass: #ffc83d;
   --color-midnight: #050b16;

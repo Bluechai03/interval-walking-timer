@@ -48,6 +48,7 @@ describe("colour contrast", () => {
         expect(contrast(v["field-hard"], v["field-hard-ink"]), "hard").toBeGreaterThanOrEqual(4.5);
         expect(contrast(v["field-easy"], v["field-easy-ink"]), "easy").toBeGreaterThanOrEqual(4.5);
         expect(contrast(v["field-done"], v["field-done-ink"]), "done").toBeGreaterThanOrEqual(4.5);
+        expect(contrast(v["field-success"], v["field-success-ink"]), "finished").toBeGreaterThanOrEqual(4.5);
       });
 
       it("keeps the you-are-here marker visible on both fields (3:1)", () => {
