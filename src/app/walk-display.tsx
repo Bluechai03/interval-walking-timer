@@ -35,6 +35,8 @@ type Props = {
   activity?: ActivityId;
   // For the heart rate target. 23 if left out.
   age?: number;
+  // The solo timer has no header above it, so it can stand taller.
+  extraSpace?: boolean;
 };
 
 // The big coloured screen: what to do now, the countdown, and where you are in
@@ -55,6 +57,7 @@ export function WalkDisplay({
   onToggleMute,
   activity = DEFAULT_ACTIVITY,
   age,
+  extraSpace = false,
 }: Props) {
   const words = activityWords(activity);
   const current = plan[phaseIndex];
@@ -70,7 +73,7 @@ export function WalkDisplay({
     <section
       aria-label="Current phase"
       // Tall enough on phones that the buttons land within thumb reach.
-      className={`flex min-h-[64svh] flex-col justify-between gap-6 px-5 pt-5 pb-6 transition-colors duration-500 sm:min-h-0 sm:rounded-xl ${
+      className={`flex ${extraSpace ? "min-h-[calc(64svh_+_4.75rem)]" : "min-h-[64svh]"} flex-col justify-between gap-6 px-5 pt-5 pb-6 transition-colors duration-500 sm:min-h-0 sm:rounded-xl ${
         PHASE_FIELD[done ? "done" : current.type]
       }`}
     >
