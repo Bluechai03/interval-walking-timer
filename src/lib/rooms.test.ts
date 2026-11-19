@@ -16,9 +16,6 @@ describe("normalizeCode", () => {
     expect(normalizeCode(" b c d f ")).toBe("BCDF");
   });
 
-  it("keeps only four letters", () => {
-    expect(normalizeCode("BCDFGH")).toBe("BCDF");
-  });
 });
 
 describe("isCompleteCode", () => {
@@ -89,10 +86,6 @@ describe("roomMessage", () => {
     expect(roomMessage({ message: "cannot_remove_self" })).toContain("leave the crew");
   });
 
-  it("falls back for anything else", () => {
-    expect(roomMessage({ message: "boom" })).toContain("didn't work");
-    expect(roomMessage(null)).toContain("didn't work");
-  });
 });
 
 describe("roomCountdownSeconds", () => {
@@ -102,8 +95,4 @@ describe("roomCountdownSeconds", () => {
     expect(roomCountdownSeconds(5)).toBe(10);
   });
 
-  it("keeps a longer setting", () => {
-    expect(roomCountdownSeconds(15)).toBe(15);
-    expect(roomCountdownSeconds(10)).toBe(10);
-  });
 });

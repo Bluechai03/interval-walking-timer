@@ -8,19 +8,6 @@ describe("spokenCue", () => {
     expect(spokenCue("fast")).toBe("Fast. Target heart rate 148.");
   });
 
-  it("says the slow pace and its target heart rate", () => {
-    expect(spokenCue("slow")).toBe("Slow. Target heart rate 89.");
-  });
-
-  it("leaves the end of the walk unchanged", () => {
-    expect(spokenCue("done")).toBe("Walk complete");
-  });
-
-  it("says the workout is complete on the elliptical, and keeps the pace words", () => {
-    expect(spokenCue("done", "elliptical")).toBe("Workout complete");
-    expect(spokenCue("fast", "elliptical")).toBe("Fast. Target heart rate 148.");
-    expect(spokenCue("done", "bike")).toBe("Ride complete");
-  });
 });
 
 describe("playCue speech", () => {

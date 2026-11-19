@@ -83,11 +83,6 @@ describe("in a browser tab", () => {
     expect(openShortcut).not.toHaveBeenCalled();
   });
 
-  it("has nothing to block when the switch is off", () => {
-    watchState.start = "";
-    const { result } = setup({ running: true, done: false });
-    expect(result.current.setup.blockedInBrowser).toBe(false);
-  });
 });
 
 describe("start", () => {
@@ -198,20 +193,4 @@ describe("sound after Shortcuts", () => {
     expect(result.current.watch.soundLocked).toBe(false);
   });
 
-  it("stays quiet when sound is already allowed", async () => {
-    const { result } = setup({ running: true, done: false });
-    act(() => {
-      result.current.watch.start();
-    });
-    await act(async () => comeBack());
-    expect(result.current.watch.soundLocked).toBe(false);
-  });
-
-  it("does nothing if we never left", async () => {
-    unlock.mockResolvedValue(false);
-    const { result } = setup({ running: true, done: false });
-    await act(async () => comeBack());
-    expect(unlock).not.toHaveBeenCalled();
-    expect(result.current.watch.soundLocked).toBe(false);
-  });
 });

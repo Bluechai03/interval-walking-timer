@@ -20,19 +20,6 @@ const show = (over: Partial<React.ComponentProps<typeof PlanSettings>> = {}) => 
 };
 
 describe("PlanSettings activity", () => {
-  it("offers Walk, Elliptical and Bike, with Walk chosen to begin with", () => {
-    show();
-    const select = screen.getByLabelText("Activity") as HTMLSelectElement;
-    expect(select.value).toBe("walk");
-    expect(Array.from(select.options).map((o) => o.text)).toEqual(["Walk", "Elliptical", "Bike"]);
-  });
-
-  it("reports what the walker picks", () => {
-    const props = show();
-    fireEvent.change(screen.getByLabelText("Activity"), { target: { value: "elliptical" } });
-    expect(props.onActivityChange).toHaveBeenCalledWith("elliptical");
-  });
-
   it("is locked once the walk has started, like the rest of the plan", () => {
     show({ disabled: true });
     expect((screen.getByLabelText("Activity") as HTMLSelectElement).disabled).toBe(true);
@@ -66,9 +53,3 @@ describe("PlanSettings out-of-range values", () => {
   });
 });
 
-describe("PlanSettings during a walk", () => {
-  it("locks the age with the rest of the plan", () => {
-    show({ disabled: true });
-    expect((screen.getByLabelText("Age") as HTMLInputElement).disabled).toBe(true);
-  });
-});

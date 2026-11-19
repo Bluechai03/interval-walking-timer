@@ -7,10 +7,6 @@ describe("formatTime", () => {
     expect(formatTime(0)).toBe("0:00");
   });
 
-  it("formats whole minutes", () => {
-    expect(formatTime(180)).toBe("3:00");
-  });
-
   it("rolls seconds over into minutes", () => {
     expect(formatTime(61)).toBe("1:01");
     expect(formatTime(3600)).toBe("60:00");

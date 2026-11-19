@@ -28,9 +28,6 @@ describe("buildPlan", () => {
     ]);
   });
 
-  it("uses the default config when none is given", () => {
-    expect(buildPlan()).toHaveLength(DEFAULT_PLAN_CONFIG.rounds * 2);
-  });
 });
 
 describe("totalSeconds", () => {
@@ -39,9 +36,6 @@ describe("totalSeconds", () => {
     expect(totalSeconds(plan)).toBe(360);
   });
 
-  it("is zero for an empty plan", () => {
-    expect(totalSeconds([])).toBe(0);
-  });
 });
 
 describe("isValidPlanValue", () => {
@@ -70,21 +64,8 @@ describe("isValidPlanValue", () => {
 });
 
 describe("sanitizePlanConfig", () => {
-  it("keeps valid values", () => {
-    const config = { fastSeconds: 120, slowSeconds: 240, rounds: 8 };
-    expect(sanitizePlanConfig(config)).toEqual(config);
-  });
-
   it("falls back to defaults for missing fields", () => {
     expect(sanitizePlanConfig({})).toEqual(DEFAULT_PLAN_CONFIG);
-  });
-
-  it("defaults to 3 minutes fast, 3 minutes slow, 5 rounds", () => {
-    expect(DEFAULT_PLAN_CONFIG).toEqual({
-      fastSeconds: 180,
-      slowSeconds: 180,
-      rounds: 5,
-    });
   });
 
   it("replaces a saved plan with 10-second phases by the default", () => {

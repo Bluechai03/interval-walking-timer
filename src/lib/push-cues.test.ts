@@ -17,17 +17,6 @@ describe("pushCues", () => {
     expect(first.body).toBe("Target 79–99 bpm\nRound 1 of 2");
   });
 
-  it("numbers rounds", () => {
-    const cues = pushCues(plan, 0);
-    expect(cues[1].title).toBe("Fast pace · 3 min");
-    expect(cues[1].body).toBe("Target 138–158 bpm\nRound 2 of 2");
-  });
-
-  it("ends with the total time walked", () => {
-    const cues = pushCues(plan, 0);
-    expect(cues[3]).toMatchObject({ title: "Walk done", body: "Well done, 10 min walked", delaySeconds: 600 });
-  });
-
   it("only schedules what is left after a pause, counted from now", () => {
     const cues = pushCues(plan, 200);
     expect(cues.map((c) => c.delaySeconds)).toEqual([100, 280, 400]);

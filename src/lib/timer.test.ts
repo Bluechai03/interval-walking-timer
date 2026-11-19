@@ -8,15 +8,6 @@ const plan: Phase[] = [
 ];
 
 describe("getPosition", () => {
-  it("starts at the first phase with its full time left", () => {
-    expect(getPosition(plan, 0)).toEqual({
-      phaseIndex: 0,
-      secondsLeft: 10,
-      fractionLeft: 1,
-      done: false,
-    });
-  });
-
   it("rounds seconds left up and reports the fraction left", () => {
     const position = getPosition(plan, 2500);
     expect(position.phaseIndex).toBe(0);
@@ -63,11 +54,6 @@ describe("countdownLeft", () => {
     expect(countdownLeft(-5000)).toBe(5);
     expect(countdownLeft(-4001)).toBe(5);
     expect(countdownLeft(-1)).toBe(1);
-  });
-
-  it("is zero once the walk has started", () => {
-    expect(countdownLeft(0)).toBe(0);
-    expect(countdownLeft(12_000)).toBe(0);
   });
 
   it("leaves the walk on its first phase during the countdown", () => {

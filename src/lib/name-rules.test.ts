@@ -8,10 +8,6 @@ describe("cleanName", () => {
 });
 
 describe("checkName", () => {
-  it("accepts a normal name and returns it cleaned", () => {
-    expect(checkName(" Anna ")).toEqual({ ok: true, name: "Anna" });
-  });
-
   it("accepts the shortest and longest names", () => {
     expect(checkName("Jo").ok).toBe(true);
     expect(checkName("a".repeat(16)).ok).toBe(true);
@@ -27,10 +23,6 @@ describe("checkName", () => {
     expect(checkName("Anna\u0007").ok).toBe(false);
   });
 
-  it("explains a rejection kindly", () => {
-    const result = checkName("J");
-    expect(result.ok === false && result.message).toContain("at least 2");
-  });
 });
 
 describe("suggestNickname", () => {

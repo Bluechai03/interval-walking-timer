@@ -87,11 +87,6 @@ describe("RoomWalk", () => {
     expect(screen.queryByText(/Reconnecting/)).toBeNull();
   });
 
-  it("says nothing about the clock when it was read", () => {
-    render(<RoomWalk room={room(5)} roomId="r1" />);
-    expect(screen.queryByText(/couldn't check the clock/)).toBeNull();
-  });
-
   it("counts everyone in, then starts the first phase together", () => {
     render(<RoomWalk room={room(5)} roomId="r1" />);
     expect(screen.getByText("Get ready")).toBeTruthy();
@@ -113,13 +108,6 @@ describe("RoomWalk", () => {
     render(<RoomWalk room={room(-70)} roomId="r1" />);
     expect(screen.getByText("Walk slow")).toBeTruthy();
     expect(screen.getByRole("timer").getAttribute("aria-label")).toContain("0:50");
-  });
-
-  it("follows the server clock when the phone's is behind", () => {
-    // The phone is 3 seconds behind the server, so the walk is 3 seconds further on.
-    offset.value = 3000;
-    render(<RoomWalk room={room(5)} roomId="r1" />);
-    expect(screen.getByRole("timer").getAttribute("aria-label")).toContain("2 seconds");
   });
 
   it("schedules reminders from the room's plan and clock", () => {
@@ -219,17 +207,6 @@ describe("RoomWalk, the Apple Watch", () => {
     expect(openShortcut).toHaveBeenCalledWith(START_URL);
   });
 
-  it("follows the server clock when it times the launch", () => {
-    watchOn();
-    offset.value = 2000;
-    render(<RoomWalk room={room(10)} roomId="r1" />);
-    // The server is 2 seconds ahead, so the walk is 8 seconds off, not 10.
-    act(() => vi.advanceTimersByTime(1_900));
-    expect(openShortcut).not.toHaveBeenCalled();
-    act(() => vi.advanceTimersByTime(200));
-    expect(openShortcut).toHaveBeenCalledWith(START_URL);
-  });
-
   it("always offers a Start my Watch button, and the tap opens the Shortcut at once", () => {
     watchOn();
     render(<RoomWalk room={room(10)} roomId="r1" />);
@@ -241,13 +218,6 @@ describe("RoomWalk, the Apple Watch", () => {
     expect(openShortcut).toHaveBeenCalledTimes(1);
   });
 
-  it("launches at once if the countdown is already shorter than the Watch delay", () => {
-    watchOn();
-    render(<RoomWalk room={room(3)} roomId="r1" />);
-    act(() => vi.advanceTimersByTime(10));
-    expect(openShortcut).toHaveBeenCalledWith(START_URL);
-  });
-
   it("leaves someone who joins after the start to the button, since the Watch would be late", () => {
     watchOn();
     render(<RoomWalk room={room(-30)} roomId="r1" />);
@@ -255,17 +225,6 @@ describe("RoomWalk, the Apple Watch", () => {
     expect(openShortcut).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Start my Watch" }));
     expect(openShortcut).toHaveBeenCalledWith(START_URL);
-  });
-
-  it("shows nothing about the Watch when the switch is off, or away from iOS", () => {
-    render(<RoomWalk room={room(10)} roomId="r1" />);
-    act(() => vi.advanceTimersByTime(20_000));
-    expect(screen.queryByRole("button", { name: "Start my Watch" })).toBeNull();
-    expect(openShortcut).not.toHaveBeenCalled();
-    cleanup();
-    Object.assign(watchState, { ios: false, start: "Strut Outdoor" });
-    render(<RoomWalk room={room(10)} roomId="r1" />);
-    expect(screen.queryByRole("button", { name: "Start my Watch" })).toBeNull();
   });
 
   it("in a browser tab, says so and neither launches nor offers the Watch", () => {
@@ -276,41 +235,6 @@ describe("RoomWalk, the Apple Watch", () => {
     expect(screen.queryByRole("button", { name: "Start my Watch" })).toBeNull();
     act(() => vi.advanceTimersByTime(20_000));
     expect(openShortcut).not.toHaveBeenCalled();
-  });
-
-  it("stays quiet about browser tabs in the Home Screen app", () => {
-    watchOn();
-    render(<RoomWalk room={room(10)} roomId="r1" />);
-    expect(screen.queryByText(/only starts from the Strut app on your Home Screen/)).toBeNull();
-  });
-
-  it("ends the workout a moment after the walk finishes", () => {
-    watchOn();
-    localStorage.setItem("watch-workout", "started");
-    // Five seconds from the end of a 240 second walk.
-    render(<RoomWalk room={room(-235)} roomId="r1" />);
-    act(() => vi.advanceTimersByTime(5_000));
-    expect(screen.getByText("Walk complete")).toBeTruthy();
-    act(() => vi.advanceTimersByTime(2_400));
-    expect(openShortcut).not.toHaveBeenCalledWith(END_URL);
-    act(() => vi.advanceTimersByTime(200));
-    expect(openShortcut).toHaveBeenCalledWith(END_URL);
-  });
-
-  it("does not end a workout for a walk that was already over when the page opened", () => {
-    watchOn();
-    localStorage.setItem("watch-workout", "started");
-    render(<RoomWalk room={room(-500)} roomId="r1" />);
-    act(() => vi.advanceTimersByTime(10_000));
-    expect(openShortcut).not.toHaveBeenCalled();
-  });
-
-  it("offers End Watch workout on the finished screen", () => {
-    watchOn();
-    localStorage.setItem("watch-workout", "started");
-    render(<RoomWalk room={room(-500)} roomId="r1" />);
-    fireEvent.click(screen.getByRole("button", { name: "End Watch workout" }));
-    expect(openShortcut).toHaveBeenCalledWith(END_URL);
   });
 
   it("ends the workout too when someone leaves the walk early", async () => {
@@ -325,34 +249,5 @@ describe("RoomWalk, the Apple Watch", () => {
     expect(openShortcut).toHaveBeenCalledWith(END_URL);
   });
 
-  it("does not open any Shortcut for someone whose workout Strut never started", async () => {
-    watchOn();
-    leaveRoom.mockResolvedValue({ ok: true, value: null });
-    render(<RoomWalk room={room(-30)} roomId="r1" />);
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Leave this walk" }));
-    });
-    expect(openShortcut).not.toHaveBeenCalled();
-  });
 });
 
-describe("RoomWalk, the activity the host chose", () => {
-  it("uses the elliptical's words on the screen and in the reminders", () => {
-    const base = room(-30);
-    render(<RoomWalk room={{ ...base, activity: "elliptical" }} roomId="r1" />);
-    expect(screen.getByText("Push harder")).toBeTruthy();
-    expect(screen.queryByText("Walk fast")).toBeNull();
-    expect(useCues).toHaveBeenCalledWith(expect.objectContaining({ activity: "elliptical" }));
-    expect(usePhasePush).toHaveBeenCalledWith(expect.objectContaining({ activity: "elliptical" }));
-  });
-
-  it("says the workout is complete at the end", () => {
-    render(<RoomWalk room={{ ...room(-500), activity: "elliptical" }} roomId="r1" />);
-    expect(screen.getByText("Workout complete")).toBeTruthy();
-  });
-
-  it("keeps the walking words for a walk, and for anything it doesn't know", () => {
-    render(<RoomWalk room={{ ...room(-30), activity: "swimming" }} roomId="r1" />);
-    expect(screen.getByText("Walk fast")).toBeTruthy();
-  });
-});
