@@ -1,45 +1,76 @@
 @import "tailwindcss";
 
-/* Strut palette: the phase colors are fixed so they read the same in
-   sunlight and at night; only the page around them follows the color scheme. */
+/* Strut's look: a very dark page with the effort fields as the loud part. The
+   phase colors are fixed so they read the same in sunlight and at night; only
+   the page around them follows the phone's light or dark setting. Dark first. */
 :root {
-  --page: #f1f3f6;
-  --page-ink: #14213d;
-  --page-quiet: #5a6579;
-  --page-line: #d8dde5;
-  /* Filled buttons: navy in light mode, a mid blue in dark mode so they are
-     not a bright block on the dark page. */
-  --action: #14213d;
-  --action-ink: #f1f3f6;
+  --page: #050b16;
+  --page-line: #18233a;
+  --field-hard: #c0392b;
+  --field-hard-ink: #f4f6f8;
+  --field-easy: #163a70;
+  --field-easy-ink: #f4f6f8;
+  --field-done: #0b1424;
+  --field-done-ink: #f4f6f8;
+  --field-marker: #ffc83d;
 }
 
-@media (prefers-color-scheme: dark) {
+:root {
+  --page-ink: #f4f6f8;
+  --page-quiet: #a9b7ca;
+  /* Filled buttons: chalk on the dark page, midnight on the light one. */
+  --action: #f4f6f8;
+  --action-ink: #050b16;
+}
+
+/* A light phone gets a light page. The fields keep their colours. */
+@media (prefers-color-scheme: light) {
   :root {
-    --page: #070d1a;
-    --page-ink: #e8edf3;
-    --page-quiet: #9fb0c8;
-    --page-line: #1c2a42;
-    --action: #3a5f94;
-    --action-ink: #e8edf3;
+    --page: #f4f6f8;
+    --page-ink: #0e1a2b;
+    --page-quiet: #4a5870;
+    --page-line: #d5dbe3;
+    --action: #0e1a2b;
+    --action-ink: #f4f6f8;
   }
 }
 
 @theme inline {
-  --font-sans: var(--font-barlow);
-  --font-condensed: var(--font-barlow-condensed);
+  --font-sans: var(--font-archivo);
+  --font-condensed: var(--font-archivo);
 
-  --color-blaze: #e6b84e;
-  --color-ink: #14213d;
-  --color-brick: #8a3028;
-  --color-slate: #1d3557;
-  --color-charcoal: #211c1b;
-  --color-mist: #e8edf3;
+  /* The effort fields and what is written on them keep their own colours.
+     The marker shows where you are on the effort strip. */
+  --color-field-hard: var(--field-hard);
+  --color-field-hard-ink: var(--field-hard-ink);
+  --color-field-easy: var(--field-easy);
+  --color-field-easy-ink: var(--field-easy-ink);
+  --color-field-done: var(--field-done);
+  --color-field-done-ink: var(--field-done-ink);
+  --color-marker: var(--field-marker);
+  --color-brass: #ffc83d;
+  --color-midnight: #050b16;
   --color-page: var(--page);
   --color-page-ink: var(--page-ink);
   --color-page-quiet: var(--page-quiet);
   --color-page-line: var(--page-line);
   --color-action: var(--action);
   --color-action-ink: var(--action-ink);
+}
+
+/* One family, two shapes. Archivo has a width axis: narrow and heavy for the
+   numbers you read at arm's length, wide and heavy for the instruction. */
+.font-condensed,
+.type-numerals {
+  font-weight: 800;
+  font-variation-settings: "wdth" 68;
+  letter-spacing: -0.01em;
+}
+
+.type-instruction {
+  font-weight: 800;
+  font-variation-settings: "wdth" 112;
+  letter-spacing: -0.01em;
 }
 
 @theme inline {

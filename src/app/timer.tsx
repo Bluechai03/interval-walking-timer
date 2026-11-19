@@ -207,6 +207,7 @@ export function Timer() {
         onChange={setConfig}
       />
 
+
       <WatchWorkoutSetting />
     </div>
   );

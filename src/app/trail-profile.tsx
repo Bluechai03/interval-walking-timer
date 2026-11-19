@@ -10,13 +10,14 @@ type Props = {
   activity?: ActivityId;
 };
 
-// The walk drawn like a trail's elevation profile: fast phases are tall,
-// slow phases low, and each segment's width follows its duration. Walked
-// segments are solid and the current one fills as it runs.
+// The effort strip: the workout drawn like an elevation profile. Hard phases are
+// tall, easy ones low, and each segment's width follows its duration. Finished
+// segments are solid, the current one fills as it runs, and a bright line marks
+// where you are right now.
 export function TrailProfile({ plan, phaseIndex, fractionLeft, done, activity = DEFAULT_ACTIVITY }: Props) {
   const words = activityWords(activity);
   return (
-    <ol aria-label={words.label} className="flex h-12 items-end gap-1">
+    <ol aria-label={words.label} className="flex h-16 items-end gap-1">
       {plan.map((phase, i) => {
         const walked = done || i < phaseIndex;
         const isCurrent = !done && i === phaseIndex;
@@ -36,6 +37,13 @@ export function TrailProfile({ plan, phaseIndex, fractionLeft, done, activity = 
               className="absolute inset-0 origin-left bg-current transition-transform duration-300 ease-linear"
               style={{ transform: `scaleX(${fill})` }}
             />
+            {isCurrent && (
+              <span
+                aria-hidden="true"
+                className="absolute inset-y-0 w-[3px] bg-marker"
+                style={{ left: `calc(${fill * 100}% - 1.5px)` }}
+              />
+            )}
             <span className="sr-only">
               {phase.type === "fast" ? "Fast" : "Slow"}{" "}
               {formatTime(phase.durationInSeconds)}

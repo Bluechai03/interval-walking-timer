@@ -1,20 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "./service-worker-register";
-import { DESCRIPTION, THEME_COLOR } from "./theme";
+import { DESCRIPTION, THEME_COLOR, THEME_COLOR_LIGHT } from "./theme";
 
-const barlow = Barlow({
-  variable: "--font-barlow",
+// One variable family. Its width axis gives both the narrow numerals and the wide
+// instruction, so only one font file is sent.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-// Only the countdown uses the condensed cut.
-const barlowCondensed = Barlow_Condensed({
-  variable: "--font-barlow-condensed",
-  subsets: ["latin"],
-  weight: ["600"],
+  axes: ["wdth"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +20,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: THEME_COLOR,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLOR_LIGHT },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLOR },
+  ],
   width: "device-width",
   initialScale: 1,
   // Lets the page extend under notches; safe-area padding keeps content clear.
@@ -37,10 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${barlow.variable} ${barlowCondensed.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${archivo.variable} h-full antialiased`}>
       <body className="min-h-svh flex flex-col font-sans">
         {children}
         <ServiceWorkerRegister />
