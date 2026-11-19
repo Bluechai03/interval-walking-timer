@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   resolve: {
@@ -7,5 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // Browser tests live in e2e/ and run with `pnpm test:e2e`.
+    exclude: [...configDefaults.exclude, "e2e/**"],
   },
 });
