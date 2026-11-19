@@ -41,3 +41,22 @@ describe("PhaseNotifications explaining cards", () => {
     } catch {}
   });
 });
+
+describe("PhaseNotifications on the workout screen", () => {
+  it("keeps the explaining cards out of the way until a walk is on, since they live in Settings", () => {
+    render(<PhaseNotifications {...props} state="denied" quietWhenIdle />);
+    expect(screen.queryByText("Reminders are blocked")).toBeNull();
+    cleanup();
+    render(<PhaseNotifications {...props} state="install" quietWhenIdle walking />);
+    expect(screen.getByRole("alert").textContent).toContain("This walk is in a browser tab");
+  });
+
+  it("still asks once, when the app is first opened", () => {
+    // jsdom has no modal dialogs.
+    HTMLDialogElement.prototype.showModal = function () {
+      this.setAttribute("open", "");
+    };
+    render(<PhaseNotifications {...props} state="off" shouldAsk quietWhenIdle />);
+    expect(screen.getByText(/nudge at each change/)).toBeTruthy();
+  });
+});

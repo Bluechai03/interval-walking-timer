@@ -1,6 +1,5 @@
 "use client";
 
-import { CaretDownIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { ACTIVITY_IDS, type ActivityId, activityWords, isActivity } from "@/lib/activity";
 import { AGE_LIMITS } from "@/lib/heart-rate";
@@ -44,12 +43,10 @@ export function PlanSettings({
       return { ...current, [key]: message };
     });
   return (
-    // Closed to begin with, so the first screen is the plan and Start.
-    <details className="group flex flex-col gap-3 px-4 sm:px-0">
-      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between border-b-2 border-page-ink pb-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink [&::-webkit-details-marker]:hidden">
-        <h2 className="text-xl font-semibold">More settings</h2>
-        <CaretDownIcon aria-hidden="true" size={22} weight="bold" className="transition-transform group-open:rotate-180" />
-      </summary>
+    <section aria-labelledby="plan-heading" className="flex flex-col gap-3 px-4 sm:px-0">
+      <h2 id="plan-heading" className="border-b-2 border-page-ink pb-2 text-xl font-semibold">
+        Your workout
+      </h2>
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium text-page-quiet">Activity</span>
         <select
@@ -123,6 +120,6 @@ export function PlanSettings({
       <p className={`text-sm text-page-quiet ${disabled ? "" : "invisible"}`}>
         End the walk to change these.
       </p>
-    </details>
+    </section>
   );
 }
