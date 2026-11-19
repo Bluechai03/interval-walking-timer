@@ -140,3 +140,25 @@ body {
     animation: none !important;
   }
 }
+
+/* Every button answers a press the way Start and Pause do: it sinks a little and comes
+   back. It uses the scale property, so nothing around it moves, and it is switched off
+   when the phone is set to reduce motion. A link that looks like a button takes the
+   press class. Utilities in a component win over this, so Start and Pause keep theirs. */
+@layer base {
+  button,
+  summary,
+  .press {
+    transition-property: scale, opacity, background-color, color;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    button:not(:disabled):active,
+    summary:active,
+    .press:active {
+      scale: 0.97;
+    }
+  }
+}
