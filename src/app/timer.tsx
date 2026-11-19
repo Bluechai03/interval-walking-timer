@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 import { buildPlan } from "@/lib/plan";
 import { useActivity } from "@/lib/use-activity";
 import { useAge } from "@/lib/use-age";
-import { useOnline } from "@/lib/use-online";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
@@ -15,24 +14,20 @@ import { useGetReady } from "@/lib/use-get-ready";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { useWatchSetup, useWatchWorkout } from "@/lib/use-watch-workout";
-import Link from "next/link";
 import { AboutDialog } from "./about-dialog";
-import { SECONDARY } from "./friends/styles";
+import { BottomTabs } from "./bottom-tabs";
 import { PhaseNotifications } from "./phase-notifications";
-import { PlanSettings } from "./plan-settings";
 import { ReadyCard } from "./ready-card";
 import { WalkDisplay } from "./walk-display";
-import { WatchWorkoutSetting } from "./watch-workout-setting";
 
 const BUTTON =
   "flex h-16 flex-1 items-center justify-center gap-2 rounded-lg text-xl font-semibold transition-[colors,transform] motion-safe:active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink disabled:opacity-40";
 
 export function Timer() {
-  const { config, setConfig, hydrated } = usePlanConfig();
+  const { config, setConfig } = usePlanConfig();
   const getReady = useGetReady();
-  const { activity, setActivity } = useActivity();
-  const { age, setAge } = useAge();
-  const online = useOnline();
+  const { activity } = useActivity();
+  const { age } = useAge();
   // Done ends a walk in progress, so the first tap only asks.
   const [confirmEnd, setConfirmEnd] = useState(false);
   const watchSetup = useWatchSetup();
@@ -91,7 +86,7 @@ export function Timer() {
   const watch = useWatchWorkout(watchSetup, { running, done, muted, prime, unlock });
 
   return (
-    <div className="flex w-full flex-col gap-8">
+    <div className={`flex w-full flex-col gap-8 ${walking ? "" : "pb-[calc(5.5rem+env(safe-area-inset-bottom))]"}`}>
       {/* Mid-walk the header fades out so the countdown is the only thing on screen. It keeps its space, so nothing moves when a walk starts, and inert keeps the help button out of tab order. The heading stays in the page for screen readers. */}
       <div
         className={`flex items-center justify-between px-4 motion-safe:transition-opacity motion-safe:duration-300 sm:px-0 ${
@@ -133,7 +128,13 @@ export function Timer() {
         />
         )}
 
-        <div className="flex gap-3 px-4 sm:px-0">
+        {/* The main buttons stay in reach above the tab bar, so Start is never hidden behind it
+            however tall the screen above is. */}
+        <div
+          className={`sticky z-10 flex gap-3 bg-page px-4 py-3 sm:px-0 ${
+            walking ? "bottom-[env(safe-area-inset-bottom)]" : "bottom-[calc(4.25rem+env(safe-area-inset-bottom))]"
+          }`}
+        >
           {running && counting ? (
             // Backing out of the countdown, as if Start had not been tapped.
             <button
@@ -237,47 +238,12 @@ export function Timer() {
           onEnable={() => void phasePush.enable()}
           onDisable={() => void phasePush.disable()}
           onDismissAsk={phasePush.dismissAsk}
+          quietWhenIdle
         />
       </div>
 
-      <PlanSettings
-        // Remount once after hydration so the inputs show stored values.
-        key={String(hydrated)}
-        disabled={started}
-        activity={activity}
-        onActivityChange={setActivity}
-        age={age}
-        onAgeChange={setAge}
-        getReadySeconds={getReady.seconds}
-        getReadyFromWatch={watchOn}
-        onGetReadyChange={getReady.setSeconds}
-      />
-
-      {/* The way into rooms. Out of the way during a walk, which is not the time to start one. */}
-      {!walking && (
-        <section aria-labelledby="friends-heading" className="flex flex-col gap-3 px-4 sm:px-0">
-          <h2 id="friends-heading" className="border-b-2 border-page-ink pb-2 text-xl font-semibold">
-            Walk with friends
-          </h2>
-          {online ? (
-            <>
-              <p className="text-base text-page-quiet">
-                Start a crew and friends join with a four-letter code, so you all switch pace together.
-              </p>
-              <Link href="/friends" className={SECONDARY}>
-                Open Walk with friends
-              </Link>
-            </>
-          ) : (
-            // The timer itself needs no signal, so this is the only place that says so.
-            <p role="status" className="text-base text-page-quiet">
-              A crew needs a signal to keep everyone in step. Your timer works without one.
-            </p>
-          )}
-        </section>
-      )}
-
-      <WatchWorkoutSetting />
+      {/* A walk in progress has nothing but itself on screen. */}
+      <BottomTabs hidden={walking} />
     </div>
   );
 }

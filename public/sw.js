@@ -15,11 +15,15 @@ const staticFilesIn = (html) => [...new Set(html.match(/\/_next\/static\/[^"'\s\
 async function precache() {
   const cache = await caches.open(CACHE);
   await cache.add("/offline.html");
-  const home = await fetch("/");
-  if (!home.ok) return;
-  await cache.put("/", home.clone());
-  const files = staticFilesIn(await home.text());
-  await Promise.all(files.map((file) => cache.add(file).catch(() => {})));
+  // The workout and the settings both work with no signal.
+  const files = new Set();
+  for (const page of ["/", "/settings"]) {
+    const response = await fetch(page);
+    if (!response.ok) continue;
+    await cache.put(page, response.clone());
+    staticFilesIn(await response.text()).forEach((file) => files.add(file));
+  }
+  await Promise.all([...files].map((file) => cache.add(file).catch(() => {})));
 }
 
 self.addEventListener("install", (event) => {

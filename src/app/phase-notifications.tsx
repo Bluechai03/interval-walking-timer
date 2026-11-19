@@ -14,6 +14,9 @@ type Props = {
   onEnable: () => void;
   onDisable: () => void;
   onDismissAsk: () => void;
+  // On the workout screen the cards live in Settings; only a walk's own warnings and the
+  // first-run question stay.
+  quietWhenIdle?: boolean;
 };
 
 const ALERT = "flex items-start gap-3 rounded-lg border-2 px-4 py-3 text-base";
@@ -65,13 +68,16 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
 }
 
 // Alert-style note under the controls: a tinted card with an icon, a title and one clear action.
-export function PhaseNotifications({ state, walking = false, failed, shouldAsk, onEnable, onDisable, onDismissAsk }: Props) {
+export function PhaseNotifications({ state, walking = false, failed, shouldAsk, onEnable, onDisable, onDismissAsk, quietWhenIdle = false }: Props) {
   // The two cards that only explain something can be hidden for good, so they
   // don't nag someone who has already decided.
   const hidden = useNamed("reminders-note-hidden");
   const hide = () => hidden.setName("1");
   const noteHidden = hidden.name === "1";
   if (state === "unsupported") return null;
+  if (quietWhenIdle && !walking) {
+    return shouldAsk ? <AskDialog onEnable={onEnable} onDismissAsk={onDismissAsk} /> : null;
+  }
 
   if (state === "install" && walking) {
     return (
