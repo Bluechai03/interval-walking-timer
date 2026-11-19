@@ -75,6 +75,8 @@
 
 @theme inline {
   --animate-blink: blink 1s ease-in-out infinite;
+  --animate-glide-up: glide-up 350ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  --animate-glide-down: glide-down 350ms cubic-bezier(0.2, 0.7, 0.2, 1);
 
   @keyframes blink {
     50% {
@@ -86,6 +88,26 @@
 body {
   background: var(--page);
   color: var(--page-ink);
+}
+
+/* The header is 44px high with a 2rem gap, so the walk starts that far down and slides up
+   into the room the header left, or the other way when it comes back. */
+@keyframes glide-up {
+  from {
+    transform: translateY(4.75rem);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes glide-down {
+  from {
+    transform: translateY(-4.75rem);
+  }
+  to {
+    transform: none;
+  }
 }
 
 @keyframes heartbeat {

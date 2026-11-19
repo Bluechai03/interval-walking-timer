@@ -28,6 +28,8 @@ export function Timer() {
   const getReady = useGetReady();
   const { activity } = useActivity();
   const { age } = useAge();
+  // Which way the walk screen glides when a tap changes whether the header is there.
+  const [glide, setGlide] = useState<"up" | "down" | null>(null);
   // Done ends a walk in progress, so the first tap only asks.
   const [confirmEnd, setConfirmEnd] = useState(false);
   const watchSetup = useWatchSetup();
@@ -86,19 +88,24 @@ export function Timer() {
   const watch = useWatchWorkout(watchSetup, { running, done, muted, prime, unlock });
 
   return (
-    <div className={`flex w-full flex-col gap-8 ${walking ? "" : "pb-[calc(5.5rem+env(safe-area-inset-bottom))]"}`}>
-      {/* Mid-walk the header fades out so the countdown is the only thing on screen. It keeps its space, so nothing moves when a walk starts, and inert keeps the help button out of tab order. The heading stays in the page for screen readers. */}
+    <div className={`relative flex w-full flex-col gap-8 ${walking ? "" : "pb-[calc(5.5rem+env(safe-area-inset-bottom))]"}`}>
+      {/* Once a walk has started the header leaves the page flow, so the walk can use its room. It stays in the page for screen readers, fades out, and inert keeps the help button out of tab order. It comes back when the walk is reset, not when it finishes by itself, so nothing moves without a tap. */}
       <div
-        className={`flex items-center justify-between px-4 motion-safe:transition-opacity motion-safe:duration-300 sm:px-0 ${
-          walking ? "opacity-0" : ""
+        className={`flex h-11 items-center justify-between px-4 motion-safe:transition-opacity motion-safe:duration-300 sm:px-0 ${
+          started ? "pointer-events-none absolute inset-x-0 top-0 opacity-0" : ""
         }`}
       >
         <h1 className="font-condensed text-[2rem] leading-none">Strut</h1>
-        <div inert={walking}>
+        <div inert={started}>
           <AboutDialog />
         </div>
       </div>
-      <div className="flex flex-col gap-3">
+      {/* The glide is a transform, so it costs the page no layout work. */}
+      <div
+        className={`flex flex-col gap-3 ${
+          glide === "up" ? "motion-safe:animate-glide-up" : glide === "down" ? "motion-safe:animate-glide-down" : ""
+        }`}
+      >
         {/* Before the walk, the plan on a calm field; the effort colours come with the walk. */}
         {!started ? (
           <ReadyCard
@@ -125,6 +132,7 @@ export function Timer() {
           onToggleMute={() => setMuted(!muted)}
           activity={activity}
           age={age}
+          extraSpace
         />
         )}
 
@@ -140,6 +148,7 @@ export function Timer() {
             <button
               className={`${BUTTON} border-2 border-page-ink`}
               onClick={() => {
+                setGlide("down");
                 reset();
                 watch.end();
               }}
@@ -167,7 +176,10 @@ export function Timer() {
                   // The walk starts here, in the app, so its reminders work. The
                   // countdown gives the Watch time to start its workout.
                   start();
-                  if (first) watch.start();
+                  if (first) {
+                    setGlide("up");
+                    watch.start();
+                  }
                 }}
               >
                 <PlayIcon aria-hidden="true" />
@@ -185,6 +197,7 @@ export function Timer() {
                   return;
                 }
                 setConfirmEnd(false);
+                setGlide("down");
                 reset();
                 watch.end();
               }}
@@ -199,6 +212,7 @@ export function Timer() {
             <button
               className={`${BUTTON} border-2 border-page-ink`}
               onClick={() => {
+                setGlide("down");
                 reset();
                 watch.end();
               }}
