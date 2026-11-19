@@ -20,13 +20,24 @@ import { LINK, PRIMARY, SECONDARY } from "./styles";
 
 // A walk everyone in the room is taking together. It follows the host's start
 // moment on the server's clock, so it needs no Start, Pause or Reset of its own.
-export function RoomWalk({ room, roomId, isHost = false }: { room: Room; roomId: string; isHost?: boolean }) {
+export function RoomWalk({
+  room,
+  roomId,
+  isHost = false,
+  connected = true,
+}: {
+  room: Room;
+  roomId: string;
+  isHost?: boolean;
+  // False while the live connection is down. The walk keeps counting without it.
+  connected?: boolean;
+}) {
   const { offset, approximate } = useOffsetOrFallback();
   if (offset === null || room.start_at === null) {
     return <p className="text-page-quiet">One moment…</p>;
   }
   return (
-    <Walking room={room} roomId={roomId} startAt={room.start_at} offset={offset} approximate={approximate} isHost={isHost} />
+    <Walking room={room} roomId={roomId} startAt={room.start_at} offset={offset} approximate={approximate} isHost={isHost} connected={connected} />
   );
 }
 
@@ -37,6 +48,7 @@ function Walking({
   offset,
   approximate,
   isHost,
+  connected,
 }: {
   room: Room;
   roomId: string;
@@ -45,6 +57,7 @@ function Walking({
   offset: number;
   // We couldn't read the server's clock, so this phone's own is standing in.
   approximate: boolean;
+  connected: boolean;
 }) {
   const router = useRouter();
   const config = useMemo(
@@ -157,6 +170,12 @@ function Walking({
         onToggleMute={() => setMuted(!muted)}
         activity={activity}
       />
+
+      {!connected && (
+        <p role="status" className="text-sm text-page-quiet">
+          Reconnecting… Your walk keeps counting, and you stay in step with your friends.
+        </p>
+      )}
 
       {approximate && (
         <p className="text-sm text-page-quiet">

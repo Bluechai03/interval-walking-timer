@@ -148,7 +148,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
             <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Lock-screen reminders</p>
-              <p>A short note at each change, so your phone can stay in your pocket.</p>
+              <p>A short note at each change, so your phone can stay in your pocket and the screen can sleep.</p>
               <button type="button" className={ACTION} onClick={onEnable}>
                 Turn on
               </button>

@@ -10,7 +10,32 @@ export type RoomState =
   // Closed, gone, or you aren't in it. The database doesn't say which.
   | { status: "missing" }
   | { status: "error"; message: string }
-  | { status: "ready"; room: Room; here: Member[]; reload: () => void };
+  // `connected` is false while the latest check failed and the last good copy is shown.
+  | { status: "ready"; room: Room; here: Member[]; reload: () => void; connected: boolean };
+
+// The walk of a started crew is kept on the phone, so a reload with no signal can
+// carry on with the same plan and start moment instead of showing an error.
+const SAVED_KEY = "crew-walk";
+const SAVED_FOR_MS = 6 * 60 * 60 * 1000;
+
+const readSaved = (id: string): Room | null => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SAVED_KEY) ?? "null") as { room?: Room; savedAt?: number } | null;
+    if (saved?.room?.id === id && saved.room.start_at && Date.now() - (saved.savedAt ?? 0) < SAVED_FOR_MS) return saved.room;
+  } catch {
+    // Storage unavailable or damaged: nothing saved.
+  }
+  return null;
+};
+
+const writeSaved = (room: Room) => {
+  if (!room.start_at) return;
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify({ room, savedAt: Date.now() }));
+  } catch {
+    // Storage unavailable: the walk just won't survive a reload with no signal.
+  }
+};
 
 // Short, so a guest still hears about the start quickly if live updates are missed.
 const REFRESH_MS = 4_000;
@@ -20,7 +45,7 @@ const TICK_MS = 5_000;
 export const useRoom = (roomId: string): RoomState => {
   const [reloadCount, setReloadCount] = useState(0);
   const [loaded, setLoaded] = useState<
-    { status: "loading" } | { status: "missing" } | { status: "error"; message: string } | { status: "ready"; room: Room; members: Member[] }
+    { status: "loading" } | { status: "missing" } | { status: "error"; message: string } | { status: "ready"; room: Room; members: Member[]; connected: boolean }
   >({ status: "loading" });
   const [now, setNow] = useState(() => Date.now());
   // last_seen_at comes from the server, so compare it with the server's time.
@@ -32,9 +57,21 @@ export const useRoom = (roomId: string): RoomState => {
     const load = () =>
       void fetchRoom(roomId).then((result) => {
         if (!active) return;
-        if (!result.ok) setLoaded({ status: "error", message: result.message });
-        else if (!result.value) setLoaded({ status: "missing" });
-        else setLoaded({ status: "ready", ...result.value });
+        if (!result.ok) {
+          // No answer. Keep showing what was there, or the saved walk, rather than
+          // an error in the middle of a walk.
+          setLoaded((current) => {
+            if (current.status === "ready") return { ...current, connected: false };
+            const saved = readSaved(roomId);
+            return saved
+              ? { status: "ready", room: saved, members: [], connected: false }
+              : { status: "error", message: result.message };
+          });
+        } else if (!result.value) setLoaded({ status: "missing" });
+        else {
+          writeSaved(result.value.room);
+          setLoaded({ status: "ready", ...result.value, connected: true });
+        }
       });
     // Changes often arrive in bursts, so fetch once after they settle.
     const refresh = () => {
@@ -87,5 +124,6 @@ export const useRoom = (roomId: string): RoomState => {
     here: membersHere(loaded.members, loaded.room.host_id, now + serverOffset),
     // For right after our own change, so the screen doesn't wait for the next refresh.
     reload: () => setReloadCount((count) => count + 1),
+    connected: loaded.connected,
   };
 };

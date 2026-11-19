@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useActivity } from "@/lib/use-activity";
 import { useAge } from "@/lib/use-age";
+import { useOnline } from "@/lib/use-online";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
@@ -30,6 +31,7 @@ export function Timer() {
   const getReady = useGetReady();
   const { activity, setActivity } = useActivity();
   const { age, setAge } = useAge();
+  const online = useOnline();
   // Done ends a walk in progress, so the first tap only asks.
   const [confirmEnd, setConfirmEnd] = useState(false);
   const watchSetup = useWatchSetup();
@@ -248,12 +250,21 @@ export function Timer() {
           <h2 id="friends-heading" className="border-b-2 border-page-ink pb-2 text-xl font-semibold">
             Walk with friends
           </h2>
-          <p className="text-base text-page-quiet">
-            Start a crew and friends join with a four-letter code, so you all switch pace together.
-          </p>
-          <Link href="/friends" className={SECONDARY}>
-            Open Walk with friends
-          </Link>
+          {online ? (
+            <>
+              <p className="text-base text-page-quiet">
+                Start a crew and friends join with a four-letter code, so you all switch pace together.
+              </p>
+              <Link href="/friends" className={SECONDARY}>
+                Open Walk with friends
+              </Link>
+            </>
+          ) : (
+            // The timer itself needs no signal, so this is the only place that says so.
+            <p role="status" className="text-base text-page-quiet">
+              A crew needs a signal to keep everyone in step. Your timer works without one.
+            </p>
+          )}
         </section>
       )}
 

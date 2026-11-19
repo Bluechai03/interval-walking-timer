@@ -18,9 +18,18 @@ export const useRoomTimer = (plan: Phase[], startAt: string, offsetMs: number) =
 
   useEffect(() => {
     if (position.done) return;
-    const id = setInterval(() => setNow(Date.now()), TICK_MS);
+    // Checked four times a second so a second is never shown late, but the page
+    // is only redrawn when the second on screen changes, which spares the battery.
+    const secondOf = (time: number) => Math.floor((time + offsetMs - startMs) / 1000);
+    const id = setInterval(
+      () => setNow((previous) => {
+        const next = Date.now();
+        return secondOf(next) === secondOf(previous) ? previous : next;
+      }),
+      TICK_MS,
+    );
     return () => clearInterval(id);
-  }, [position.done]);
+  }, [position.done, offsetMs, startMs]);
 
   const totalBefore = plan.slice(0, position.phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0);
   return {

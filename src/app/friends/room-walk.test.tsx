@@ -78,6 +78,15 @@ describe("RoomWalk", () => {
     expect(screen.getByText(/couldn't check the clock/)).toBeTruthy();
   });
 
+  it("says it is reconnecting, and that the walk keeps counting, when the live connection is down", () => {
+    render(<RoomWalk room={room(5)} roomId="r1" connected={false} />);
+    expect(screen.getByText(/Reconnecting/)).toBeTruthy();
+    expect(screen.getByText(/keeps counting/)).toBeTruthy();
+    cleanup();
+    render(<RoomWalk room={room(5)} roomId="r1" />);
+    expect(screen.queryByText(/Reconnecting/)).toBeNull();
+  });
+
   it("says nothing about the clock when it was read", () => {
     render(<RoomWalk room={room(5)} roomId="r1" />);
     expect(screen.queryByText(/couldn't check the clock/)).toBeNull();

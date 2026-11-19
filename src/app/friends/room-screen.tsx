@@ -66,7 +66,7 @@ export function RoomScreen({ roomId }: { roomId: string }) {
 
   // Once the host has started, the room becomes the walk.
   if (state.room.start_at !== null) {
-    return <RoomWalk room={state.room} roomId={roomId} isHost={isHost} />;
+    return <RoomWalk room={state.room} roomId={roomId} isHost={isHost} connected={state.connected} />;
   }
 
   return (
