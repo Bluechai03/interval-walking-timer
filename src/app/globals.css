@@ -2,13 +2,8 @@
 
 /* Strut's look: a very dark page with the effort fields as the loud part. The
    phase colors are fixed so they read the same in sunlight and at night; only
-   the page around them follows the phone's light or dark setting. Dark first.
-
-   A colour scheme sets the page, the hard and easy fields and what is written
-   on them. They are keyed by data-scheme, on the page or on any element that
-   wants to show one, such as a swatch. Midnight is the default. */
-:root,
-[data-scheme="midnight"] {
+   the page around them follows the phone's light or dark setting. Dark first. */
+:root {
   --page: #050b16;
   --page-line: #18233a;
   --field-hard: #c0392b;
@@ -20,43 +15,6 @@
   --field-marker: #ffc83d;
 }
 
-[data-scheme="ember"] {
-  --page: #0f0a08;
-  --page-line: #2a1d17;
-  --field-hard: #b93a0a;
-  --field-hard-ink: #f4f6f8;
-  --field-easy: #26401b;
-  --field-easy-ink: #f4f6f8;
-  --field-done: #1c120d;
-  --field-done-ink: #f4f6f8;
-  --field-marker: #ffc83d;
-}
-
-[data-scheme="forest"] {
-  --page: #07130f;
-  --page-line: #15302a;
-  --field-hard: #1e7a45;
-  --field-hard-ink: #f4f6f8;
-  --field-easy: #0f3d5e;
-  --field-easy-ink: #f4f6f8;
-  --field-done: #0b1d17;
-  --field-done-ink: #f4f6f8;
-  --field-marker: #ffc83d;
-}
-
-/* Black, white and grey. The hard phase is the light one, so it is written on in black. */
-[data-scheme="mono"] {
-  --page: #0a0a0a;
-  --page-line: #262626;
-  --field-hard: #f1f1f1;
-  --field-hard-ink: #0a0a0a;
-  --field-easy: #2b2b2b;
-  --field-easy-ink: #f1f1f1;
-  --field-done: #161616;
-  --field-done-ink: #f1f1f1;
-  --field-marker: #ff3b30;
-}
-
 :root {
   --page-ink: #f4f6f8;
   --page-quiet: #a9b7ca;
@@ -65,11 +23,9 @@
   --action-ink: #050b16;
 }
 
-/* A light phone gets a light page, whichever scheme is chosen. The fields keep
-   the scheme's colours. */
+/* A light phone gets a light page. The fields keep their colours. */
 @media (prefers-color-scheme: light) {
-  :root,
-  :root[data-scheme] {
+  :root {
     --page: #f4f6f8;
     --page-ink: #0e1a2b;
     --page-quiet: #4a5870;
@@ -83,7 +39,7 @@
   --font-sans: var(--font-archivo);
   --font-condensed: var(--font-archivo);
 
-  /* The effort fields and what is written on them come from the colour scheme.
+  /* The effort fields and what is written on them keep their own colours.
      The marker shows where you are on the effort strip. */
   --color-field-hard: var(--field-hard);
   --color-field-hard-ink: var(--field-hard-ink);

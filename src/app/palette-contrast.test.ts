@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SCHEME_IDS, type SchemeId } from "@/lib/scheme";
 
 // Reads the real stylesheet and checks every colour pair against WCAG 2.2.
 // AA needs 4.5:1 for normal text and 3:1 for large text and for graphics.
@@ -21,11 +20,9 @@ export const contrast = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
-// The variables set for one scheme, such as --field-hard.
-const schemeVars = (id: SchemeId): Record<string, string> => {
-  const selector = id === "midnight" ? ':root,\n[data-scheme="midnight"]' : `[data-scheme="${id}"]`;
-  const start = css.indexOf(`${selector} {`);
-  if (start < 0) throw new Error(`No block for ${id}`);
+// The variables set on the first :root block, such as --field-hard.
+const fieldVars = (): Record<string, string> => {
+  const start = css.indexOf(":root {");
   const body = css.slice(css.indexOf("{", start) + 1, css.indexOf("}", start));
   return Object.fromEntries([...body.matchAll(/--([a-z-]+):\s*(#[0-9a-f]{6})/g)].map((m) => [m[1], m[2]]));
 };
@@ -43,9 +40,9 @@ describe("colour contrast", () => {
     expect(contrast("#777777", "#777777")).toBe(1);
   });
 
-  for (const id of SCHEME_IDS) {
-    describe(`${id}`, () => {
-      const v = schemeVars(id);
+  {
+    describe("dark page and fields", () => {
+      const v = fieldVars();
 
       it("keeps the writing on each effort field readable (4.5:1)", () => {
         expect(contrast(v["field-hard"], v["field-hard-ink"]), "hard").toBeGreaterThanOrEqual(4.5);
@@ -58,7 +55,7 @@ describe("colour contrast", () => {
         expect(contrast(v["field-marker"], v["field-easy"]), "on easy").toBeGreaterThanOrEqual(3);
       });
 
-      it("keeps the page's quiet text readable on this scheme's dark page (4.5:1)", () => {
+      it("keeps the page's quiet text readable on the dark page (4.5:1)", () => {
         expect(contrast(rootVar("page-quiet"), v["page"])).toBeGreaterThanOrEqual(4.5);
         expect(contrast(rootVar("page-ink"), v["page"])).toBeGreaterThanOrEqual(7);
       });
