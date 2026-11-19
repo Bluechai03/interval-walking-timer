@@ -207,10 +207,10 @@ export function Timer() {
               {confirmEnd ? "Yes, end" : "Done"}
             </button>
           )}
-          {/* After the finish, back to the start. */}
+          {/* After the finish, the same plan again from the ready screen. */}
           {done && (
             <button
-              className={`${BUTTON} border-2 border-page-ink`}
+              className={`${BUTTON} bg-marker text-midnight`}
               onClick={() => {
                 setGlide("down");
                 reset();
@@ -218,7 +218,7 @@ export function Timer() {
               }}
             >
               <RotateCcwIcon aria-hidden="true" />
-              Reset
+              Go again
             </button>
           )}
           {/* The automatic end can be blocked by iOS, so the walker can always tap it. */}

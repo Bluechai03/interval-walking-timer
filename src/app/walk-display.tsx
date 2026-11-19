@@ -13,7 +13,7 @@ const BLINK_THRESHOLD_SECONDS = 3;
 const PHASE_FIELD = {
   fast: "bg-field-hard text-field-hard-ink",
   slow: "bg-field-easy text-field-easy-ink",
-  done: "bg-field-done text-field-done-ink",
+  done: "bg-field-success text-field-success-ink",
 };
 
 type Props = {
@@ -68,6 +68,10 @@ export function WalkDisplay({
   // to fit. Chosen from the longest time this screen will show, so it never changes mid-walk.
   const longest = done ? totalSeconds(plan) : Math.max(...plan.map((phase) => phase.durationInSeconds));
   const longTime = formatTime(longest).length >= 5;
+  // What the finished walk was made of, in whole minutes.
+  const minutesOf = (type: Phase["type"]) =>
+    plan.filter((phase) => phase.type === type).reduce((sum, phase) => sum + phase.durationInSeconds, 0) / 60;
+  const summary = { fast: minutesOf("fast"), slow: minutesOf("slow") };
 
   return (
     <section
@@ -118,9 +122,19 @@ export function WalkDisplay({
         </p>
       </div>
 
-      {/* Holds its place when there is no heart rate to show. */}
+      {/* Holds its place when there is no heart rate to show. When the walk is done it
+          says well done and what was done, in the same room, so nothing moves at the finish. */}
       <div className="min-h-14">
-        {!done && !counting && <HeartRate type={current.type} pulsing={running} age={age} />}
+        {done ? (
+          <p className="text-lg leading-tight">
+            <span className="font-semibold">Well done</span>
+            <span className="block text-base">
+              {summary.fast} min fast · {summary.slow} min slow · {rounds} {rounds === 1 ? "round" : "rounds"}
+            </span>
+          </p>
+        ) : (
+          !counting && <HeartRate type={current.type} pulsing={running} age={age} />
+        )}
       </div>
 
       {/* Where you are in the walk, written above the trail it describes. The block
