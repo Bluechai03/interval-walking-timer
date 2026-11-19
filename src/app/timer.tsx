@@ -3,7 +3,7 @@
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
 import { CheckIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
-import { buildPlan, totalSeconds } from "@/lib/plan";
+import { buildPlan } from "@/lib/plan";
 import { useActivity } from "@/lib/use-activity";
 import { useAge } from "@/lib/use-age";
 import { useOnline } from "@/lib/use-online";
@@ -20,6 +20,7 @@ import { AboutDialog } from "./about-dialog";
 import { SECONDARY } from "./friends/styles";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
+import { ReadyCard } from "./ready-card";
 import { WalkDisplay } from "./walk-display";
 import { WatchWorkoutSetting } from "./watch-workout-setting";
 
@@ -103,6 +104,16 @@ export function Timer() {
         </div>
       </div>
       <div className="flex flex-col gap-3">
+        {/* Before the walk, the plan on a calm field; the effort colours come with the walk. */}
+        {!started ? (
+          <ReadyCard
+            config={config}
+            onChange={setConfig}
+            activity={activity}
+            muted={muted}
+            onToggleMute={() => setMuted(!muted)}
+          />
+        ) : (
         <WalkDisplay
           plan={plan}
           rounds={config.rounds}
@@ -120,6 +131,7 @@ export function Timer() {
           activity={activity}
           age={age}
         />
+        )}
 
         <div className="flex gap-3 px-4 sm:px-0">
           {running && counting ? (
@@ -135,7 +147,7 @@ export function Timer() {
             </button>
           ) : running ? (
             <button
-              className={`${BUTTON} bg-action text-action-ink`}
+              className={`${BUTTON} bg-marker text-midnight`}
               onClick={() => {
                 setConfirmEnd(false);
                 pause();
@@ -147,7 +159,7 @@ export function Timer() {
           ) : (
             !done && (
               <button
-                className={`${BUTTON} bg-action text-action-ink`}
+                className={`${BUTTON} bg-marker text-midnight`}
                 onClick={() => {
                   prime();
                   const first = !started;
@@ -231,8 +243,6 @@ export function Timer() {
       <PlanSettings
         // Remount once after hydration so the inputs show stored values.
         key={String(hydrated)}
-        config={config}
-        totalSeconds={totalSeconds(plan)}
         disabled={started}
         activity={activity}
         onActivityChange={setActivity}
@@ -241,7 +251,6 @@ export function Timer() {
         getReadySeconds={getReady.seconds}
         getReadyFromWatch={watchOn}
         onGetReadyChange={getReady.setSeconds}
-        onChange={setConfig}
       />
 
       {/* The way into rooms. Out of the way during a walk, which is not the time to start one. */}
