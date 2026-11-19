@@ -29,7 +29,7 @@ export function BottomTabs({ hidden = false }: { hidden?: boolean }) {
               <Link
                 href={href}
                 aria-current={current ? "page" : undefined}
-                className={`flex min-h-16 flex-col items-center justify-center gap-1 border-t-4 text-sm font-semibold focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-page-ink ${
+                className={`press flex min-h-16 flex-col items-center justify-center gap-1 border-t-4 text-sm font-semibold focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-page-ink ${
                   current ? "border-marker text-page-ink" : "border-transparent text-page-quiet"
                 }`}
               >

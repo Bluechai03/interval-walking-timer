@@ -20,7 +20,7 @@ type Props = {
 };
 
 const ALERT = "flex items-start gap-3 rounded-lg border-2 px-4 py-3 text-base";
-const ACTION = "inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4";
+const ACTION = "inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4 active:opacity-60";
 
 // Asks once when the app is first opened, then stays out of the way. The
 // button inside it is the tap iPhones require before allowing notifications.

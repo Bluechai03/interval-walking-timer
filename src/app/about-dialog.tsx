@@ -85,7 +85,7 @@ export function AboutDialog() {
             <p className="text-base">
               Start a crew and friends join with a four-letter code or a link.
               Everyone sees the same countdown at the same moment.{" "}
-              <Link href="/friends" className="font-semibold underline underline-offset-4">
+              <Link href="/friends" className="font-semibold underline underline-offset-4 active:opacity-60">
                 Open Walk with friends
               </Link>
               .
