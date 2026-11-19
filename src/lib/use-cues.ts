@@ -32,11 +32,13 @@ type Options = {
   getReadyLeft?: number;
   // Changes the words spoken at the end. Walking if left out.
   activity?: ActivityId;
+  // For the spoken target heart rate. 23 if left out.
+  age?: number;
 };
 
 // Plays a sound, vibration and spoken cue whenever the phase changes, with a
 // spoken heads-up shortly before.
-export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false, getReadyLeft = 0, activity = DEFAULT_ACTIVITY }: Options) => {
+export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false, getReadyLeft = 0, activity = DEFAULT_ACTIVITY, age }: Options) => {
   const audioContext = useRef<AudioContext | null>(shared);
   const lastCued = useRef<string | null>(null);
   const lastWarned = useRef<number | null>(null);
@@ -87,7 +89,7 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft,
     if (lastCued.current === key) return;
     lastCued.current = key;
 
-    playCue(done ? "done" : plan[phaseIndex].type, (audioContext.current ??= shared), muted, activity);
+    playCue(done ? "done" : plan[phaseIndex].type, (audioContext.current ??= shared), muted, activity, age);
     // Muting mid-phase must not replay the cue, so muted is read but not a trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, phaseIndex, running, started, done]);

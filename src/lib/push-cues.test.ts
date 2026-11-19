@@ -46,4 +46,10 @@ describe("pushCues", () => {
     expect(last("elliptical").title).toBe("Workout done");
     expect(last("elliptical").body).toBe("Well done, 2 min in total");
   });
+
+  it("works out the target heart rate from the walker's age", () => {
+    const [young] = pushCues(plan, 0);
+    const [older] = pushCues(plan, 0, "walk", 60);
+    expect(older.body).not.toBe(young.body);
+  });
 });

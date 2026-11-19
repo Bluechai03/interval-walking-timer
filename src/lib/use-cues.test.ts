@@ -43,7 +43,7 @@ describe("useCues", () => {
     const { rerender } = setup();
     rerender({ ...idle, running: true, started: true });
     expect(playCue).toHaveBeenCalledTimes(1);
-    expect(playCue).toHaveBeenLastCalledWith("fast", null, false, "walk");
+    expect(playCue).toHaveBeenLastCalledWith("fast", null, false, "walk", undefined);
   });
 
   it("cues once per phase change and not on repeated renders", () => {
@@ -54,7 +54,7 @@ describe("useCues", () => {
     rerender({ ...running, phaseIndex: 1 });
     rerender({ ...running, phaseIndex: 1 });
     expect(playCue).toHaveBeenCalledTimes(2);
-    expect(playCue).toHaveBeenLastCalledWith("slow", null, false, "walk");
+    expect(playCue).toHaveBeenLastCalledWith("slow", null, false, "walk", undefined);
   });
 
   it("stays quiet while paused and on resume", () => {
@@ -82,7 +82,7 @@ describe("useCues", () => {
     rerender(done);
     rerender(done);
     expect(playCue).toHaveBeenCalledTimes(2);
-    expect(playCue).toHaveBeenLastCalledWith("done", null, false, "walk");
+    expect(playCue).toHaveBeenLastCalledWith("done", null, false, "walk", undefined);
   });
 
   it("announces the first phase again after a reset", () => {
@@ -92,7 +92,7 @@ describe("useCues", () => {
     rerender(idle); // reset
     rerender(running);
     expect(playCue).toHaveBeenCalledTimes(2);
-    expect(playCue).toHaveBeenLastCalledWith("fast", null, false, "walk");
+    expect(playCue).toHaveBeenLastCalledWith("fast", null, false, "walk", undefined);
   });
 });
 
@@ -151,13 +151,18 @@ describe("useCues heads-up", () => {
     const running = { ...idle, plan: longPlan, running: true, started: true, muted: true };
     const { rerender } = setup({ ...idle, plan: longPlan, muted: true });
     rerender({ ...running, secondsLeft: 60 });
-    expect(playCue).toHaveBeenLastCalledWith("fast", null, true, "walk");
+    expect(playCue).toHaveBeenLastCalledWith("fast", null, true, "walk", undefined);
     rerender({ ...running, secondsLeft: 10 });
     expect(playHeadsUp).toHaveBeenLastCalledWith(true);
   });
 
   it("passes the activity along, so the end is spoken in its words", () => {
     setup({ ...idle, running: true, started: true, activity: "elliptical" });
-    expect(playCue).toHaveBeenLastCalledWith("fast", null, false, "elliptical");
+    expect(playCue).toHaveBeenLastCalledWith("fast", null, false, "elliptical", undefined);
+  });
+
+  it("passes the walker's age along, for the spoken heart rate", () => {
+    setup({ ...idle, running: true, started: true, age: 58 });
+    expect(playCue).toHaveBeenLastCalledWith("fast", null, false, "walk", 58);
   });
 });

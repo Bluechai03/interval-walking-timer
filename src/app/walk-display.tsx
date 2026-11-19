@@ -33,6 +33,8 @@ type Props = {
   onToggleMute: () => void;
   // Changes the words on the screen. Walking if left out.
   activity?: ActivityId;
+  // For the heart rate target. 23 if left out.
+  age?: number;
 };
 
 // The big coloured screen: what to do now, the countdown, and where you are in
@@ -52,6 +54,7 @@ export function WalkDisplay({
   muted,
   onToggleMute,
   activity = DEFAULT_ACTIVITY,
+  age,
 }: Props) {
   const words = activityWords(activity);
   const current = plan[phaseIndex];
@@ -69,8 +72,9 @@ export function WalkDisplay({
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-2">
-          <p className="text-base font-medium opacity-90">{words.label}</p>
-          <p className="type-instruction text-[clamp(2rem,9.5vw,2.75rem)] leading-none">
+          <p className="text-base font-medium">{words.label}</p>
+          {/* A status, so screen readers say it when the phase changes. The countdown is not in it, so it is not read every second. */}
+          <p role="status" className="type-instruction text-[clamp(2rem,9.5vw,2.75rem)] leading-none">
             {done
               ? words.done
               : counting
@@ -104,17 +108,17 @@ export function WalkDisplay({
         {counting ? getReadyLeft : formatTime(done ? totalSeconds(plan) : secondsLeft)}
       </p>
 
-      {!done && !counting && <HeartRate type={current.type} pulsing={running} />}
+      {!done && !counting && <HeartRate type={current.type} pulsing={running} age={age} />}
 
       {/* Where you are in the walk, written above the trail it describes. */}
       {counting ? (
-        <p className="text-base font-medium opacity-90">
+        <p className="text-base font-medium">
           {rounds} rounds of {formatTime(fastSeconds)} fast and{" "}
           {formatTime(slowSeconds)} slow
         </p>
       ) : (
         <div className="flex flex-col gap-2">
-          <p className="text-base font-medium opacity-90">
+          <p className="text-base font-medium">
             {done ? words.timeDone : `Round ${round} of ${rounds}`}
           </p>
           <TrailProfile

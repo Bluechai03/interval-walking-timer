@@ -74,8 +74,8 @@ export function AboutDialog() {
             <p className="text-base">
               Fast is brisk: you can only speak in short sentences. Slow is easy:
               you can chat. The heart rate targets on screen are estimates, based
-              on an assumed age of {ASSUMED_AGE}, so trust how it feels over the
-              number.
+              on the age in Plan ({ASSUMED_AGE} until you set yours), so trust how
+              it feels over the number.
             </p>
           </section>
 

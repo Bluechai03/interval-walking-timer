@@ -1,9 +1,10 @@
 "use client";
 
 import { PauseIcon, PlayIcon, RotateCcwIcon } from "@animateicons/react/lucide";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { buildPlan, totalSeconds } from "@/lib/plan";
 import { useActivity } from "@/lib/use-activity";
+import { useAge } from "@/lib/use-age";
 import { useCues } from "@/lib/use-cues";
 import { useMuted } from "@/lib/use-muted";
 import { usePhasePush } from "@/lib/use-phase-push";
@@ -25,6 +26,9 @@ export function Timer() {
   const { config, setConfig, hydrated } = usePlanConfig();
   const getReady = useGetReady();
   const { activity, setActivity } = useActivity();
+  const { age, setAge } = useAge();
+  // Reset throws a half-done walk away, so the first tap only asks.
+  const [confirmReset, setConfirmReset] = useState(false);
   const watchSetup = useWatchSetup();
   // With the Watch workout on, the countdown lasts as long as the Watch takes to
   // start, so the workout and the walk begin on the same beat.
@@ -57,6 +61,7 @@ export function Timer() {
     muted,
     getReadyLeft,
     activity,
+    age,
   });
   const elapsedSeconds =
     plan.slice(0, phaseIndex).reduce((sum, p) => sum + p.durationInSeconds, 0) +
@@ -64,6 +69,7 @@ export function Timer() {
   const phasePush = usePhasePush({
     config,
     activity,
+    age,
     elapsedSeconds,
     ready,
     running: running && !counting,
@@ -106,6 +112,7 @@ export function Timer() {
           muted={muted}
           onToggleMute={() => setMuted(!muted)}
           activity={activity}
+          age={age}
         />
 
         <div className="flex gap-3 px-4 sm:px-0">
@@ -123,7 +130,10 @@ export function Timer() {
           ) : running ? (
             <button
               className={`${BUTTON} bg-action text-action-ink`}
-              onClick={pause}
+              onClick={() => {
+                setConfirmReset(false);
+                pause();
+              }}
             >
               <PauseIcon aria-hidden="true" />
               Pause
@@ -151,12 +161,18 @@ export function Timer() {
             <button
               className={`${BUTTON} border-2 border-page-ink`}
               onClick={() => {
+                if (!done && !confirmReset) {
+                  setConfirmReset(true);
+                  return;
+                }
+                setConfirmReset(false);
                 reset();
                 watch.end();
               }}
+              onBlur={() => setConfirmReset(false)}
             >
               <RotateCcwIcon aria-hidden="true" />
-              Reset
+              {confirmReset ? "Tap again to reset" : "Reset"}
             </button>
           )}
           {/* The automatic end can be blocked by iOS, so the walker can always tap it. */}
@@ -171,13 +187,13 @@ export function Timer() {
         </div>
 
         {watchSetup.blockedInBrowser && walking && (
-          <p className="px-4 text-sm text-page-quiet sm:px-0">
+          <p role="status" className="px-4 text-sm text-page-quiet sm:px-0">
             Your Watch workout only starts from the Strut app on your Home Screen, so it
             didn&apos;t start here. Open Strut from there next time.
           </p>
         )}
         {watch.soundLocked && (
-          <p className="px-4 text-sm text-page-quiet sm:px-0">
+          <p role="status" className="px-4 text-sm text-page-quiet sm:px-0">
             Tap anywhere to turn sound on. iOS keeps it off after a trip to Shortcuts.
           </p>
         )}
@@ -201,6 +217,8 @@ export function Timer() {
         disabled={started}
         activity={activity}
         onActivityChange={setActivity}
+        age={age}
+        onAgeChange={setAge}
         getReadySeconds={getReady.seconds}
         getReadyFromWatch={watchOn}
         onGetReadyChange={getReady.setSeconds}

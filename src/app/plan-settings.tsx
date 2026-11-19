@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { ACTIVITY_IDS, type ActivityId, activityWords, isActivity } from "@/lib/activity";
 import { formatTime } from "@/lib/format-time";
+import { AGE_LIMITS } from "@/lib/heart-rate";
 import { GET_READY_LIMITS } from "@/lib/use-get-ready";
 import {
   isValidPlanValue,
@@ -22,6 +24,9 @@ type Props = {
   disabled: boolean;
   activity: ActivityId;
   onActivityChange: (activity: ActivityId) => void;
+  // For the heart rate targets.
+  age: number;
+  onAgeChange: (age: number) => void;
   getReadySeconds: number;
   // The Watch workout sets the countdown, so this field has no effect.
   getReadyFromWatch?: boolean;
@@ -37,11 +42,25 @@ export function PlanSettings({
   disabled,
   activity,
   onActivityChange,
+  age,
+  onAgeChange,
   getReadySeconds,
   getReadyFromWatch = false,
   onGetReadyChange,
   onChange,
 }: Props) {
+  // A field's message while what is typed is out of range. Gone once it is fine.
+  const [problems, setProblems] = useState<Record<string, string>>({});
+  const check = (key: string, ok: boolean, message: string) =>
+    setProblems((current) => {
+      if (ok) {
+        if (!(key in current)) return current;
+        const rest = { ...current };
+        delete rest[key];
+        return rest;
+      }
+      return { ...current, [key]: message };
+    });
   return (
     <section aria-labelledby="plan-heading" className="flex flex-col gap-3 px-4 sm:px-0">
       <div className="flex items-baseline justify-between border-b-2 border-page-ink pb-2">
@@ -88,9 +107,9 @@ export function PlanSettings({
                   disabled={disabled}
                   onChange={(event) => {
                     const value = event.target.valueAsNumber * step;
-                    if (isValidPlanValue(field, value)) {
-                      onChange({ ...config, [field]: value });
-                    }
+                    const ok = isValidPlanValue(field, value);
+                    check(field, ok, `${label} can be ${min / step} to ${max / step}${unit ? ` ${unit}` : ""}.`);
+                    if (ok) onChange({ ...config, [field]: value });
                   }}
                 />
                 {unit && (
@@ -117,9 +136,9 @@ export function PlanSettings({
               disabled={disabled || getReadyFromWatch}
               onChange={(event) => {
                 const value = event.target.valueAsNumber;
-                if (Number.isInteger(value) && value >= GET_READY_LIMITS.min && value <= GET_READY_LIMITS.max) {
-                  onGetReadyChange(value);
-                }
+                const ok = Number.isInteger(value) && value >= GET_READY_LIMITS.min && value <= GET_READY_LIMITS.max;
+                check("getReady", ok, `Get ready can be ${GET_READY_LIMITS.min} to ${GET_READY_LIMITS.max} sec.`);
+                if (ok) onGetReadyChange(value);
               }}
             />
             <span aria-hidden="true" className="text-sm text-page-quiet">
@@ -127,7 +146,31 @@ export function PlanSettings({
             </span>
           </span>
         </label>
+        <label className="flex min-w-0 flex-col gap-1">
+          <span className="text-sm font-medium text-page-quiet">Age</span>
+          <span className="flex items-baseline gap-1 border-b border-page-line focus-within:border-page-ink">
+            <input
+              type="number"
+              inputMode="numeric"
+              className="w-full min-w-0 bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none"
+              defaultValue={age}
+              min={AGE_LIMITS.min}
+              max={AGE_LIMITS.max}
+              onChange={(event) => {
+                const value = event.target.valueAsNumber;
+                const ok = Number.isInteger(value) && value >= AGE_LIMITS.min && value <= AGE_LIMITS.max;
+                check("age", ok, `Age can be ${AGE_LIMITS.min} to ${AGE_LIMITS.max}.`);
+                if (ok) onAgeChange(value);
+              }}
+            />
+          </span>
+        </label>
       </div>
+      {Object.keys(problems).length > 0 && (
+        <p role="alert" className="text-sm font-medium">
+          {Object.values(problems).join(" ")}
+        </p>
+      )}
       <p className={`text-sm text-page-quiet ${disabled ? "" : "invisible"}`}>
         Reset the timer to change the plan.
       </p>
