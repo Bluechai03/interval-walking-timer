@@ -37,3 +37,11 @@ describe("ReadyCard", () => {
     expect(screen.getByText("round")).toBeTruthy();
   });
 });
+
+describe("ReadyCard's plan sheet", () => {
+  it("starts with focus on its title, so no preset wears a focus ring on opening", () => {
+    show();
+    fireEvent.click(screen.getByRole("button", { name: "Change plan" }));
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Your plan" }));
+  });
+});
