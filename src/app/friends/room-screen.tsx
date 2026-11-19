@@ -36,7 +36,7 @@ export function RoomScreen({ roomId }: { roomId: string }) {
     return (
       <div className="flex flex-col gap-4">
         <p className="text-lg">
-          This club isn&apos;t available to you. It may have closed, or you may need to join it
+          This crew isn&apos;t available to you. It may have closed, or you may need to join it
           with the code first.
         </p>
         <Link href="/friends" className={PRIMARY}>
@@ -53,7 +53,7 @@ export function RoomScreen({ roomId }: { roomId: string }) {
   if (state.room.status === "closed") {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-lg">This club has closed. The host may have left before the walk began.</p>
+        <p className="text-lg">This walk is over. The host may have left before it began.</p>
         <Link href="/friends" className={PRIMARY}>
           Back to Walk with friends
         </Link>
@@ -190,7 +190,7 @@ function RoomCode({ room }: { room: Room }) {
       </p>
       {qr && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={qr} alt="QR code that opens the club" width={160} height={160} className="rounded-md bg-white p-1" />
+        <img src={qr} alt="QR code that opens the crew" width={160} height={160} className="rounded-md bg-white p-1" />
       )}
       {link && <p className="max-w-full break-all text-center text-sm opacity-80">{link}</p>}
       <div className="flex w-full gap-3">
@@ -250,14 +250,14 @@ function LeaveButton({ roomId, isHost }: { roomId: string; isHost: boolean }) {
         // Leaving as the host closes the room for everyone, so ask first.
         onClick={() => (isHost ? setConfirming(true) : void leave())}
       >
-        {isHost ? "Close the club" : "Leave the club"}
+        {isHost ? "End the walk" : "Leave the crew"}
       </button>
       {confirming && (
         <ConfirmDialog
-          title="Close this club?"
-          body="You're the host, so leaving closes the club for everyone. Your friends will see that it has closed, and the code will stop working."
-          cancelLabel="Keep the club"
-          confirmLabel="Close the club"
+          title="End the walk for everyone?"
+          body="You're the host, so leaving ends the walk for everyone. Your friends will see that it's over, and the code will stop working."
+          cancelLabel="Keep the walk"
+          confirmLabel="End the walk"
           busy={busy}
           onCancel={() => setConfirming(false)}
           onConfirm={() => void leave()}

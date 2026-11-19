@@ -211,7 +211,7 @@ function Walking({
             </button>
           )}
           <button className={SECONDARY} disabled={leaving} onClick={() => void leave()}>
-            Leave the club
+            Leave the crew
           </button>
           <Link href="/" className={`${LINK} self-center`}>
             Back to the timer

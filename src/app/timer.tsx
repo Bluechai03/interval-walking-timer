@@ -249,7 +249,7 @@ export function Timer() {
             Walk with friends
           </h2>
           <p className="text-base text-page-quiet">
-            Start a club and friends join with a four-letter code, so you all switch pace together.
+            Start a crew and friends join with a four-letter code, so you all switch pace together.
           </p>
           <Link href="/friends" className={SECONDARY}>
             Open Walk with friends

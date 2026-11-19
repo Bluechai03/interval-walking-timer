@@ -66,7 +66,7 @@ describe("RoomScreen", () => {
     expect(screen.getByText(/4 rounds of 3:00 fast and 2:00 slow/)).toBeTruthy();
     expect(screen.getByText("Here now (2)")).toBeTruthy();
     expect(screen.getByText("Ben")).toBeTruthy();
-    expect(await screen.findByAltText("QR code that opens the club")).toBeTruthy();
+    expect(await screen.findByAltText("QR code that opens the crew")).toBeTruthy();
   });
 
   it("marks you and the host", () => {
@@ -99,7 +99,7 @@ describe("RoomScreen", () => {
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
     leaveRoom.mockResolvedValue({ ok: true, value: null });
     render(<RoomScreen roomId="r1" />);
-    fireEvent.click(screen.getByRole("button", { name: "Leave the club" }));
+    fireEvent.click(screen.getByRole("button", { name: "Leave the crew" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/friends"));
     expect(leaveRoom).toHaveBeenCalledWith("r1");
   });
@@ -117,8 +117,8 @@ describe("RoomScreen, closing and leaving", () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
     render(<RoomScreen roomId="r1" />);
-    expect(screen.getByRole("button", { name: "Close the club" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Leave the club" })).toBeNull();
+    expect(screen.getByRole("button", { name: "End the walk" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Leave the crew" })).toBeNull();
   });
 
   it("tells a guest the room has closed when the host left before the start", () => {
@@ -130,7 +130,7 @@ describe("RoomScreen, closing and leaving", () => {
       reload,
     };
     render(<RoomScreen roomId="r1" />);
-    expect(screen.getByText(/This club has closed/)).toBeTruthy();
+    expect(screen.getByText(/This walk is over/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Start the walk" })).toBeNull();
   });
 });
@@ -192,20 +192,20 @@ describe("RoomScreen, the host leaving", () => {
     leaveRoom.mockResolvedValue({ ok: true, value: null });
   });
 
-  it("asks first, and says leaving closes the club for everyone", () => {
+  it("asks first, and says leaving ends the walk for everyone", () => {
     render(<RoomScreen roomId="r1" />);
-    fireEvent.click(screen.getByRole("button", { name: "Close the club" }));
+    fireEvent.click(screen.getByRole("button", { name: "End the walk" }));
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("Close this club?")).toBeTruthy();
-    expect(dialog.textContent).toContain("closes the club for everyone");
+    expect(within(dialog).getByText("End the walk for everyone?")).toBeTruthy();
+    expect(dialog.textContent).toContain("ends the walk for everyone");
     expect(dialog.textContent).toContain("code will stop working");
     expect(leaveRoom).not.toHaveBeenCalled();
   });
 
   it("keeps the room open when the host changes their mind", () => {
     render(<RoomScreen roomId="r1" />);
-    fireEvent.click(screen.getByRole("button", { name: "Close the club" }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Keep the club" }));
+    fireEvent.click(screen.getByRole("button", { name: "End the walk" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Keep the walk" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(leaveRoom).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
@@ -213,8 +213,8 @@ describe("RoomScreen, the host leaving", () => {
 
   it("closes the room and goes back once the host confirms", async () => {
     render(<RoomScreen roomId="r1" />);
-    fireEvent.click(screen.getByRole("button", { name: "Close the club" }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Close the club" }));
+    fireEvent.click(screen.getByRole("button", { name: "End the walk" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "End the walk" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/friends"));
     expect(leaveRoom).toHaveBeenCalledWith("r1");
   });
@@ -222,7 +222,7 @@ describe("RoomScreen, the host leaving", () => {
   it("does not ask a guest, who can leave without closing anything", async () => {
     auth.state = as("g1");
     render(<RoomScreen roomId="r1" />);
-    fireEvent.click(screen.getByRole("button", { name: "Leave the club" }));
+    fireEvent.click(screen.getByRole("button", { name: "Leave the crew" }));
     expect(screen.queryByRole("dialog")).toBeNull();
     await waitFor(() => expect(leaveRoom).toHaveBeenCalledWith("r1"));
   });

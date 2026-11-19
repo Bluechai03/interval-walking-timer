@@ -83,7 +83,7 @@ export function AboutDialog() {
           <section className="flex flex-col gap-2">
             <h3 className={HEADING}>Walk with friends</h3>
             <p className="text-base">
-              Start a club and friends join with a four-letter code or a link.
+              Start a crew and friends join with a four-letter code or a link.
               Everyone sees the same countdown at the same moment.{" "}
               <Link href="/friends" className="font-semibold underline underline-offset-4">
                 Open Walk with friends

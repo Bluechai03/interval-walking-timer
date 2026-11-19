@@ -119,7 +119,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
       <section className="flex flex-col gap-4">
         {deleted && saved === null && (
           <p role="status" className="text-lg">
-            All done. Your name and your clubs are deleted.
+            All done. Your name and your crews are deleted.
           </p>
         )}
         <form onSubmit={save} className="flex flex-col gap-4">
@@ -180,7 +180,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
       {confirmingDelete && (
         <ConfirmDialog
           title="Delete your data?"
-          body="This removes your name and takes you out of every club. Any club you started is removed for everyone in it. You can pick a new name whenever you like."
+          body="This removes your name and takes you out of every crew. Any crew you started is removed for everyone in it. You can pick a new name whenever you like."
           cancelLabel="Keep my data"
           confirmLabel="Delete my data"
           busy={busy}
@@ -200,7 +200,7 @@ function Notice({ children, id }: { children: React.ReactNode; id?: string }) {
   );
 }
 
-// Start a club of your own, or type the four letters a friend gave you.
+// Start a crew of your own, or type the four letters a friend gave you.
 function RoomActions({ name }: { name: string }) {
   const router = useRouter();
   const { config } = usePlanConfig();
@@ -246,7 +246,7 @@ function RoomActions({ name }: { name: string }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <button className={PRIMARY} disabled={busy} onClick={() => void start()}>
-          {busy && doing === "start" ? "Starting…" : "Start a club"}
+          {busy && doing === "start" ? "Starting…" : "Start a crew"}
         </button>
         <p className="text-sm text-page-quiet">
           You&apos;ll walk the plan you set on the timer. Friends join with a code.
@@ -268,7 +268,7 @@ function RoomActions({ name }: { name: string }) {
           />
         </label>
         <button className={SECONDARY} disabled={busy || !isCompleteCode(code)} type="submit">
-          {busy && doing === "join" ? "Joining…" : "Join the club"}
+          {busy && doing === "join" ? "Joining…" : "Join the crew"}
         </button>
       </form>
       {message && <Notice>{message}</Notice>}
@@ -309,7 +309,7 @@ function JoinLink({ code, name }: { code: string; name: string }) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-lg">
-        You&apos;re invited to the club <span className="font-semibold tracking-[0.2em]">{clean}</span>.
+        You&apos;re invited to the crew <span className="font-semibold tracking-[0.2em]">{clean}</span>.
       </p>
       <button className={PRIMARY} disabled={busy} onClick={() => void join()}>
         {busy ? "Joining…" : `Join as ${name}`}

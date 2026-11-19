@@ -3,7 +3,7 @@ import { FriendsShell } from "../../friends-shell";
 import { RoomScreen } from "../../room-screen";
 
 export const metadata: Metadata = {
-  title: "Your club · Strut",
+  title: "Your crew · Strut",
 };
 
 export default async function RoomPage({ params }: { params: Promise<{ id: string }> }) {

@@ -8,7 +8,7 @@ const show = () => {
   const onCancel = vi.fn();
   const onConfirm = vi.fn();
   render(
-    <ConfirmDialog title="Close this club?" body="Sure?" cancelLabel="Keep it" confirmLabel="Close it" onCancel={onCancel} onConfirm={onConfirm} />,
+    <ConfirmDialog title="End the walk for everyone?" body="Sure?" cancelLabel="Keep it" confirmLabel="Close it" onCancel={onCancel} onConfirm={onConfirm} />,
   );
   return { onCancel, onConfirm };
 };

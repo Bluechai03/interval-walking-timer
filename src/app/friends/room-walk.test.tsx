@@ -138,7 +138,7 @@ describe("RoomWalk", () => {
     leaveRoom.mockResolvedValue({ ok: true, value: null });
     // Fake timers are on, so let the leave finish by hand, not with waitFor.
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Leave the club" }));
+      fireEvent.click(screen.getByRole("button", { name: "Leave the crew" }));
     });
     expect(push).toHaveBeenCalledWith("/friends");
     expect(leaveRoom).toHaveBeenCalledWith("r1");
@@ -188,7 +188,7 @@ describe("RoomWalk, the host leaving", () => {
     leaveRoom.mockResolvedValue({ ok: true, value: null });
     render(<RoomWalk room={room(-500)} roomId="r1" isHost />);
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Leave the club" }));
+      fireEvent.click(screen.getByRole("button", { name: "Leave the crew" }));
     });
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(leaveRoom).toHaveBeenCalledWith("r1");

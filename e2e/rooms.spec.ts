@@ -11,7 +11,7 @@ const pickName = async (page: Page, name: string) => {
 };
 
 const startRoom = async (page: Page): Promise<string> => {
-  await page.getByRole("button", { name: "Start a club" }).click();
+  await page.getByRole("button", { name: "Start a crew" }).click();
   const code = page.getByLabel(/^Join code [A-Z] [A-Z] [A-Z] [A-Z]$/);
   await expect(code).toBeVisible();
   return ((await code.textContent()) ?? "").trim();
@@ -19,7 +19,7 @@ const startRoom = async (page: Page): Promise<string> => {
 
 const joinRoom = async (page: Page, code: string) => {
   await page.getByPlaceholder("ABCD").fill(code);
-  await page.getByRole("button", { name: "Join the club" }).click();
+  await page.getByRole("button", { name: "Join the crew" }).click();
 };
 
 const here = (page: Page, count: number) => expect(page.getByText(`Here now (${count})`)).toBeVisible();
@@ -107,11 +107,11 @@ test("the host is in charge of the room", async ({ browser }) => {
   await expect(anna.page.getByText(/The host has taken you out/)).toBeVisible();
 
   // Closing the room asks first, then closes it for everyone.
-  await host.page.getByRole("button", { name: "Close the club" }).click();
+  await host.page.getByRole("button", { name: "End the walk" }).click();
   const dialog = host.page.getByRole("dialog");
-  await expect(dialog).toContainText("closes the club for everyone");
-  await dialog.getByRole("button", { name: "Close the club" }).click();
-  await expect(ben.page.getByText(/This club has closed/)).toBeVisible();
+  await expect(dialog).toContainText("ends the walk for everyone");
+  await dialog.getByRole("button", { name: "End the walk" }).click();
+  await expect(ben.page.getByText(/This walk is over/)).toBeVisible();
 
   for (const friend of [host, anna, ben, twin]) await friend.context.close();
 });
