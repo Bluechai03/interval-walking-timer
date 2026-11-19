@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { type ActivityId, DEFAULT_ACTIVITY } from "./activity";
 import { createAudioContext, playCue, playHeadsUp, playTick } from "./cues";
 import type { Phase } from "./plan";
 
@@ -29,11 +30,13 @@ type Options = {
   muted?: boolean;
   /** Seconds of "get ready" left; a tick plays for each. */
   getReadyLeft?: number;
+  // Changes the words spoken at the end. Walking if left out.
+  activity?: ActivityId;
 };
 
 // Plays a sound, vibration and spoken cue whenever the phase changes, with a
 // spoken heads-up shortly before.
-export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false, getReadyLeft = 0 }: Options) => {
+export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft, muted = false, getReadyLeft = 0, activity = DEFAULT_ACTIVITY }: Options) => {
   const audioContext = useRef<AudioContext | null>(shared);
   const lastCued = useRef<string | null>(null);
   const lastWarned = useRef<number | null>(null);
@@ -84,7 +87,7 @@ export const useCues = ({ plan, phaseIndex, running, started, done, secondsLeft,
     if (lastCued.current === key) return;
     lastCued.current = key;
 
-    playCue(done ? "done" : plan[phaseIndex].type, (audioContext.current ??= shared), muted);
+    playCue(done ? "done" : plan[phaseIndex].type, (audioContext.current ??= shared), muted, activity);
     // Muting mid-phase must not replay the cue, so muted is read but not a trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, phaseIndex, running, started, done]);

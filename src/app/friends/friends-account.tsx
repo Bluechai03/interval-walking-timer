@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { checkName, NAME_LIMITS, suggestNickname } from "@/lib/name-rules";
 import { deleteMyData, fetchDisplayName, saveDisplayName } from "@/lib/profile";
 import { usePlanConfig } from "@/lib/use-plan-config";
+import { useActivity } from "@/lib/use-activity";
 import { useGetReady } from "@/lib/use-get-ready";
 import { createRoom, isCompleteCode, joinRoom, normalizeCode, roomCountdownSeconds } from "@/lib/rooms";
 import { signInAsGuest, useAuth } from "@/lib/use-auth";
@@ -202,6 +203,7 @@ function RoomActions({ name }: { name: string }) {
   const router = useRouter();
   const { config } = usePlanConfig();
   const getReady = useGetReady();
+  const { activity } = useActivity();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -211,7 +213,7 @@ function RoomActions({ name }: { name: string }) {
     setBusy(true);
     setMessage(null);
     const result = await createRoom(
-      { fast: config.fastSeconds, slow: config.slowSeconds, rounds: config.rounds, getReady: roomCountdownSeconds(getReady.seconds) },
+      { fast: config.fastSeconds, slow: config.slowSeconds, rounds: config.rounds, getReady: roomCountdownSeconds(getReady.seconds), activity },
       name,
     );
     if (!result.ok) {

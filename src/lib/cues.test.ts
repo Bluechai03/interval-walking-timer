@@ -15,6 +15,12 @@ describe("spokenCue", () => {
   it("leaves the end of the walk unchanged", () => {
     expect(spokenCue("done")).toBe("Walk complete");
   });
+
+  it("says the workout is complete on the elliptical, and keeps the pace words", () => {
+    expect(spokenCue("done", "elliptical")).toBe("Workout complete");
+    expect(spokenCue("fast", "elliptical")).toBe("Fast. Target heart rate 148.");
+    expect(spokenCue("done", "bike")).toBe("Ride complete");
+  });
 });
 
 describe("playCue speech", () => {

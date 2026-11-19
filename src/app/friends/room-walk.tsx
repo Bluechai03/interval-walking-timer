@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { parseActivity } from "@/lib/activity";
 import { buildPlan } from "@/lib/plan";
 import { leaveRoom, type Room } from "@/lib/rooms";
 import { primeAudio, useCues } from "@/lib/use-cues";
@@ -51,6 +52,7 @@ function Walking({
     [room.fast_seconds, room.slow_seconds, room.rounds],
   );
   const plan = useMemo(() => buildPlan(config), [config]);
+  const activity = parseActivity(room.activity);
   const timer = useRoomTimer(plan, startAt, offset);
   const { phaseIndex, secondsLeft, fractionLeft, done, running, getReadyLeft, elapsedSeconds } = timer;
   const counting = getReadyLeft > 0;
@@ -67,11 +69,13 @@ function Walking({
     secondsLeft,
     muted,
     getReadyLeft,
+    activity,
   });
 
   // Reminders follow the room's clock, so a late joiner's match everyone else's.
   const phasePush = usePhasePush({
     config: { ...config },
+    activity,
     elapsedSeconds,
     ready: true,
     running: running && !counting,
@@ -151,6 +155,7 @@ function Walking({
         running={running}
         muted={muted}
         onToggleMute={() => setMuted(!muted)}
+        activity={activity}
       />
 
       {approximate && (

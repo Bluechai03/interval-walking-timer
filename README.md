@@ -10,7 +10,7 @@ A phone-first Japanese interval walking timer that walks with you: strut fast, e
 - Plays an audio cue at each phase change and when the walk ends.
 - Keeps the screen awake while a walk is running.
 - Shows the target heart rate for each phase (currently set for age 23).
-- Lets you change the plan (fast and slow minutes, number of rounds); it's saved on your device.
+- Lets you change the plan (fast and slow minutes, number of rounds) and the activity (walk, elliptical, bike or run, which changes the words); it's saved on your device.
 - Counts you in before the walk starts, 5 seconds by default (change it with Get ready in the plan, or set 0 for none).
 - Installs as an app on your home screen (PWA).
 
