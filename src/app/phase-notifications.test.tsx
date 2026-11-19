@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { PhaseNotifications } from "./phase-notifications";
 
@@ -21,5 +21,23 @@ describe("PhaseNotifications in an iPhone browser tab", () => {
   it("stays quiet about it when reminders can work", () => {
     render(<PhaseNotifications {...props} state="on" walking />);
     expect(screen.queryByText("This walk is in a browser tab")).toBeNull();
+  });
+});
+
+describe("PhaseNotifications explaining cards", () => {
+  it("can be hidden for good, so it stops nagging", () => {
+    try {
+      localStorage.removeItem("reminders-note-hidden");
+    } catch {}
+    render(<PhaseNotifications {...props} state="denied" />);
+    expect(screen.getByText("Reminders are blocked")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Hide this" }));
+    expect(screen.queryByText("Reminders are blocked")).toBeNull();
+    cleanup();
+    render(<PhaseNotifications {...props} state="install" />);
+    expect(screen.queryByText("Want reminders on your lock screen?")).toBeNull();
+    try {
+      localStorage.removeItem("reminders-note-hidden");
+    } catch {}
   });
 });

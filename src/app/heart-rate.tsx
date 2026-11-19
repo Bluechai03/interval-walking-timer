@@ -29,7 +29,10 @@ export function HeartRate({ type, pulsing, age = ASSUMED_AGE }: Props) {
       <p className="text-lg leading-tight">
         <span className="font-semibold">{effortWords(type)}</span>
         <span className="block text-base">
-          Target {min}–{max} bpm, for age {age}
+          Target {min}–{max} bpm, for{" "}
+          <a href="#age" className="underline underline-offset-4">
+            age {age}
+          </a>
         </span>
       </p>
     </div>

@@ -14,7 +14,9 @@ import { useGetReady } from "@/lib/use-get-ready";
 import { useTimer } from "@/lib/use-timer";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { useWatchSetup, useWatchWorkout } from "@/lib/use-watch-workout";
+import Link from "next/link";
 import { AboutDialog } from "./about-dialog";
+import { SECONDARY } from "./friends/styles";
 import { PhaseNotifications } from "./phase-notifications";
 import { PlanSettings } from "./plan-settings";
 import { WalkDisplay } from "./walk-display";
@@ -240,6 +242,20 @@ export function Timer() {
         onChange={setConfig}
       />
 
+      {/* The way into rooms. Out of the way during a walk, which is not the time to start one. */}
+      {!walking && (
+        <section aria-labelledby="friends-heading" className="flex flex-col gap-3 px-4 sm:px-0">
+          <h2 id="friends-heading" className="border-b-2 border-page-ink pb-2 text-xl font-semibold">
+            Walk with friends
+          </h2>
+          <p className="text-base text-page-quiet">
+            Start a crew and friends join with a four-letter code, so you all switch pace together.
+          </p>
+          <Link href="/friends" className={SECONDARY}>
+            Open Walk with friends
+          </Link>
+        </section>
+      )}
 
       <WatchWorkoutSetting />
     </div>

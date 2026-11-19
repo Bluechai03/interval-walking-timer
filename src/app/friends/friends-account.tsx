@@ -11,7 +11,7 @@ import { createRoom, isCompleteCode, joinRoom, normalizeCode, roomCountdownSecon
 import { signInAsGuest, useAuth } from "@/lib/use-auth";
 import { primeAudio } from "@/lib/use-cues";
 import { ConfirmDialog } from "./confirm-dialog";
-import { PRIMARY, SECONDARY } from "./styles";
+import { LINK, PRIMARY, SECONDARY } from "./styles";
 
 export function FriendsAccount({ joinCode }: { joinCode?: string }) {
   const auth = useAuth();
@@ -119,7 +119,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
       <section className="flex flex-col gap-4">
         {deleted && saved === null && (
           <p role="status" className="text-lg">
-            All done. Your name and your rooms are deleted.
+            All done. Your name and your crews are deleted.
           </p>
         )}
         <form onSubmit={save} className="flex flex-col gap-4">
@@ -138,9 +138,12 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
               maxLength={NAME_LIMITS.max * 2}
               autoComplete="nickname"
               autoCapitalize="words"
+              aria-describedby={message ? "name-message" : undefined}
+              aria-invalid={message ? true : undefined}
               onChange={(event) => setDraft(event.target.value)}
             />
           </label>
+          {message && <Notice id="name-message">{message}</Notice>}
           <button className={PRIMARY} disabled={busy} type="submit">
             {busy ? "Saving…" : "Save my name"}
           </button>
@@ -150,7 +153,6 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
             </button>
           )}
         </form>
-        {message && <Notice>{message}</Notice>}
       </section>
     );
   }
@@ -160,7 +162,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
       <p className="text-3xl font-semibold">Hi, {saved}</p>
       {joinCode !== undefined ? <JoinLink code={joinCode} name={saved} /> : <RoomActions name={saved} />}
       <button
-        className="self-start text-sm font-medium text-page-quiet underline underline-offset-4"
+        className={`${LINK} self-start`}
         onClick={() => {
           setDraft(saved);
           setEditing(true);
@@ -169,7 +171,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
         Change my name
       </button>
       <button
-        className="self-start text-sm font-medium text-page-quiet underline underline-offset-4"
+        className={`${LINK} self-start`}
         onClick={() => setConfirmingDelete(true)}
       >
         Delete my data
@@ -178,7 +180,7 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
       {confirmingDelete && (
         <ConfirmDialog
           title="Delete your data?"
-          body="This removes your name and takes you out of every room. Any room you started is removed for everyone in it. You can pick a new name whenever you like."
+          body="This removes your name and takes you out of every crew. Any crew you started is removed for everyone in it. You can pick a new name whenever you like."
           cancelLabel="Keep my data"
           confirmLabel="Delete my data"
           busy={busy}
@@ -190,15 +192,15 @@ function NameForm({ initialUserId, joinCode }: { initialUserId: string | null; j
   );
 }
 
-function Notice({ children }: { children: React.ReactNode }) {
+function Notice({ children, id }: { children: React.ReactNode; id?: string }) {
   return (
-    <p role="alert" className="text-sm text-page-quiet">
+    <p id={id} role="alert" className="text-sm text-page-quiet">
       {children}
     </p>
   );
 }
 
-// Start a room of your own, or type the four letters a friend gave you.
+// Start a crew of your own, or type the four letters a friend gave you.
 function RoomActions({ name }: { name: string }) {
   const router = useRouter();
   const { config } = usePlanConfig();
@@ -206,10 +208,13 @@ function RoomActions({ name }: { name: string }) {
   const { activity } = useActivity();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  // Which button was tapped, so its label can say what is happening.
+  const [doing, setDoing] = useState<"start" | "join" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const start = async () => {
     primeAudio();
+    setDoing("start");
     setBusy(true);
     setMessage(null);
     const result = await createRoom(
@@ -226,6 +231,7 @@ function RoomActions({ name }: { name: string }) {
   const join = async (event: React.FormEvent) => {
     event.preventDefault();
     primeAudio();
+    setDoing("join");
     setBusy(true);
     setMessage(null);
     const result = await joinRoom(code, name);
@@ -240,7 +246,7 @@ function RoomActions({ name }: { name: string }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <button className={PRIMARY} disabled={busy} onClick={() => void start()}>
-          Start a room
+          {busy && doing === "start" ? "Starting…" : "Start a crew"}
         </button>
         <p className="text-sm text-page-quiet">
           You&apos;ll walk the plan you set on the timer. Friends join with a code.
@@ -262,7 +268,7 @@ function RoomActions({ name }: { name: string }) {
           />
         </label>
         <button className={SECONDARY} disabled={busy || !isCompleteCode(code)} type="submit">
-          Join the room
+          {busy && doing === "join" ? "Joining…" : "Join the crew"}
         </button>
       </form>
       {message && <Notice>{message}</Notice>}
@@ -303,10 +309,10 @@ function JoinLink({ code, name }: { code: string; name: string }) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-lg">
-        You&apos;re invited to room <span className="font-semibold tracking-[0.2em]">{clean}</span>.
+        You&apos;re invited to the crew <span className="font-semibold tracking-[0.2em]">{clean}</span>.
       </p>
       <button className={PRIMARY} disabled={busy} onClick={() => void join()}>
-        Join as {name}
+        {busy ? "Joining…" : `Join as ${name}`}
       </button>
       {message && <Notice>{message}</Notice>}
     </div>

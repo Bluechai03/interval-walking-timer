@@ -126,7 +126,7 @@ describe("rooms", () => {
   it("starts a room with the walker's name and plan, then opens it", async () => {
     createRoom.mockResolvedValue({ ok: true, value: { id: "room-1", code: "BCDF" } });
     await named();
-    fireEvent.click(screen.getByRole("button", { name: "Start a room" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start a crew" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-1"));
     expect(createRoom).toHaveBeenCalledWith(
       // A room counts down for at least 10 seconds, so a Watch has time to start.
@@ -139,7 +139,7 @@ describe("rooms", () => {
     activityChoice.value = "elliptical";
     createRoom.mockResolvedValue({ ok: true, value: { id: "room-9", code: "BCDF" } });
     await named();
-    fireEvent.click(screen.getByRole("button", { name: "Start a room" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start a crew" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-9"));
     expect(createRoom).toHaveBeenCalledWith(expect.objectContaining({ activity: "elliptical" }), "Anna");
     activityChoice.value = "walk";
@@ -148,7 +148,7 @@ describe("rooms", () => {
   it("only lets a complete code be joined, in any case", async () => {
     joinRoom.mockResolvedValue({ ok: true, value: "room-2" });
     await named();
-    const join = screen.getByRole("button", { name: "Join the room" }) as HTMLButtonElement;
+    const join = screen.getByRole("button", { name: "Join the crew" }) as HTMLButtonElement;
     expect(join.disabled).toBe(true);
     fireEvent.change(screen.getByPlaceholderText("ABCD"), { target: { value: "bc-df" } });
     expect(join.disabled).toBe(false);
@@ -161,7 +161,7 @@ describe("rooms", () => {
     joinRoom.mockResolvedValue({ ok: false, message: "That room is full." });
     await named();
     fireEvent.change(screen.getByPlaceholderText("ABCD"), { target: { value: "BCDF" } });
-    fireEvent.click(screen.getByRole("button", { name: "Join the room" }));
+    fireEvent.click(screen.getByRole("button", { name: "Join the crew" }));
     expect((await screen.findByRole("alert")).textContent).toContain("full");
     expect(push).not.toHaveBeenCalled();
   });
@@ -169,7 +169,7 @@ describe("rooms", () => {
   it("joins from a friend's link with one tap", async () => {
     joinRoom.mockResolvedValue({ ok: true, value: "room-3" });
     await named("bcdf");
-    expect(screen.queryByRole("button", { name: "Start a room" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Start a crew" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Join as Anna" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/friends/room/room-3"));
     expect(joinRoom).toHaveBeenCalledWith("BCDF", "Anna");
@@ -194,7 +194,7 @@ describe("Delete my data", () => {
     await named();
     fireEvent.click(screen.getByRole("button", { name: "Delete my data" }));
     const dialog = screen.getByRole("dialog");
-    expect(dialog.textContent).toContain("removes your name and takes you out of every room");
+    expect(dialog.textContent).toContain("removes your name and takes you out of every crew");
     expect(dialog.textContent).toContain("removed for everyone in it");
     expect(deleteMyData).not.toHaveBeenCalled();
   });
@@ -213,7 +213,7 @@ describe("Delete my data", () => {
     deleteMyData.mockResolvedValue({ ok: true, value: null });
     fireEvent.click(screen.getByRole("button", { name: "Delete my data" }));
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Delete my data" }));
-    expect(await screen.findByText(/All done. Your name and your rooms are deleted/)).toBeTruthy();
+    expect(await screen.findByText(/All done. Your name and your crews are deleted/)).toBeTruthy();
     expect(screen.queryByText("Hi, Anna")).toBeNull();
     const input = screen.getByRole("textbox") as HTMLInputElement;
     expect(input.value).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);

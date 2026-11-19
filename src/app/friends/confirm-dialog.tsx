@@ -35,9 +35,14 @@ export function ConfirmDialog({ title, body, confirmLabel, cancelLabel, busy = f
         event.preventDefault();
         onCancel();
       }}
-      className="m-auto w-[min(92vw,26rem)] rounded-xl border-2 border-page-line bg-page p-6 text-page-ink shadow-xl backdrop:bg-black/60"
+      // The box has no padding of its own, so a tap that lands on the box itself
+      // is a tap on the dimmed page around the card.
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onCancel();
+      }}
+      className="m-auto w-[min(92vw,26rem)] rounded-xl border-2 border-page-line bg-page p-0 text-page-ink shadow-xl backdrop:bg-black/60"
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 p-6">
         <h2 id={titleId} className="text-2xl font-semibold">
           {title}
         </h2>

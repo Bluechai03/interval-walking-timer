@@ -70,28 +70,28 @@ _Avoid_: bpm (on its own), speed
 
 ## Walking with friends
 
-**Room**:
-A shared walk that several people take at the same time. One host creates it, everyone follows the host's plan on the same clock, and it closes a few hours after the walk ends. Holds up to 8 people.
-_Avoid_: Lobby, group, party, session
+**Crew**:
+A shared walk that several people take at the same time. (In the database and the code it is still called a room, so a person never needs to read that word.) One host creates it, everyone follows the host's plan on the same clock, and it closes a few hours after the walk ends. Holds up to 8 people.
+_Avoid_: Room, club, squad, lobby, group, party, session
 
 **Host**:
-The member who creates a room, sets its plan, starts the walk and can remove people. Anyone can host.
+The member who creates a crew, sets its plan, starts the walk and can remove people. Anyone can host.
 _Avoid_: Owner, leader, admin
 
 **Member**:
-Anyone in a room, including the host.
+Anyone in a crew, including the host.
 _Avoid_: Player, participant, user
 
 **Guest**:
-Everyone who uses a room: a person with a name and no account, whose name and walks stay on their phone. Later, a guest may be able to keep their walks by signing in.
+Everyone who uses a crew: a person with a name and no account, whose name and walks stay on their phone. Later, a guest may be able to keep their walks by signing in.
 _Avoid_: Anonymous user, visitor
 
 **Join code**:
-The four letters shown on the host's screen that let someone join a room, along with a link. It stops working when the room closes.
-_Avoid_: Room ID, PIN, invite code
+The four letters shown on the host's screen that let someone join a crew, along with a link. It stops working when the crew closes.
+_Avoid_: Room ID, Crew ID, PIN, invite code
 
 **Nickname**:
-The name a guest picks, 2 to 16 characters and unique within the room.
+The name a guest picks, 2 to 16 characters and unique within the crew.
 _Avoid_: Username, handle
 
 ## Starting a walk

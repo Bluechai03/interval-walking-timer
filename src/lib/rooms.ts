@@ -48,13 +48,13 @@ export const membersHere = (members: Member[], hostId: string, now: number): Mem
     .sort((a, b) => Number(b.user_id === hostId) - Number(a.user_id === hostId));
 
 const MESSAGES: Record<string, string> = {
-  room_not_found: "We couldn't find that room. Check the four letters and try again.",
-  room_full: "That room is full. Rooms hold up to 8 people.",
-  name_taken: "Someone in that room already goes by that name. Try a different one.",
-  removed: "The host has taken you out of that room.",
+  room_not_found: "We couldn't find that crew. Check the four letters and try again.",
+  room_full: "That crew is full. Crews hold up to 8 people.",
+  name_taken: "Someone in that crew already goes by that name. Try a different one.",
+  removed: "The host has taken you out of that crew.",
   not_host: "That one is up to the host. You could ask them.",
   already_started: "That walk has already begun, so there's nothing more to start.",
-  cannot_remove_self: "That's you! If you want to go, you can leave the room.",
+  cannot_remove_self: "That's you! If you want to go, you can leave the crew.",
   try_again: "That didn't work just now. Please try again.",
 };
 

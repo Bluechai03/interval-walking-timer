@@ -211,7 +211,7 @@ function Walking({
             </button>
           )}
           <button className={SECONDARY} disabled={leaving} onClick={() => void leave()}>
-            Leave the room
+            Leave the crew
           </button>
           <Link href="/" className={`${LINK} self-center`}>
             Back to the timer
@@ -229,7 +229,7 @@ function Walking({
       {confirming && (
         <ConfirmDialog
           title="Leave the walk?"
-          body="The walk carries on for everyone else. You can rejoin with the room code."
+          body="The walk carries on for everyone else. You can rejoin with the join code."
           cancelLabel="Stay in the walk"
           confirmLabel="Leave the walk"
           busy={leaving}

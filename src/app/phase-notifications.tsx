@@ -3,6 +3,7 @@
 import { BellIcon, BellRingIcon } from "@animateicons/react/lucide";
 import { useEffect, useRef } from "react";
 import type { PushSupport } from "@/lib/use-phase-push";
+import { useNamed } from "@/lib/use-shortcut-name";
 
 type Props = {
   state: PushSupport;
@@ -16,7 +17,7 @@ type Props = {
 };
 
 const ALERT = "flex items-start gap-3 rounded-lg border-2 px-4 py-3 text-base";
-const ACTION = "self-start font-semibold underline underline-offset-4";
+const ACTION = "inline-flex min-h-11 items-center self-start font-semibold underline underline-offset-4";
 
 // Asks once when the app is first opened, then stays out of the way. The
 // button inside it is the tap iPhones require before allowing notifications.
@@ -65,6 +66,11 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
 
 // Alert-style note under the controls: a tinted card with an icon, a title and one clear action.
 export function PhaseNotifications({ state, walking = false, failed, shouldAsk, onEnable, onDisable, onDismissAsk }: Props) {
+  // The two cards that only explain something can be hidden for good, so they
+  // don't nag someone who has already decided.
+  const hidden = useNamed("reminders-note-hidden");
+  const hide = () => hidden.setName("1");
+  const noteHidden = hidden.name === "1";
   if (state === "unsupported") return null;
 
   if (state === "install" && walking) {
@@ -85,6 +91,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
   }
 
   if (state === "install") {
+    if (noteHidden) return null;
     return (
       <div className="px-4 sm:px-0">
         <div role="status" className={`${ALERT} border-brass bg-page text-page-ink`}>
@@ -92,6 +99,9 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
           <div className="flex flex-col gap-1">
             <p className="font-semibold">Want reminders on your lock screen?</p>
             <p>Tap Share, then Add to Home Screen, and open the timer from there.</p>
+            <button type="button" className={ACTION} onClick={hide}>
+              Hide this
+            </button>
           </div>
         </div>
       </div>
@@ -123,11 +133,14 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
             </div>
           </div>
         ) : state === "denied" ? (
-          <div role="status" className={`${ALERT} border-brass bg-page text-page-ink`}>
+          noteHidden ? null : <div role="status" className={`${ALERT} border-brass bg-page text-page-ink`}>
             <BellIcon aria-hidden="true" className="mt-0.5 shrink-0" />
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Reminders are blocked</p>
               <p>You can switch notifications on for this app in your phone&apos;s settings.</p>
+              <button type="button" className={ACTION} onClick={hide}>
+                Hide this
+              </button>
             </div>
           </div>
         ) : (
