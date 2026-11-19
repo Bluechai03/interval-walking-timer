@@ -72,7 +72,7 @@ export function PlanSettings({
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium text-page-quiet">Activity</span>
         <select
-          className="w-full border-b border-page-line bg-transparent py-2 text-2xl font-semibold outline-none focus:border-page-ink disabled:text-page-quiet"
+          className="w-full border-b border-page-line bg-transparent py-2 text-2xl font-semibold min-h-11 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink focus:border-page-ink disabled:text-page-quiet"
           value={activity}
           disabled={disabled}
           onChange={(event) => {
@@ -95,12 +95,12 @@ export function PlanSettings({
                 {label}
                 {unit && <span className="sr-only"> in minutes</span>}
               </span>
-              <span className="flex items-baseline gap-1 border-b border-page-line focus-within:border-page-ink">
+              <span className="flex items-center gap-1 border-b border-page-line focus-within:border-page-ink focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-page-ink min-h-11">
                 <input
                   type="number"
                   inputMode="numeric"
                   // text-2xl keeps it above 16px, so iOS Safari doesn't zoom in.
-                  className="w-full min-w-0 bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"
+                  className="w-full min-w-0 bg-transparent min-h-11 py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"
                   defaultValue={config[field] / step}
                   min={min / step}
                   max={max / step}
@@ -125,11 +125,11 @@ export function PlanSettings({
           <span className="text-sm font-medium text-page-quiet">
             Get ready{getReadyFromWatch && <span className="font-normal"> · set by Watch</span>}
           </span>
-          <span className="flex items-baseline gap-1 border-b border-page-line focus-within:border-page-ink">
+          <span className="flex items-center gap-1 border-b border-page-line focus-within:border-page-ink focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-page-ink min-h-11">
             <input
               type="number"
               inputMode="numeric"
-              className="w-full min-w-0 bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"
+              className="w-full min-w-0 bg-transparent min-h-11 py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"
               defaultValue={getReadySeconds}
               min={GET_READY_LIMITS.min}
               max={GET_READY_LIMITS.max}
@@ -148,11 +148,12 @@ export function PlanSettings({
         </label>
         <label className="flex min-w-0 flex-col gap-1">
           <span className="text-sm font-medium text-page-quiet">Age</span>
-          <span className="flex items-baseline gap-1 border-b border-page-line focus-within:border-page-ink">
+          <span className="flex items-center gap-1 border-b border-page-line focus-within:border-page-ink focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-page-ink min-h-11">
             <input
               type="number"
               inputMode="numeric"
-              className="w-full min-w-0 bg-transparent py-1 text-2xl font-semibold tabular-nums outline-none"
+              className="w-full min-w-0 bg-transparent min-h-11 py-1 text-2xl font-semibold tabular-nums outline-none disabled:text-page-quiet"
+              disabled={disabled}
               defaultValue={age}
               min={AGE_LIMITS.min}
               max={AGE_LIMITS.max}

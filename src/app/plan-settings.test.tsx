@@ -68,3 +68,10 @@ describe("PlanSettings out-of-range values", () => {
     expect(screen.getByRole("alert").textContent).toBe("Age can be 10 to 90.");
   });
 });
+
+describe("PlanSettings during a walk", () => {
+  it("locks the age with the rest of the plan", () => {
+    show({ disabled: true });
+    expect((screen.getByLabelText("Age") as HTMLInputElement).disabled).toBe(true);
+  });
+});

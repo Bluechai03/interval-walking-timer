@@ -16,7 +16,7 @@ export function MuteButton({ muted, onToggle }: Props) {
     <button
       type="button"
       onClick={onToggle}
-      className="flex min-h-11 min-w-[8.5rem] items-center justify-center gap-2 rounded-full border-2 border-current px-4 text-base font-medium focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-current"
+      className="flex min-h-11 min-w-[136px] items-center justify-center gap-2 rounded-full border-2 border-current px-4 text-base font-medium focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-current"
     >
       {muted ? (
         <SpeakerSlashIcon aria-hidden="true" size={22} weight="fill" />
