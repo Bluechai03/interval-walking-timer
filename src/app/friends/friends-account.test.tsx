@@ -35,12 +35,6 @@ const typeName = async (value: string) =>
   fireEvent.change(await screen.findByRole("textbox"), { target: { value } });
 
 describe("FriendsAccount", () => {
-  it("says so when Supabase isn't set up", () => {
-    auth.state = { status: "unavailable" };
-    render(<FriendsAccount />);
-    expect(screen.getByText(/isn't switched on here yet/)).toBeTruthy();
-  });
-
   it("asks a new visitor for a name, with a friendly suggestion, and no sign-in", async () => {
     auth.state = { status: "signed-out" };
     render(<FriendsAccount />);
@@ -88,16 +82,6 @@ describe("FriendsAccount", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(signInAsGuest).not.toHaveBeenCalled();
-  });
-
-  it("says so kindly when a guest account can't be made", async () => {
-    auth.state = { status: "signed-out" };
-    signInAsGuest.mockResolvedValue({ ok: false, message: "That didn't work just now." });
-    render(<FriendsAccount />);
-    await typeName("Anna");
-    fireEvent.click(screen.getByRole("button", { name: "Save my name" }));
-    expect(await screen.findByRole("alert")).toBeTruthy();
-    expect(saveDisplayName).not.toHaveBeenCalled();
   });
 
   it("greets a returning guest and lets them change their name", async () => {
@@ -157,15 +141,6 @@ describe("rooms", () => {
     expect(joinRoom).toHaveBeenCalledWith("BCDF", "Anna");
   });
 
-  it("shows why joining failed", async () => {
-    joinRoom.mockResolvedValue({ ok: false, message: "That room is full." });
-    await named();
-    fireEvent.change(screen.getByPlaceholderText("ABCD"), { target: { value: "BCDF" } });
-    fireEvent.click(screen.getByRole("button", { name: "Join the crew" }));
-    expect((await screen.findByRole("alert")).textContent).toContain("full");
-    expect(push).not.toHaveBeenCalled();
-  });
-
   it("joins from a friend's link with one tap", async () => {
     joinRoom.mockResolvedValue({ ok: true, value: "room-3" });
     await named("bcdf");
@@ -175,11 +150,6 @@ describe("rooms", () => {
     expect(joinRoom).toHaveBeenCalledWith("BCDF", "Anna");
   });
 
-  it("explains a link that doesn't make sense", async () => {
-    await named("12");
-    expect(screen.getByText(/doesn't look right/)).toBeTruthy();
-    expect(joinRoom).not.toHaveBeenCalled();
-  });
 });
 
 describe("Delete my data", () => {

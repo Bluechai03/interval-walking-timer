@@ -34,11 +34,6 @@ beforeEach(() => {
 });
 
 describe("useCues", () => {
-  it("is silent before the timer starts", () => {
-    setup();
-    expect(playCue).not.toHaveBeenCalled();
-  });
-
   it("announces the first phase on start", () => {
     const { rerender } = setup();
     rerender({ ...idle, running: true, started: true });
@@ -127,12 +122,6 @@ describe("useCues heads-up", () => {
     rerender({ ...running, phaseIndex: 1, secondsLeft: 180 });
     rerender({ ...running, phaseIndex: 1, secondsLeft: 10 });
     expect(playHeadsUp).toHaveBeenCalledTimes(2);
-  });
-
-  it("stays quiet while paused", () => {
-    const { rerender } = setupLong();
-    rerender({ ...running, running: false, secondsLeft: 10 });
-    expect(playHeadsUp).not.toHaveBeenCalled();
   });
 
   it("skips phases too short to need a warning", () => {

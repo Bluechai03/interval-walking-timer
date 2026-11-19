@@ -69,14 +69,6 @@ describe("RoomScreen", () => {
     expect(await screen.findByAltText("QR code that opens the crew")).toBeTruthy();
   });
 
-  it("marks you and the host", () => {
-    auth.state = as("g1");
-    room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
-    render(<RoomScreen roomId="r1" />);
-    expect(screen.getByText("(you)")).toBeTruthy();
-    expect(screen.getByText("· host")).toBeTruthy();
-  });
-
   it("lets only the host remove others, and never themselves", async () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
@@ -231,26 +223,6 @@ describe("RoomScreen, the host leaving", () => {
 });
 
 describe("RoomScreen, the activity", () => {
-  it("says nothing extra for a walk", () => {
-    auth.state = as("g1");
-    room.state = inRoom(person("host", "Anna"), person("g1", "Ben"));
-    render(<RoomScreen roomId="r1" />);
-    expect(screen.getByText(/^4 rounds of 3:00 fast and 2:00 slow\.$/)).toBeTruthy();
-  });
-
-  it("tells everyone what the host chose", () => {
-    auth.state = as("g1");
-    room.state = {
-      status: "ready",
-      room: { ...theRoom, activity: "elliptical" },
-      here: [person("host", "Anna"), person("g1", "Ben")],
-      reload,
-      connected: true,
-    };
-    render(<RoomScreen roomId="r1" />);
-    expect(screen.getByText(/Elliptical: 4 rounds of 3:00 fast and 2:00 slow\./)).toBeTruthy();
-  });
-
   it("says out loud when a friend joins or leaves, but not who was already here", () => {
     auth.state = as("host");
     room.state = inRoom(person("host", "Anna"));

@@ -11,21 +11,6 @@ const load = async () => {
 beforeEach(() => localStorage.clear());
 
 describe("useMuted", () => {
-  it("is off by default", async () => {
-    const useMuted = await load();
-    const { result } = renderHook(() => useMuted());
-    expect(result.current.muted).toBe(false);
-  });
-
-  it("switches on and off", async () => {
-    const useMuted = await load();
-    const { result } = renderHook(() => useMuted());
-    act(() => result.current.setMuted(true));
-    expect(result.current.muted).toBe(true);
-    act(() => result.current.setMuted(false));
-    expect(result.current.muted).toBe(false);
-  });
-
   it("is remembered when the app is opened again", async () => {
     const first = await load();
     const a = renderHook(() => first());

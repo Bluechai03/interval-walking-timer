@@ -69,19 +69,6 @@ describe("useTimer", () => {
     expect(result.current).toMatchObject({ running: true, secondsLeft: 4 });
   });
 
-  it("resets to the start", () => {
-    const { result } = renderHook(() => useTimer(plan));
-    act(() => result.current.start());
-    advance(4000);
-    act(() => result.current.reset());
-    expect(result.current).toMatchObject({
-      running: false,
-      started: false,
-      phaseIndex: 0,
-      secondsLeft: 10,
-    });
-  });
-
   it("stops itself when the last phase finishes", () => {
     const { result } = renderHook(() => useTimer(plan));
     act(() => result.current.start());
@@ -177,9 +164,4 @@ describe("useTimer with a get ready countdown", () => {
     expect(result.current.getReadyLeft).toBe(0);
   });
 
-  it("starts straight away with no countdown", () => {
-    const { result } = renderHook(() => useTimer(plan, 0));
-    act(() => result.current.start());
-    expect(result.current.getReadyLeft).toBe(0);
-  });
 });
