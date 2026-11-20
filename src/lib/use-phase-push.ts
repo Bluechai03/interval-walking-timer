@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ActivityId } from "./activity";
 import type { PlanConfig } from "./plan";
+import { getSetting, setSetting } from "./settings";
 
-const ENABLED_KEY = "phase-push-enabled";
-const ASKED_KEY = "phase-push-asked";
 const RUN_KEY = "phase-push-run";
 
 const rememberRun = (id: string | null) => {
@@ -96,14 +95,8 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
       }
       return;
     }
-    let enabled = false;
-    let wasAsked = false;
-    try {
-      enabled = localStorage.getItem(ENABLED_KEY) === "1";
-      wasAsked = localStorage.getItem(ASKED_KEY) === "1";
-    } catch {
-      // storage unavailable
-    }
+    const enabled = getSetting("phasePushEnabled");
+    const wasAsked = getSetting("phasePushAsked");
     const initial: PushSupport =
       Notification.permission === "denied" ? "denied" : enabled && Notification.permission === "granted" ? "on" : "off";
     void Promise.resolve().then(() => {
@@ -113,11 +106,7 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
   }, []);
 
   const dismissAsk = useCallback(() => {
-    try {
-      localStorage.setItem(ASKED_KEY, "1");
-    } catch {
-      // storage unavailable
-    }
+    setSetting("phasePushAsked", true);
     setAsked(true);
   }, []);
 
@@ -128,20 +117,12 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
     if (permission !== "granted") return setState(permission === "denied" ? "denied" : "off");
     const reg = await navigator.serviceWorker.ready;
     await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(PUBLIC_KEY) });
-    try {
-      localStorage.setItem(ENABLED_KEY, "1");
-    } catch {
-      // storage unavailable
-    }
+    setSetting("phasePushEnabled", true);
     setState("on");
   }, [dismissAsk]);
 
   const disable = useCallback(async () => {
-    try {
-      localStorage.removeItem(ENABLED_KEY);
-    } catch {
-      // storage unavailable
-    }
+    setSetting("phasePushEnabled", false);
     const reg = await navigator.serviceWorker.ready;
     await (await reg.pushManager.getSubscription())?.unsubscribe();
     setState("off");

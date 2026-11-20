@@ -68,6 +68,19 @@ _Avoid_: bpm, pace, step rate
 A song's beats per minute, used when matching music to a phase.
 _Avoid_: bpm (on its own), speed
 
+## Kept on the phone
+
+**Setting**:
+A choice the walker made, kept on their phone: the plan, the activity, their age, the countdown, the Watch switch and shortcut names, mute, and whether reminders are on. Every setting is listed in one place (`src/lib/settings.ts`) with its saved name and its default; a saved value that doesn't fit falls back to the default.
+_Avoid_: Preference, option, config
+
+**Saved record**:
+Something the app wrote down about a walk, kept on the phone for a limited time and then forgotten: the walk in progress, a Crew's walk, the server clock offset and the reminders run. Unlike a setting, it goes stale.
+_Avoid_: Cache, session, state
+
+**Phone store**:
+The one module that saves settings and saved records safely on the phone. It keeps a copy in memory in case storage is blocked, and tells every screen when a value changes, including from another tab.
+
 ## Walking with friends
 
 **Crew**:
