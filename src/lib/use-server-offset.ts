@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { serverOffsetRecord } from "./records";
 import { fetchServerTime } from "./rooms";
 import { collectSamples, offsetFromSamples, type ClockSample } from "./server-clock";
 
@@ -14,26 +15,8 @@ const RETRY_MS = 4_000;
 // The last good offset is kept on the phone, so a walk reopened with no signal
 // still lines up with the others. Phone clocks drift slowly, so it is only trusted
 // for a few hours.
-const SAVED_KEY = "server-offset";
-const SAVED_FOR_MS = 6 * 60 * 60 * 1000;
-
-const readSavedOffset = (): number | null => {
-  try {
-    const saved = JSON.parse(localStorage.getItem(SAVED_KEY) ?? "null") as { offset?: number; at?: number } | null;
-    if (saved && typeof saved.offset === "number" && Date.now() - (saved.at ?? 0) < SAVED_FOR_MS) return saved.offset;
-  } catch {
-    // Nothing usable saved.
-  }
-  return null;
-};
-
-const writeSavedOffset = (value: number) => {
-  try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify({ offset: value, at: Date.now() }));
-  } catch {
-    // Storage unavailable.
-  }
-};
+const readSavedOffset = (): number | null => serverOffsetRecord.read()?.offset ?? null;
+const writeSavedOffset = (value: number) => serverOffsetRecord.write({ offset: value, at: Date.now() });
 
 let samples: ClockSample[] = [];
 let offset: number | null = null;

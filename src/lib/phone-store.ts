@@ -31,6 +31,9 @@ export const writeRaw = (key: string, raw: string | null) => {
   listeners.forEach((listener) => listener());
 };
 
+// For tests: forget every in-memory copy, so the next read goes to storage again.
+export const forgetMemory = () => memory.clear();
+
 // Another tab changed storage: forget what was remembered and tell everyone.
 const onOtherTab = (event: StorageEvent) => {
   if (event.key === null) memory.clear();

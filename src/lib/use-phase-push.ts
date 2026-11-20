@@ -3,26 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ActivityId } from "./activity";
 import type { PlanConfig } from "./plan";
+import { pushRunRecord } from "./records";
 import { getSetting, setSetting } from "./settings";
 
-const RUN_KEY = "phase-push-run";
-
-const rememberRun = (id: string | null) => {
-  try {
-    if (id) localStorage.setItem(RUN_KEY, id);
-    else localStorage.removeItem(RUN_KEY);
-  } catch {
-    // storage unavailable
-  }
-};
-
-const savedRun = () => {
-  try {
-    return localStorage.getItem(RUN_KEY);
-  } catch {
-    return null;
-  }
-};
+const rememberRun = (id: string | null) => (id ? pushRunRecord.write(id) : pushRunRecord.clear());
+const savedRun = () => pushRunRecord.read();
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
 // "install": an iPhone browser tab, where push only works from the Home Screen.
