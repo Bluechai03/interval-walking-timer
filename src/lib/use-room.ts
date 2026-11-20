@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { crewWalkRecord } from "./records";
 import { fetchRoom, HEARTBEAT_MS, membersHere, touchRoom, type Member, type Room } from "./rooms";
 import { getSupabase } from "./supabase";
 import { useServerOffset } from "./use-server-offset";
@@ -15,26 +16,13 @@ export type RoomState =
 
 // The walk of a started crew is kept on the phone, so a reload with no signal can
 // carry on with the same plan and start moment instead of showing an error.
-const SAVED_KEY = "crew-walk";
-const SAVED_FOR_MS = 6 * 60 * 60 * 1000;
-
 const readSaved = (id: string): Room | null => {
-  try {
-    const saved = JSON.parse(localStorage.getItem(SAVED_KEY) ?? "null") as { room?: Room; savedAt?: number } | null;
-    if (saved?.room?.id === id && saved.room.start_at && Date.now() - (saved.savedAt ?? 0) < SAVED_FOR_MS) return saved.room;
-  } catch {
-    // Storage unavailable or damaged: nothing saved.
-  }
-  return null;
+  const saved = crewWalkRecord.read();
+  return saved && saved.room.id === id && saved.room.start_at ? saved.room : null;
 };
 
 const writeSaved = (room: Room) => {
-  if (!room.start_at) return;
-  try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify({ room, savedAt: Date.now() }));
-  } catch {
-    // Storage unavailable: the walk just won't survive a reload with no signal.
-  }
+  if (room.start_at) crewWalkRecord.write({ room, savedAt: Date.now() });
 };
 
 // Short, so a guest still hears about the start quickly if live updates are missed.

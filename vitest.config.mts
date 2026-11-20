@@ -7,6 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    setupFiles: ["./vitest.setup.ts"],
     // Each file still gets its own isolated page, but the fake browser is built once per
     // worker, which is most of what a run costs.
     pool: "vmThreads",
