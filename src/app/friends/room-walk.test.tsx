@@ -25,7 +25,6 @@ vi.mock("@/lib/use-ios", () => ({ useIos: () => watchState.ios }));
 vi.mock("@/lib/use-standalone", () => ({ useStandalone: () => watchState.standalone }));
 vi.mock("@/lib/use-shortcut-name", () => ({
   useWatchShortcuts: () => ({ startShortcut: watchState.start, endShortcut: watchState.end }),
-  useNamed: () => ({ name: "", setName: () => {} }),
 }));
 vi.mock("@/lib/use-watch-delay", () => ({ useWatchDelay: () => ({ seconds: watchState.delay }) }));
 vi.mock("@/lib/watch-workout", async (importOriginal) => ({

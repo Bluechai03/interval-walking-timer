@@ -1,3 +1,4 @@
+import { parseWhole } from "./phone-store";
 import type { Phase } from "./plan";
 
 // Interval walking guidance: fast phases at roughly 70-80% of max heart rate,
@@ -7,12 +8,7 @@ export const ASSUMED_AGE = 23;
 export const AGE_LIMITS = { min: 10, max: 90 } as const;
 
 // Anything that isn't a whole age in range falls back to the default.
-export const parseAge = (raw: string): number => {
-  const value = Number(raw);
-  return raw.trim() !== "" && Number.isInteger(value) && value >= AGE_LIMITS.min && value <= AGE_LIMITS.max
-    ? value
-    : ASSUMED_AGE;
-};
+export const parseAge = (raw: string): number => parseWhole(raw, AGE_LIMITS.min, AGE_LIMITS.max, ASSUMED_AGE);
 
 const INTENSITY: Record<Phase["type"], { min: number; max: number }> = {
   fast: { min: 0.7, max: 0.8 },

@@ -3,7 +3,7 @@
 import { BellIcon, BellRingIcon } from "@animateicons/react/lucide";
 import { useEffect, useRef } from "react";
 import type { PushSupport } from "@/lib/use-phase-push";
-import { useNamed } from "@/lib/use-shortcut-name";
+import { useSetting } from "@/lib/settings";
 
 type Props = {
   state: PushSupport;
@@ -71,9 +71,8 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
 export function PhaseNotifications({ state, walking = false, failed, shouldAsk, onEnable, onDisable, onDismissAsk, quietWhenIdle = false }: Props) {
   // The two cards that only explain something can be hidden for good, so they
   // don't nag someone who has already decided.
-  const hidden = useNamed("reminders-note-hidden");
-  const hide = () => hidden.setName("1");
-  const noteHidden = hidden.name === "1";
+  const [noteHidden, setNoteHidden] = useSetting("remindersNoteHidden");
+  const hide = () => setNoteHidden(true);
   if (state === "unsupported") return null;
   if (quietWhenIdle && !walking) {
     return shouldAsk ? <AskDialog onEnable={onEnable} onDismissAsk={onDismissAsk} /> : null;
