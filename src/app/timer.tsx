@@ -19,6 +19,7 @@ import { BottomTabs } from "./bottom-tabs";
 import { PhaseNotifications } from "./phase-notifications";
 import { ReadyCard } from "./ready-card";
 import { WalkDisplay } from "./walk-display";
+import { WatchReturnHint } from "./watch-return-hint";
 
 const BUTTON =
   "flex h-16 flex-1 items-center justify-center gap-2 rounded-lg text-xl font-semibold transition-[colors,transform] motion-safe:active:scale-[0.98] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-page-ink disabled:opacity-40";
@@ -238,6 +239,7 @@ export function Timer() {
             didn&apos;t start here. Open Strut from there next time.
           </p>
         )}
+        <WatchReturnHint watchOn={watchOn} started={started} walking={walking} leftForShortcut={watch.started} />
         {watch.soundLocked && (
           <p role="status" className="px-4 text-sm text-page-quiet sm:px-0">
             Tap anywhere to turn sound on. iOS keeps it off after a trip to Shortcuts.
