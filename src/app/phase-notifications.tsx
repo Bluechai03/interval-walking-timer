@@ -2,7 +2,7 @@
 
 import { BellIcon, BellRingIcon } from "@animateicons/react/lucide";
 import { useEffect, useRef } from "react";
-import type { PushSupport } from "@/lib/use-phase-push";
+import type { PushSupport, TestResult } from "@/lib/use-phase-push";
 import { useSetting } from "@/lib/settings";
 
 type Props = {
@@ -17,6 +17,9 @@ type Props = {
   // On the workout screen the cards live in Settings; only a walk's own warnings and the
   // first-run question stay.
   quietWhenIdle?: boolean;
+  // Settings only: sends one reminder now, so the walker can tell whether they reach this phone.
+  onTest?: () => void;
+  testResult?: TestResult;
 };
 
 const ALERT = "flex items-start gap-3 rounded-lg border-2 px-4 py-3 text-base";
@@ -67,8 +70,31 @@ function AskDialog({ onEnable, onDismissAsk }: Pick<Props, "onEnable" | "onDismi
   );
 }
 
+const TEST_MESSAGE: Partial<Record<TestResult, string>> = {
+  sent: "Sent. It should show up within a few seconds. If it doesn't, check Strut under Settings, Notifications, and your Focus.",
+  "no-subscription":
+    "This phone has no reminder link for Strut. Turn reminders off and on again, then send another test.",
+  expired:
+    "This phone's reminder link has stopped working. Turn reminders off and on again, then send another test.",
+  failed: "The test didn't go through. Check your signal and try again.",
+};
+
+// The test button and what came of it, shown inside the "Reminders are on" card.
+function TestReminder({ onTest, testResult = "idle" }: { onTest: () => void; testResult?: TestResult }) {
+  const sending = testResult === "sending";
+  return (
+    <>
+      <button type="button" className={ACTION} onClick={onTest} disabled={sending}>
+        {sending ? "Sending…" : "Send a test reminder"}
+      </button>
+      {/* The card around this is already a live region, so a new message is announced. */}
+      {TEST_MESSAGE[testResult] && <p>{TEST_MESSAGE[testResult]}</p>}
+    </>
+  );
+}
+
 // Alert-style note under the controls: a tinted card with an icon, a title and one clear action.
-export function PhaseNotifications({ state, walking = false, failed, shouldAsk, onEnable, onDisable, onDismissAsk, quietWhenIdle = false }: Props) {
+export function PhaseNotifications({ state, walking = false, failed, shouldAsk, onEnable, onDisable, onDismissAsk, quietWhenIdle = false, onTest, testResult }: Props) {
   // The two cards that only explain something can be hidden for good, so they
   // don't nag someone who has already decided.
   const [noteHidden, setNoteHidden] = useSetting("remindersNoteHidden");
@@ -132,6 +158,7 @@ export function PhaseNotifications({ state, walking = false, failed, shouldAsk, 
             <div className="flex flex-col gap-1">
               <p className="font-semibold">Reminders are on</p>
               <p>You&apos;ll get a note at each change, and your screen can sleep.</p>
+              {onTest && !walking && <TestReminder onTest={onTest} testResult={testResult} />}
               <button type="button" className={ACTION} onClick={onDisable}>
                 Turn off
               </button>

@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PhaseNotifications } from "./phase-notifications";
 
 afterEach(cleanup);
@@ -49,5 +49,44 @@ describe("PhaseNotifications on the workout screen", () => {
     };
     render(<PhaseNotifications {...props} state="off" shouldAsk quietWhenIdle />);
     expect(screen.getByText(/nudge at each change/)).toBeTruthy();
+  });
+});
+
+describe("PhaseNotifications test reminder", () => {
+  it("offers a test while reminders are on, and runs it on a tap", () => {
+    const onTest = vi.fn();
+    render(<PhaseNotifications {...props} state="on" onTest={onTest} />);
+    fireEvent.click(screen.getByRole("button", { name: "Send a test reminder" }));
+    expect(onTest).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers no test where it was not asked for, while reminders are off, or mid-walk", () => {
+    render(<PhaseNotifications {...props} state="on" />);
+    expect(screen.queryByRole("button", { name: "Send a test reminder" })).toBeNull();
+    cleanup();
+    render(<PhaseNotifications {...props} state="off" onTest={() => {}} />);
+    expect(screen.queryByRole("button", { name: "Send a test reminder" })).toBeNull();
+    cleanup();
+    render(<PhaseNotifications {...props} state="on" walking onTest={() => {}} />);
+    expect(screen.queryByRole("button", { name: "Send a test reminder" })).toBeNull();
+  });
+
+  it("says what came of the test, and tells the walker how to repair a dead link", () => {
+    const messages = [
+      ["sent", /should show up within a few seconds/],
+      ["no-subscription", /no reminder link for Strut.*off and on again/],
+      ["expired", /stopped working.*off and on again/],
+      ["failed", /didn't go through/],
+    ] as const;
+    for (const [result, text] of messages) {
+      render(<PhaseNotifications {...props} state="on" onTest={() => {}} testResult={result} />);
+      expect(screen.getByText(text)).toBeTruthy();
+      cleanup();
+    }
+  });
+
+  it("disables the button while a test is going out", () => {
+    render(<PhaseNotifications {...props} state="on" onTest={() => {}} testResult="sending" />);
+    expect((screen.getByRole("button", { name: "Sending…" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

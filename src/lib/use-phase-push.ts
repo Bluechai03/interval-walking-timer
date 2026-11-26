@@ -10,6 +10,10 @@ const rememberRun = (id: string | null) => (id ? pushRunRecord.write(id) : pushR
 const savedRun = () => pushRunRecord.read();
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
+// What a test reminder came to: still going, accepted by the push service, no push
+// subscription on this phone, the push service says its address is gone, or it failed.
+export type TestResult = "idle" | "sending" | "sent" | "no-subscription" | "expired" | "failed";
+
 // "install": an iPhone browser tab, where push only works from the Home Screen.
 export type PushSupport = "unsupported" | "install" | "denied" | "off" | "on";
 
@@ -67,6 +71,7 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
   const [asked, setAsked] = useState(true);
   // True when the server could not schedule this walk's reminders.
   const [failed, setFailed] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult>("idle");
   const runId = useRef<string | null>(null);
   const latest = useRef({ config, elapsedSeconds, activity, age });
   useEffect(() => {
@@ -111,6 +116,27 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
     const reg = await navigator.serviceWorker.ready;
     await (await reg.pushManager.getSubscription())?.unsubscribe();
     setState("off");
+  }, []);
+
+  // Sends one notification to this phone now, so a walker can tell whether reminders
+  // reach it before a walk depends on them.
+  const sendTest = useCallback(async () => {
+    if (!canPush()) return;
+    setTestResult("sending");
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.getSubscription();
+      if (!subscription) return setTestResult("no-subscription");
+      const response = await fetch("/api/walk-push/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: subscription.toJSON() }),
+      });
+      const body = (await response.json().catch(() => null)) as { result?: string } | null;
+      setTestResult(body?.result === "sent" ? "sent" : body?.result === "expired" ? "expired" : "failed");
+    } catch {
+      setTestResult("failed");
+    }
   }, []);
 
   const enabled = state === "on" && ready;
@@ -179,5 +205,5 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
     };
   }, [enabled, running, done]);
 
-  return { state, failed, enable, disable, shouldAsk: state === "off" && !asked, dismissAsk };
+  return { state, failed, enable, disable, shouldAsk: state === "off" && !asked, dismissAsk, testResult, sendTest };
 };
