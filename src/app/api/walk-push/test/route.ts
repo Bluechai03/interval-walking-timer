@@ -31,7 +31,13 @@ export async function POST(request: Request) {
     );
     await webpush.sendNotification(
       { endpoint: sub.endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } },
-      JSON.stringify({ title: "Strut reminders work", body: "This is a test. Your walk's reminders arrive like this." }),
+      // Its own tag each time: with the walk's shared tag, a test would replace the one before it,
+      // and a replaced notification can look like one that never came.
+      JSON.stringify({
+        title: "Strut reminders work",
+        body: "This is a test. Your walk's reminders arrive like this.",
+        tag: `test-${Date.now()}`,
+      }),
       { TTL: 60, urgency: "high" },
     );
     return Response.json({ result: "sent" });

@@ -99,13 +99,14 @@ self.addEventListener("fetch", (event) => {
 });
 
 // Phase notifications sent by the server while the phone is locked. One shared
-// tag so each cue replaces the last instead of stacking up.
+// tag so each cue replaces the last instead of stacking up. A push can bring its own
+// tag instead, so one that must never replace another (the test reminder) gets its own.
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
   event.waitUntil(
     self.registration.showNotification(data.title ?? "Strut", {
       body: data.body,
-      tag: "phase",
+      tag: typeof data.tag === "string" && data.tag !== "" ? data.tag : "phase",
       renotify: true,
       icon: "/icon/192",
     }),

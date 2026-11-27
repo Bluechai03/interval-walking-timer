@@ -36,6 +36,16 @@ describe("POST /api/walk-push/test", () => {
     expect(JSON.parse(sendNotification.mock.calls[0][1]).title).toBe("Strut reminders work");
   });
 
+  it("gives each test its own tag, so one never replaces another in the tray", async () => {
+    await post({ subscription });
+    vi.setSystemTime(now + 6000);
+    await post({ subscription });
+    const [first, second] = sendNotification.mock.calls.map(([, payload]) => JSON.parse(payload).tag);
+    expect(first).toMatch(/^test-\d+$/);
+    expect(second).toMatch(/^test-\d+$/);
+    expect(first).not.toBe(second);
+  });
+
   it("says the address is gone when the push service reports 404 or 410", async () => {
     for (const statusCode of [404, 410]) {
       sendNotification.mockRejectedValueOnce(Object.assign(new Error("gone"), { statusCode }));
