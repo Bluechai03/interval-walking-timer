@@ -43,6 +43,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -107,5 +108,77 @@ describe("usePhasePush: send a test reminder", () => {
 
     fetchMock.mockRejectedValueOnce(new TypeError("offline"));
     expect((await sendTest()).result.current.testResult).toBe("failed");
+  });
+});
+
+const settle = () => act(async () => void (await new Promise((resolve) => setTimeout(resolve, 10))));
+
+const returnToApp = () =>
+  act(() => {
+    Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+
+describe("usePhasePush: a test reminder when the walker leaves the app", () => {
+  it("sends the request in the same moment as the tap, and marks it to carry on if the page is put to sleep", async () => {
+    const { result } = renderHook(() => usePhasePush(idle));
+    await settle();
+    reply(Response.json({ result: "sent" }));
+    // Nothing is awaited between the tap and the request: iOS can freeze the page right after the tap.
+    act(() => {
+      void result.current.sendTest();
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const init = fetchMock.mock.calls[0][1];
+    expect(init.keepalive).toBe(true);
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+    await waitFor(() => expect(result.current.testResult).toBe("sent"));
+  });
+
+  it("says so when the walker comes back and it is still going, and the answer can still arrive", async () => {
+    const { result } = renderHook(() => usePhasePush(idle));
+    await settle();
+    let answer: (response: Response) => void = () => {};
+    fetchMock.mockImplementationOnce(() => new Promise<Response>((resolve) => (answer = resolve)));
+    act(() => {
+      void result.current.sendTest();
+    });
+    expect(result.current.testResult).toBe("sending");
+
+    returnToApp();
+    expect(result.current.testResult).toBe("left");
+
+    await act(async () => answer(Response.json({ result: "sent" })));
+    await waitFor(() => expect(result.current.testResult).toBe("sent"));
+  });
+
+  it("does not change a finished result when the walker comes back", async () => {
+    reply(Response.json({ result: "sent" }));
+    const { result } = await sendTest();
+    await waitFor(() => expect(result.current.testResult).toBe("sent"));
+    returnToApp();
+    expect(result.current.testResult).toBe("sent");
+  });
+
+  it("gives up after 15 seconds, so the button never stays stuck", async () => {
+    const { result } = renderHook(() => usePhasePush(idle));
+    await settle();
+    vi.useFakeTimers();
+    fetchMock.mockImplementationOnce(
+      (_url: string, init: RequestInit) =>
+        new Promise((_resolve, reject) => init.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")))),
+    );
+    act(() => {
+      void result.current.sendTest();
+    });
+    expect(result.current.testResult).toBe("sending");
+    await act(async () => {
+      vi.advanceTimersByTime(14_999);
+    });
+    expect(result.current.testResult).toBe("sending");
+    await act(async () => {
+      vi.advanceTimersByTime(2);
+    });
+    expect(result.current.testResult).toBe("failed");
   });
 });

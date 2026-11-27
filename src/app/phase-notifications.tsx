@@ -78,6 +78,7 @@ const TEST_MESSAGE: Partial<Record<TestResult, string>> = {
     "Strut couldn't use this phone's reminder link. Turn reminders off and on again, then send another test.",
   expired:
     "This phone's reminder link has stopped working. Turn reminders off and on again, then send another test.",
+  left: "You left Strut before it answered. If a notification showed up, reminders work. If not, tap again and stay here until it says Sent.",
   "too-many": "That was a moment ago. Wait a few seconds and try again.",
   failed: "The test didn't go through. Check your signal and try again.",
 };

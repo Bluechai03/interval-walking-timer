@@ -12,8 +12,21 @@ const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
 // Where a test reminder stands: not asked for yet, going out, accepted by the push
 // service, no push subscription on this phone, the server refused this phone's address,
-// the push service says the address is gone, tried too soon after the last, or failed.
-export type TestResult = "idle" | "sending" | "sent" | "no-subscription" | "refused" | "expired" | "too-many" | "failed";
+// the push service says the address is gone, tried too soon after the last, the walker
+// left the app before it was answered, or failed.
+export type TestResult =
+  | "idle"
+  | "sending"
+  | "sent"
+  | "no-subscription"
+  | "refused"
+  | "expired"
+  | "too-many"
+  | "left"
+  | "failed";
+
+// A test that has not been answered by now is given up on, so the button never stays stuck.
+const TEST_TIMEOUT_MS = 15_000;
 
 // What the server's answer means for the walker. A 400 is its own result: the address was
 // no use, and a lost signal is not the cause.
@@ -83,6 +96,9 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
   // True when the server could not schedule this walk's reminders.
   const [failed, setFailed] = useState(false);
   const [testResult, setTestResult] = useState<TestResult>("idle");
+  // This phone's push subscription, looked up ahead of time so a test can go out the moment
+  // it is tapped. undefined: not looked up yet. null: the phone has none.
+  const knownSubscription = useRef<ReturnType<PushSubscription["toJSON"]> | null | undefined>(undefined);
   const runId = useRef<string | null>(null);
   const latest = useRef({ config, elapsedSeconds, activity, age });
   useEffect(() => {
@@ -115,6 +131,7 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
     if (!canPush()) return;
     dismissAsk();
     setTestResult("idle");
+    knownSubscription.current = undefined;
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return setState(permission === "denied" ? "denied" : "off");
     const reg = await navigator.serviceWorker.ready;
@@ -126,30 +143,68 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
   const disable = useCallback(async () => {
     // A result from before the walker turned reminders off and on says nothing about the new link.
     setTestResult("idle");
+    knownSubscription.current = undefined;
     setSetting("phasePushEnabled", false);
     const reg = await navigator.serviceWorker.ready;
     await (await reg.pushManager.getSubscription())?.unsubscribe();
     setState("off");
   }, []);
 
+  // Look up the subscription while the card is on screen, so a test needs nothing to finish
+  // between the tap and the request. iOS puts a page to sleep within moments of leaving it.
+  useEffect(() => {
+    if (state !== "on" || !canPush()) return;
+    let stale = false;
+    void navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((subscription) => {
+        if (!stale) knownSubscription.current = subscription ? subscription.toJSON() : null;
+      })
+      .catch(() => {});
+    return () => {
+      stale = true;
+    };
+  }, [state]);
+
+  // The walker leaves the app to see the banner. If they come back and the test is still
+  // going, say what happened, and let them try again.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setTestResult((now) => (now === "sending" ? "left" : now));
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
+
   // Sends one notification to this phone now, so a walker can tell whether reminders
-  // reach it before a walk depends on them.
+  // reach it before a walk depends on them. With the subscription already known, the request
+  // is sent before anything is awaited, and it is marked to carry on if the page is put to sleep.
   const sendTest = useCallback(async () => {
     if (!canPush()) return;
     setTestResult("sending");
+    const controller = new AbortController();
+    const giveUp = setTimeout(() => controller.abort(), TEST_TIMEOUT_MS);
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const subscription = await reg.pushManager.getSubscription();
-      if (!subscription) return setTestResult("no-subscription");
+      let subscription = knownSubscription.current;
+      if (subscription === undefined) {
+        const reg = await navigator.serviceWorker.ready;
+        subscription = (await reg.pushManager.getSubscription())?.toJSON() ?? null;
+        knownSubscription.current = subscription;
+      }
+      if (subscription === null) return setTestResult("no-subscription");
       const response = await fetch("/api/walk-push/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription: subscription.toJSON() }),
+        body: JSON.stringify({ subscription }),
+        keepalive: true,
+        signal: controller.signal,
       });
       const body = (await response.json().catch(() => null)) as { result?: string } | null;
       setTestResult(testResultOf(response.status, body));
     } catch {
       setTestResult("failed");
+    } finally {
+      clearTimeout(giveUp);
     }
   }, []);
 

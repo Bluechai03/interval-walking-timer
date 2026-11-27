@@ -77,6 +77,7 @@ describe("PhaseNotifications test reminder", () => {
       ["no-subscription", /no reminder link for Strut.*off and on again/],
       ["refused", /couldn't use this phone's reminder link.*off and on again/],
       ["expired", /stopped working.*off and on again/],
+      ["left", /You left Strut before it answered.*stay here until it says Sent/],
       ["too-many", /Wait a few seconds/],
       ["failed", /didn't go through/],
     ] as const;
@@ -85,6 +86,11 @@ describe("PhaseNotifications test reminder", () => {
       expect(screen.getByText(text)).toBeTruthy();
       cleanup();
     }
+  });
+
+  it("leaves the button usable after the walker left before the answer, so it can't stay stuck", () => {
+    render(<PhaseNotifications {...props} state="on" onTest={() => {}} testResult="left" />);
+    expect((screen.getByRole("button", { name: "Send a test reminder" }) as HTMLButtonElement).disabled).toBe(false);
   });
 
   it("disables the button while a test is going out", () => {
