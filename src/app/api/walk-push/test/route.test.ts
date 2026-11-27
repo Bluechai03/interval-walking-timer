@@ -10,9 +10,15 @@ import { POST } from "./route";
 const post = (body: object) =>
   POST(new Request("http://localhost/api/walk-push/test", { method: "POST", body: JSON.stringify(body) }));
 
-const subscription = { endpoint: "https://push.example/abc", keys: { p256dh: "p", auth: "a" } };
+const subscription = { endpoint: "https://web.push.apple.com/abc", keys: { p256dh: "p", auth: "a" } };
+
+// Each test is a new minute, so the limit on one test per phone every few seconds never carries over.
+let now = Date.parse("2026-11-27T09:00:00Z");
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  now += 60_000;
+  vi.setSystemTime(now);
   sendNotification.mockReset();
   sendNotification.mockResolvedValue({ statusCode: 201 });
   setVapidDetails.mockReset();
@@ -33,7 +39,8 @@ describe("POST /api/walk-push/test", () => {
   it("says the address is gone when the push service reports 404 or 410", async () => {
     for (const statusCode of [404, 410]) {
       sendNotification.mockRejectedValueOnce(Object.assign(new Error("gone"), { statusCode }));
-      const response = await post({ subscription });
+      // A different phone each time, so the limit on one test per phone doesn't apply.
+      const response = await post({ subscription: { ...subscription, endpoint: `https://web.push.apple.com/${statusCode}` } });
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual({ result: "expired" });
     }
@@ -57,7 +64,43 @@ describe("POST /api/walk-push/test", () => {
 
   it("refuses a request with no subscription, or an address that is not https", async () => {
     expect((await post({})).status).toBe(400);
-    expect((await post({ subscription: { ...subscription, endpoint: "http://push.example/abc" } })).status).toBe(400);
+    expect((await post({ subscription: { ...subscription, endpoint: "http://web.push.apple.com/abc" } })).status).toBe(400);
     expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("refuses an address that is not a push service, so it can't be used to make the server call any address", async () => {
+    for (const endpoint of ["https://example.com/push", "https://web.push.apple.com.evil.example/abc"]) {
+      const response = await post({ subscription: { ...subscription, endpoint } });
+      expect(response.status, endpoint).toBe(400);
+    }
+    expect(sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("sends to the push services phones use", async () => {
+    for (const endpoint of [
+      "https://fcm.googleapis.com/fcm/send/abc",
+      "https://updates.push.services.mozilla.com/wpush/v2/abc",
+    ]) {
+      const response = await post({ subscription: { ...subscription, endpoint } });
+      expect(await response.json(), endpoint).toEqual({ result: "sent" });
+    }
+  });
+
+  it("lets one phone test once every few seconds, and says to wait without sending again", async () => {
+    expect((await post({ subscription })).status).toBe(200);
+    const again = await post({ subscription });
+    expect(again.status).toBe(429);
+    expect(await again.json()).toEqual({ result: "too-many" });
+    expect(sendNotification).toHaveBeenCalledTimes(1);
+
+    vi.setSystemTime(now + 6000);
+    expect((await post({ subscription })).status).toBe(200);
+    expect(sendNotification).toHaveBeenCalledTimes(2);
+  });
+
+  it("counts each phone on its own", async () => {
+    await post({ subscription });
+    const other = await post({ subscription: { ...subscription, endpoint: "https://web.push.apple.com/other" } });
+    expect(other.status).toBe(200);
   });
 });

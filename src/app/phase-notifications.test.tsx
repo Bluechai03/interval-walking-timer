@@ -75,7 +75,9 @@ describe("PhaseNotifications test reminder", () => {
     const messages = [
       ["sent", /should show up within a few seconds/],
       ["no-subscription", /no reminder link for Strut.*off and on again/],
+      ["refused", /couldn't use this phone's reminder link.*off and on again/],
       ["expired", /stopped working.*off and on again/],
+      ["too-many", /Wait a few seconds/],
       ["failed", /didn't go through/],
     ] as const;
     for (const [result, text] of messages) {

@@ -1,6 +1,12 @@
 import webpush from "web-push";
+import { isPushServiceEndpoint } from "@/lib/push-endpoint";
+import { createRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+
+// One test per phone every few seconds. It is kept in this server instance's memory, so it
+// slows a loop down and does not strictly stop it.
+const limit = createRateLimit({ max: 1, windowMs: 5000 });
 
 // Sends one notification to the phone that asked, now, so the walker can tell whether
 // reminders reach this phone before a walk depends on them. Only a fixed message goes out.
@@ -10,9 +16,12 @@ export async function POST(request: Request) {
   } | null;
 
   const sub = body?.subscription;
-  if (!sub?.endpoint?.startsWith("https://") || !sub.keys?.p256dh || !sub.keys.auth) {
+  // Only addresses of real push services, so this can't be used to make the server call
+  // any web address it is given.
+  if (!sub?.endpoint || !isPushServiceEndpoint(sub.endpoint) || !sub.keys?.p256dh || !sub.keys.auth) {
     return Response.json({ error: "Missing subscription" }, { status: 400 });
   }
+  if (!limit.allow(sub.endpoint)) return Response.json({ result: "too-many" }, { status: 429 });
 
   try {
     webpush.setVapidDetails(

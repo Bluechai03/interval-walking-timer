@@ -9,7 +9,8 @@ import { forgetMemory } from "./phone-store";
 import { DEFAULT_PLAN_CONFIG } from "./plan";
 import { usePhasePush } from "./use-phase-push";
 
-const subscription = { endpoint: "https://push.example/abc", keys: { p256dh: "p", auth: "a" } };
+const subscription = { endpoint: "https://web.push.apple.com/abc", keys: { p256dh: "p", auth: "a" } };
+const unsubscribe = vi.fn();
 const getSubscription = vi.fn();
 const fetchMock = vi.fn();
 
@@ -34,7 +35,7 @@ beforeEach(() => {
   forgetMemory();
   localStorage.setItem("phase-push-enabled", "1");
   getSubscription.mockReset();
-  getSubscription.mockResolvedValue({ toJSON: () => subscription });
+  getSubscription.mockResolvedValue({ toJSON: () => subscription, unsubscribe });
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
   fakePush();
@@ -74,6 +75,25 @@ describe("usePhasePush: send a test reminder", () => {
     const { result } = await sendTest();
     expect(result.current.testResult).toBe("no-subscription");
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("says the address was refused for a 400, and to wait for a 429, and not to check the signal", async () => {
+    reply(Response.json({ error: "Missing subscription" }, { status: 400 }));
+    expect((await sendTest()).result.current.testResult).toBe("refused");
+    cleanup();
+
+    reply(Response.json({ result: "too-many" }, { status: 429 }));
+    expect((await sendTest()).result.current.testResult).toBe("too-many");
+  });
+
+  it("forgets the result when reminders are turned off, so an old message is not waiting later", async () => {
+    reply(Response.json({ result: "expired" }));
+    const { result } = await sendTest();
+    expect(result.current.testResult).toBe("expired");
+    await act(async () => {
+      await result.current.disable();
+    });
+    expect(result.current.testResult).toBe("idle");
   });
 
   it("reports an expired address, a failed send and a lost connection as different results", async () => {

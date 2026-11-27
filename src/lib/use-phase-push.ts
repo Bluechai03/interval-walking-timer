@@ -10,9 +10,20 @@ const rememberRun = (id: string | null) => (id ? pushRunRecord.write(id) : pushR
 const savedRun = () => pushRunRecord.read();
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
-// What a test reminder came to: still going, accepted by the push service, no push
-// subscription on this phone, the push service says its address is gone, or it failed.
-export type TestResult = "idle" | "sending" | "sent" | "no-subscription" | "expired" | "failed";
+// Where a test reminder stands: not asked for yet, going out, accepted by the push
+// service, no push subscription on this phone, the server refused this phone's address,
+// the push service says the address is gone, tried too soon after the last, or failed.
+export type TestResult = "idle" | "sending" | "sent" | "no-subscription" | "refused" | "expired" | "too-many" | "failed";
+
+// What the server's answer means for the walker. A 400 is its own result: the address was
+// no use, and a lost signal is not the cause.
+const testResultOf = (status: number, body: { result?: string } | null): TestResult => {
+  if (status === 400) return "refused";
+  if (status === 429) return "too-many";
+  if (body?.result === "sent") return "sent";
+  if (body?.result === "expired") return "expired";
+  return "failed";
+};
 
 // "install": an iPhone browser tab, where push only works from the Home Screen.
 export type PushSupport = "unsupported" | "install" | "denied" | "off" | "on";
@@ -103,6 +114,7 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
   const enable = useCallback(async () => {
     if (!canPush()) return;
     dismissAsk();
+    setTestResult("idle");
     const permission = await Notification.requestPermission();
     if (permission !== "granted") return setState(permission === "denied" ? "denied" : "off");
     const reg = await navigator.serviceWorker.ready;
@@ -112,6 +124,8 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
   }, [dismissAsk]);
 
   const disable = useCallback(async () => {
+    // A result from before the walker turned reminders off and on says nothing about the new link.
+    setTestResult("idle");
     setSetting("phasePushEnabled", false);
     const reg = await navigator.serviceWorker.ready;
     await (await reg.pushManager.getSubscription())?.unsubscribe();
@@ -133,7 +147,7 @@ export const usePhasePush = ({ config, activity, age, elapsedSeconds, ready, run
         body: JSON.stringify({ subscription: subscription.toJSON() }),
       });
       const body = (await response.json().catch(() => null)) as { result?: string } | null;
-      setTestResult(body?.result === "sent" ? "sent" : body?.result === "expired" ? "expired" : "failed");
+      setTestResult(testResultOf(response.status, body));
     } catch {
       setTestResult("failed");
     }
