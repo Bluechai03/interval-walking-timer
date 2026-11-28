@@ -52,6 +52,8 @@ export function SettingsScreen() {
           onEnable={() => void phasePush.enable()}
           onDisable={() => void phasePush.disable()}
           onDismissAsk={phasePush.dismissAsk}
+          onTest={() => void phasePush.sendTest()}
+          testResult={phasePush.testResult}
         />
       </section>
 
