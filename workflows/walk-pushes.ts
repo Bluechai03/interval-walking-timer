@@ -27,7 +27,9 @@ async function sendCue(subscription: PushSubscription, cue: PushCue) {
   try {
     await webpush.sendNotification(
       subscription,
-      JSON.stringify({ title: cue.title, body: cue.body }),
+      // Its own tag for every cue. With one shared tag, an iPhone can replace the cue still
+      // sitting in Notification Center without showing a banner for the new one.
+      JSON.stringify({ title: cue.title, body: cue.body, tag: `phase-${crypto.randomUUID()}` }),
       { TTL: 60, urgency: "high" },
     );
   } catch (error) {

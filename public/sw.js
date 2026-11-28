@@ -98,9 +98,10 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(url.pathname.startsWith(STATIC) ? cacheFirst(request) : quickOrSaved(event, request));
 });
 
-// Phase notifications sent by the server while the phone is locked. One shared
-// tag so each cue replaces the last instead of stacking up. A push can bring its own
-// tag instead, so one that must never replace another (the test reminder) gets its own.
+// Phase notifications sent by the server while the phone is locked. Each push brings its
+// own tag, so a new cue never replaces the one before it: on an iPhone a replaced
+// notification can arrive with no banner. A push with no tag (one scheduled before the
+// server sent them) falls back to one shared tag.
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
   event.waitUntil(
